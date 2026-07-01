@@ -33,6 +33,15 @@
   @media(max-width:860px){ #sn-root #stack-grid{ grid-template-columns:repeat(2,minmax(0,1fr)); } }
   #sn-root .sn-stack{ transition:transform .14s ease, box-shadow .14s ease; }
   #sn-root .sn-stack:hover{ transform:translateY(-4px); box-shadow:7px 9px 0 var(--ink); }
+  /* Flavour card image flip: only the white image container rotates in 3D — the
+     coloured info panel below it lives outside .sn-flip-scene entirely and is
+     untouched by any of this. */
+  #sn-root .sn-flip-scene{ position:relative; overflow:hidden; perspective:1000px; }
+  #sn-root .sn-flip-inner{ position:relative; width:100%; height:100%; transform-style:preserve-3d; -webkit-transform-style:preserve-3d; transition:transform .5s ease-in-out; will-change:transform; }
+  #sn-root .sn-flip-scene:hover .sn-flip-inner,
+  #sn-root .sn-flip-scene.is-flipped .sn-flip-inner{ transform:rotateY(180deg); }
+  #sn-root .sn-flip-face{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; backface-visibility:hidden; -webkit-backface-visibility:hidden; }
+  #sn-root .sn-flip-back{ transform:rotateY(180deg); padding:8%; }
   #sn-root #usp-grid{ display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); }
   @media(max-width:980px){ #sn-root #usp-grid{ grid-template-columns:repeat(2,minmax(0,1fr)); } }
   @media(max-width:520px){ #sn-root #usp-grid{ grid-template-columns:1fr; } }
@@ -59,7 +68,7 @@
   #sn-sticky-cta{ position:fixed; left:0; right:0; bottom:0; z-index:50; display:none; justify-content:center; padding:0 14px 18px; pointer-events:none; }
   #sn-sticky-cta.is-visible{ display:flex; animation:sn-fade .25s ease both; }
   #sn-sticky-cta button{ pointer-events:auto; }
-  @media(prefers-reduced-motion:reduce){ #sn-root *{ animation:none !important; } #sn-sticky-cta.is-visible{ animation:none; } }
+  @media(prefers-reduced-motion:reduce){ #sn-root *{ animation:none !important; } #sn-sticky-cta.is-visible{ animation:none; } #sn-root .sn-flip-inner{ transition:none; } }
 {%- endstyle -%}
 
 {%- assign spots_claimed = section.settings.spots_claimed | default: 0 -%}
@@ -135,11 +144,19 @@
       {%- assign fvegs  = 'with carrots,with spinach,with beets,with cauliflower' | split: ',' -%}
       {%- assign fcols  = '#FBE07A,#BBD06E,#F2ABCB,#B6CDEA' | split: ',' -%}
       {%- assign fimgs  = 'sn-stack-banana.jpg,sn-stack-apple.jpg,sn-stack-berry.jpg,sn-stack-buttermilk.jpg' | split: ',' -%}
+      {%- assign fpkgs  = 'bananabonanzawithcarrots.png,applepieagentswithspinach.png,berrybanditswithbeets.png,buttermilkblastwithcauliflower.png' | split: ',' -%}
       {%- for i in (0..3) -%}
         <div class="sn-stack" style="border:2.5px solid var(--ink); border-radius:20px; background:#fff; box-shadow:5px 5px 0 var(--ink); overflow:hidden; display:flex; flex-direction:column;">
           <div style="height:8px; background:{{ fcols[i] }}; border-bottom:2.5px solid var(--ink);"></div>
-          <div style="flex:1; min-height:clamp(210px,27vw,320px); overflow:hidden; display:flex; align-items:center; justify-content:center; padding:10px 12px 2px;">
-            <img src="{{ fimgs[i] | asset_url }}" alt="{{ fnames[i] }} pancake stack" loading="lazy" style="width:100%; height:100%; object-fit:contain;">
+          <div class="sn-flip-scene" style="flex:1; min-height:clamp(210px,27vw,320px); padding:10px 12px 2px;">
+            <div class="sn-flip-inner">
+              <div class="sn-flip-face sn-flip-front">
+                <img src="{{ fimgs[i] | asset_url }}" alt="{{ fnames[i] }} pancake stack" loading="lazy" style="width:100%; height:100%; object-fit:contain;">
+              </div>
+              <div class="sn-flip-face sn-flip-back">
+                <img src="{{ fpkgs[i] | asset_url }}" alt="{{ fnames[i] }} packaging" loading="lazy" style="width:100%; height:100%; object-fit:contain;">
+              </div>
+            </div>
           </div>
           <div style="padding:8px 14px 14px; text-align:center; background:{{ fcols[i] }}; border-top:2.5px solid var(--ink);">
             <h3 style="font-family:'Archivo Black',sans-serif; text-transform:uppercase; line-height:1.05; font-size:.98rem; margin:0; min-height:2.05em; display:flex; align-items:center; justify-content:center;">{{ fnames[i] }}</h3>
@@ -427,6 +444,24 @@
   root.querySelectorAll('.sn-next').forEach(function(b){ b.addEventListener('click',function(){ reset(); next(); }); });
   root.querySelectorAll('.sn-prev').forEach(function(b){ b.addEventListener('click',function(){ reset(); prev(); }); });
   render(); timer=setInterval(next,4500);
+
+  // Flavour card image flip: CSS :hover already drives this on devices that support
+  // hover. On touch devices (no hover), tap the white image container to flip it;
+  // tap it again, tap another card, or tap anywhere else to flip it back.
+  var flipScenes = root.querySelectorAll('.sn-flip-scene');
+  if(flipScenes.length && !(window.matchMedia && window.matchMedia('(hover: hover)').matches)){
+    flipScenes.forEach(function(scene){
+      scene.addEventListener('click', function(ev){
+        ev.stopPropagation();
+        var wasFlipped = scene.classList.contains('is-flipped');
+        flipScenes.forEach(function(s){ s.classList.remove('is-flipped'); });
+        if(!wasFlipped) scene.classList.add('is-flipped');
+      });
+    });
+    document.addEventListener('click', function(){
+      flipScenes.forEach(function(s){ s.classList.remove('is-flipped'); });
+    });
+  }
 
   // Auto-scroll reviews
   var strip=document.getElementById('rev-strip');
