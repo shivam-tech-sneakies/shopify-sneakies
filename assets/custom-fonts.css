@@ -1,0 +1,18 @@
+@font-face {
+  font-family: 'Venice Black';
+  src: url("//eatsneakies.com/cdn/shop/t/9/assets/VeniceBlvd-Black.woff2?v=179086608511500831321782894910") format('woff2');
+  font-weight: 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'General Sans';
+  src: url("//eatsneakies.com/cdn/shop/t/9/assets/GeneralSans-Medium.woff2?v=110340538253201054201782894910") format('woff2');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+
+

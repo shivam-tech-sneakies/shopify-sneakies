@@ -1,0 +1,341 @@
+{%- comment -%}
+  Sneakies — exact landing-page replica (full-store version)
+  Add this file as: sections/sneakies-landing.liquid
+  Upload the 18 images from the "upload-to-theme" folder into the theme's Assets.
+  In the theme editor, open this section's settings and pick your 5 products.
+{%- endcomment -%}
+
+{%- style -%}
+  #sn-root{ --ink:#1B0305; --cream:#FFFCEA; --beige:#F3ECCF; --yellow:#F8DA34;
+            background:var(--cream); color:var(--ink);
+            font-family:'Archivo',system-ui,sans-serif; -webkit-font-smoothing:antialiased; overflow-x:hidden; }
+  #sn-root *{ box-sizing:border-box; }
+  #sn-root img{ max-width:100%; display:block; }
+  #sn-root ::selection{ background:var(--yellow); color:var(--ink); }
+  #sn-root a{ color:inherit; }
+  @keyframes sn-bounce{ 0%,100%{ transform:translateY(0) rotate(-1.5deg);} 25%{ transform:translateY(-9px) rotate(1deg);} 50%{ transform:translateY(0) rotate(1.5deg);} 75%{ transform:translateY(-5px) rotate(-.8deg);} }
+  #sn-root #stack-grid{ display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); }
+  @media(max-width:860px){ #sn-root #stack-grid{ grid-template-columns:repeat(2,minmax(0,1fr)); } }
+  #sn-root .sn-stack{ transition:transform .14s ease, box-shadow .14s ease; text-decoration:none; }
+  #sn-root .sn-stack:hover{ transform:translateY(-4px); box-shadow:7px 9px 0 var(--ink); }
+  #sn-root #usp-grid{ display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); }
+  @media(max-width:980px){ #sn-root #usp-grid{ grid-template-columns:repeat(2,minmax(0,1fr)); } }
+  @media(max-width:520px){ #sn-root #usp-grid{ grid-template-columns:1fr; } }
+  #sn-root #tier-grid{ display:grid; grid-template-columns:1fr 1fr; }
+  @media(max-width:620px){ #sn-root #tier-grid{ grid-template-columns:1fr; } }
+  #sn-root .sn-ghost{ display:flex; flex-direction:column; align-items:center; gap:6px; }
+  @media(max-width:520px){ #sn-root .sn-ghost{ display:none !important; } }
+  #sn-root #rev-strip{ scrollbar-width:thin; scrollbar-color:var(--ink) transparent; }
+  #sn-root #rev-strip::-webkit-scrollbar{ height:9px; }
+  #sn-root #rev-strip::-webkit-scrollbar-thumb{ background:var(--ink); border-radius:99px; }
+  #sn-root .sn-btn{ transition:transform .08s, box-shadow .08s; }
+  #sn-root .sn-btn:hover{ transform:translateY(2px); }
+  @media(prefers-reduced-motion:reduce){ #sn-root *{ animation:none !important; } }
+{%- endstyle -%}
+
+{%- assign variety = section.settings.variety_product -%}
+{%- assign variety_url = variety.url | default: '/products/sneakies-variety-pack' -%}
+
+<div id="sn-root">
+
+  <!-- HERO ILLUSTRATION BAND -->
+  {%- if section.settings.hero_band != blank -%}
+    <div style="width:100%; line-height:0;">
+      <img src="{{ section.settings.hero_band | image_url: width: 2000 }}" alt="The Sneakies squad, fruit and veggie characters peeking over a ledge">
+    </div>
+  {%- else -%}
+    <div style="width:100%; line-height:0;">
+      <img src="{{ 'sn-hero-band.jpg' | asset_url }}" alt="The Sneakies squad">
+    </div>
+  {%- endif -%}
+
+  <!-- LOGO -->
+  <header style="display:flex; flex-direction:column; align-items:center; gap:10px; padding:0 clamp(18px,5vw,40px) clamp(4px,0.8vw,8px); text-align:center; background:var(--cream); position:relative; z-index:3;">
+    <img src="{{ 'sn-logo.jpg' | asset_url }}" alt="Sneakies" style="height:clamp(150px,19vw,240px); width:auto; max-width:100%; margin-top:clamp(-44px,-5.5vw,-24px); mix-blend-mode:multiply;">
+  </header>
+
+  <!-- HERO -->
+  <section style="padding:clamp(2px,0.4vw,5px) clamp(18px,5vw,40px) clamp(32px,5vw,52px);">
+    <div style="max-width:900px; margin:0 auto; text-align:center;">
+      <h1 style="font-family:'Archivo Black',sans-serif; text-transform:uppercase; line-height:.88; letter-spacing:-.015em; font-size:clamp(1.9rem,6vw,4rem); margin:0;">
+        Fruits &amp; Veggies,<br>Undercover.
+      </h1>
+      <p style="font-size:clamp(1rem,2vw,1.3rem); line-height:1.45; opacity:.84; max-width:44ch; margin:clamp(10px,1.5vw,16px) auto 0; font-weight:500;">
+        Single-serve pancake &amp; waffle mix with real ingredients, plus a full serving of fruits &amp; vegetables per bag.
+      </p>
+    </div>
+    <div style="display:flex; justify-content:center; margin:clamp(20px,3vw,32px) auto 0;">
+      <a href="{{ variety_url }}" class="sn-btn" style="text-decoration:none; display:inline-flex; align-items:center; gap:8px; background:var(--yellow); border:2.5px solid var(--ink); border-radius:999px; padding:12px 26px; box-shadow:3px 3px 0 var(--ink); font-family:'Archivo Narrow',sans-serif; font-weight:700; text-transform:uppercase; letter-spacing:.10em; font-size:clamp(11px,1.6vw,14px); color:var(--ink); white-space:nowrap;">
+        ★ Shop the Variety 4-Pack&nbsp;·&nbsp;{% if variety %}{{ variety.price | money }}{% else %}$39.99{% endif %}
+      </a>
+    </div>
+
+    <!-- Four pancake stacks -->
+    <div id="stack-grid" style="gap:clamp(10px,1.6vw,18px); max-width:1060px; margin:clamp(16px,2.5vw,26px) auto 0;">
+      {%- assign fnames = 'Banana Bonanza,Apple Pie Agents,Berry Bandits,Buttermilk Blast' | split: ',' -%}
+      {%- assign fvegs  = 'with carrots,with spinach,with beets,with cauliflower' | split: ',' -%}
+      {%- assign fcols  = '#FBE07A,#BBD06E,#F2ABCB,#B6CDEA' | split: ',' -%}
+      {%- assign fimgs  = 'sn-stack-banana.jpg,sn-stack-apple.jpg,sn-stack-berry.jpg,sn-stack-buttermilk.jpg' | split: ',' -%}
+      {%- assign fprods = section.settings.p_banana | default: section.settings.p_apple -%}
+      {%- for i in (0..3) -%}
+        {%- case i -%}
+          {%- when 0 -%}{%- assign fp = section.settings.p_banana -%}
+          {%- when 1 -%}{%- assign fp = section.settings.p_apple -%}
+          {%- when 2 -%}{%- assign fp = section.settings.p_berry -%}
+          {%- when 3 -%}{%- assign fp = section.settings.p_buttermilk -%}
+        {%- endcase -%}
+        {%- assign fp_url = fp.url | default: '#sn-flavors' -%}
+        <a class="sn-stack" href="{{ fp_url }}" style="border:2.5px solid var(--ink); border-radius:20px; background:#fff; box-shadow:5px 5px 0 var(--ink); overflow:hidden; display:flex; flex-direction:column;">
+          <div style="height:8px; background:{{ fcols[i] }}; border-bottom:2.5px solid var(--ink);"></div>
+          <div style="flex:1; min-height:clamp(210px,27vw,320px); overflow:hidden; display:flex; align-items:center; justify-content:center; padding:10px 12px 2px;">
+            <img src="{{ fimgs[i] | asset_url }}" alt="{{ fnames[i] }} pancake stack" loading="lazy" style="width:100%; height:100%; object-fit:contain;">
+          </div>
+          <div style="padding:8px 14px 14px; text-align:center; background:{{ fcols[i] }}; border-top:2.5px solid var(--ink);">
+            <h3 style="font-family:'Archivo Black',sans-serif; text-transform:uppercase; line-height:1.05; font-size:.98rem; margin:0; min-height:2.05em; display:flex; align-items:center; justify-content:center;">{{ fnames[i] }}</h3>
+            <p style="font-family:'Archivo Narrow',sans-serif; font-weight:700; font-size:11px; text-transform:uppercase; letter-spacing:.06em; color:var(--ink); background:var(--cream); border:2px solid var(--ink); border-radius:999px; padding:4px 13px; box-shadow:2px 2px 0 var(--ink); margin:8px 0 0; display:inline-block;">{{ fvegs[i] }}</p>
+          </div>
+        </a>
+      {%- endfor -%}
+    </div>
+  </section>
+
+  <!-- OFFER + CAPTURE -->
+  <section id="sn-offer" style="position:relative; background:var(--beige); border-top:3px solid var(--ink); padding:clamp(28px,4.5vw,52px) clamp(18px,5vw,40px);">
+    <div style="max-width:620px; margin:0 auto; text-align:center;">
+      <h2 style="font-family:'Archivo Black',sans-serif; text-transform:uppercase; line-height:.9; font-size:clamp(1.9rem,5.4vw,3.2rem); margin:0;">{{ section.settings.offer_headline }}</h2>
+
+      <div id="tier-grid" style="gap:clamp(10px,1.6vw,14px); margin:clamp(16px,2.4vw,22px) 0 0;">
+        <div style="border:2.5px solid var(--ink); border-radius:16px; background:var(--cream); box-shadow:4px 4px 0 var(--ink); overflow:hidden; display:flex; flex-direction:column;">
+          <div style="height:7px; background:var(--yellow); border-bottom:2.5px solid var(--ink);"></div>
+          <div style="padding:clamp(16px,2.8vw,22px) clamp(14px,2.4vw,20px); flex:1; display:flex; flex-direction:column; align-items:center; gap:7px;">
+            <h3 style="font-family:'Archivo Black',sans-serif; text-transform:uppercase; line-height:1; font-size:clamp(1.15rem,2.6vw,1.5rem); margin:0; min-height:2.3em; display:flex; align-items:center;">Free US Shipping</h3>
+            <p style="font-size:13.5px; line-height:1.4; font-weight:600; opacity:.82; margin:0; max-width:26ch;">On every order, shipped fresh to your door.</p>
+          </div>
+        </div>
+        <div style="border:2.5px solid var(--ink); border-radius:16px; background:var(--cream); box-shadow:4px 4px 0 var(--ink); overflow:hidden; display:flex; flex-direction:column;">
+          <div style="height:7px; background:#B6CDEA; border-bottom:2.5px solid var(--ink);"></div>
+          <div style="padding:clamp(16px,2.8vw,22px) clamp(14px,2.4vw,20px); flex:1; display:flex; flex-direction:column; align-items:center; gap:7px;">
+            <h3 style="font-family:'Archivo Black',sans-serif; text-transform:uppercase; line-height:1; font-size:clamp(1.15rem,2.6vw,1.5rem); margin:0; min-height:2.3em; display:flex; align-items:center;">10% Off Your First Order</h3>
+            <p style="font-size:13.5px; line-height:1.4; font-weight:600; opacity:.82; margin:0; max-width:26ch;">Sign up below and we'll send your code.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Primary: add variety pack to cart -->
+      {%- if variety and variety.available -%}
+        <form method="post" action="/cart/add" style="margin:16px auto 0; max-width:420px;">
+          <input type="hidden" name="id" value="{{ variety.selected_or_first_available_variant.id }}">
+          <button type="submit" class="sn-btn" style="width:100%; cursor:pointer; font-family:'Archivo Black',sans-serif; text-transform:uppercase; letter-spacing:.02em; font-size:clamp(.98rem,2.1vw,1.12rem); color:var(--cream); background:var(--ink); border:2.5px solid var(--ink); border-radius:12px; padding:15px 20px; box-shadow:0 5px 0 var(--yellow);">
+            Add the 4-Pack to cart — {{ variety.price | money }}
+          </button>
+        </form>
+      {%- else -%}
+        <a href="{{ variety_url }}" class="sn-btn" style="display:block; margin:16px auto 0; max-width:420px; text-decoration:none; text-align:center; font-family:'Archivo Black',sans-serif; text-transform:uppercase; font-size:1.05rem; color:var(--cream); background:var(--ink); border:2.5px solid var(--ink); border-radius:12px; padding:15px 20px; box-shadow:0 5px 0 var(--yellow);">Shop the Variety 4-Pack</a>
+      {%- endif -%}
+
+      <!-- Email signup for 10% off -->
+      {%- form 'customer', style: 'margin:16px auto 0; max-width:420px;' -%}
+        <input type="hidden" name="contact[tags]" value="newsletter,10off">
+        {%- if form.posted_successfully? -%}
+          <p style="font-weight:700; color:#1B7A2E;">Thanks! Check your inbox for your 10% off code.</p>
+        {%- endif -%}
+        <div style="display:flex; flex-wrap:wrap; gap:8px;">
+          <input type="email" name="contact[email]" required placeholder="you@email.com" aria-label="Email" style="flex:2 1 160px; min-width:140px; font-family:'Archivo',sans-serif; font-size:15px; padding:12px 14px; border:2.5px solid var(--ink); border-radius:11px; background:var(--cream); color:var(--ink); outline:none;">
+          <button type="submit" style="flex:1 1 110px; cursor:pointer; font-family:'Archivo Narrow',sans-serif; font-weight:700; text-transform:uppercase; letter-spacing:.05em; font-size:13px; color:var(--ink); background:var(--yellow); border:2.5px solid var(--ink); border-radius:11px; padding:12px 14px;">Get 10% off</button>
+        </div>
+      {%- endform -%}
+      <p style="font-size:11px; line-height:1.5; opacity:.56; margin:8px 0 0;">One per household. Unsubscribe anytime.</p>
+    </div>
+  </section>
+
+  <!-- OUR SECRET SAUCE -->
+  <section style="position:relative; border-top:3px solid var(--ink); padding:clamp(26px,4vw,48px) clamp(18px,5vw,40px);">
+    <div style="max-width:1100px; margin:0 auto;">
+      <h2 style="font-family:'Archivo Black',sans-serif; text-transform:uppercase; line-height:.9; font-size:clamp(1.9rem,5.4vw,3.2rem); margin:0; text-align:center;">Our Secret Sauce</h2>
+      <p style="font-family:'Archivo Narrow',sans-serif; font-weight:700; text-transform:uppercase; letter-spacing:.09em; font-size:clamp(10.5px,1.1vw,12.5px); opacity:.60; margin:14px auto clamp(24px,3.5vw,40px); max-width:54ch; line-height:1.4; text-align:center;">Why families love our single-serve pancake mixes</p>
+      <div id="usp-grid" style="gap:clamp(14px,2vw,20px);">
+        {%- assign usp_titles = 'Super Convenient|Sneaky Fruits & Veggies|Real Ingredients|Nostalgic Flavors' | split: '|' -%}
+        {%- assign usp_cols = '#FBE07A,#BBD06E,#F2ABCB,#B6CDEA' | split: ',' -%}
+        {%- assign usp_body = 'Single-serve packets that each make 4-5 pancakes or waffles in 5 minutes. No measuring and no stale box sitting in your pantry.|A full serving of real fruits and veggies, snuck into every bag. Perfect for picky eaters and adults alike.|A complete breakfast: whole wheat flour, real buttermilk, real fruits and veggies, sweetened with coconut sugar. No artificial flavors or colors.|Rotate between Banana, Berry, Apple Pie, and Buttermilk pancakes for breakfast! With new flavor drops each month for subscribers.' | split: '|' -%}
+        {%- for i in (0..3) -%}
+        <div style="border:2.5px solid var(--ink); border-radius:20px; overflow:hidden; background:var(--cream); box-shadow:6px 6px 0 var(--ink); display:flex; flex-direction:column;">
+          <div style="height:11px; background:{{ usp_cols[i] }}; border-bottom:2.5px solid var(--ink);"></div>
+          <div style="padding:22px 20px 26px; display:flex; flex-direction:column; gap:16px; align-items:center; text-align:center; flex:1;">
+            <div style="width:100%; min-height:76px; display:flex; align-items:center; justify-content:center; background:{{ usp_cols[i] }}; border:2.5px solid var(--ink); border-radius:14px; padding:10px 16px; box-shadow:3px 3px 0 var(--ink);">
+              <span style="font-family:'Archivo Black',sans-serif; text-transform:uppercase; font-size:clamp(1rem,1.8vw,1.2rem); line-height:1.08;">{{ usp_titles[i] }}</span>
+            </div>
+            <p style="font-size:14px; line-height:1.55; opacity:.84; margin:0; font-weight:500;">{{ usp_body[i] }}</p>
+          </div>
+        </div>
+        {%- endfor -%}
+      </div>
+    </div>
+  </section>
+
+  <!-- MEET THE FLAVORS (carousel) -->
+  <section id="sn-flavors" style="position:relative; border-top:3px solid var(--ink); padding:clamp(40px,6vw,74px) clamp(18px,5vw,40px); overflow:hidden;">
+    <div style="max-width:860px; margin:0 auto; text-align:center;">
+      <h2 style="font-family:'Archivo Black',sans-serif; text-transform:uppercase; line-height:.9; font-size:clamp(1.9rem,5.4vw,3.2rem); margin:0;">Meet the flavors.</h2>
+      <p style="font-family:'Archivo Narrow',sans-serif; font-weight:700; text-transform:uppercase; letter-spacing:.09em; font-size:clamp(10.5px,1.1vw,12.5px); opacity:.60; margin:14px auto 0; max-width:54ch; line-height:1.4;">Four nostalgic flavors with new flavor releases each month for subscribers</p>
+
+      <div style="display:flex; align-items:center; justify-content:center; gap:clamp(8px,1.6vw,16px); margin-top:clamp(22px,3.5vw,36px);">
+        <button class="sn-ghost sn-prev" aria-label="Previous flavor" style="flex:none; width:clamp(66px,10vw,108px); cursor:pointer; background:none; border:none; padding:0;">
+          <div style="position:relative; width:100%;">
+            <img class="sn-ghost-img sn-ghost-prev" src="" alt="" style="width:100%; opacity:.4;">
+            <div style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:40px; height:40px; border-radius:50%; background:rgba(255,252,234,.94); border:2.5px solid var(--ink); display:flex; align-items:center; justify-content:center; box-shadow:2px 2px 0 var(--ink);"><span style="font-family:'Archivo Black',sans-serif; font-size:1.1rem;">←</span></div>
+          </div>
+          <span class="sn-ghost-label-prev" style="font-family:'Archivo Narrow',sans-serif; font-weight:700; text-transform:uppercase; letter-spacing:.07em; font-size:clamp(8px,1.1vw,10.5px); opacity:.5; display:block; margin-top:5px;"></span>
+        </button>
+
+        <div style="flex:1; min-width:0; max-width:clamp(260px,50vw,440px); display:flex; flex-direction:column; align-items:center; gap:clamp(14px,2.2vw,20px);">
+          <div style="line-height:0; width:100%; height:clamp(360px,52vw,500px); display:flex; align-items:center; justify-content:center; animation:sn-bounce 2.8s ease-in-out infinite;">
+            <img class="sn-center-img" src="" alt="" style="max-height:100%; width:auto; object-fit:contain;">
+          </div>
+          <div>
+            <h3 class="sn-name" style="font-family:'Archivo Black',sans-serif; text-transform:uppercase; line-height:1; font-size:clamp(1.2rem,3.5vw,1.7rem); margin:0;"></h3>
+            <div class="sn-veg" style="font-family:'Archivo Narrow',sans-serif; font-weight:700; text-transform:uppercase; letter-spacing:.06em; font-size:12px; color:var(--ink); background:var(--cream); border:2px solid var(--ink); border-radius:999px; padding:4px 13px; box-shadow:2px 2px 0 var(--ink); margin:10px auto 0; display:inline-block;"></div>
+            <div class="sn-callouts" style="display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin-top:15px;"></div>
+            <p class="sn-taste" style="font-size:clamp(13px,2vw,15px); line-height:1.45; font-weight:600; font-style:italic; margin:14px auto 0; max-width:32ch;"></p>
+          </div>
+        </div>
+
+        <button class="sn-ghost sn-next" aria-label="Next flavor" style="flex:none; width:clamp(66px,10vw,108px); cursor:pointer; background:none; border:none; padding:0;">
+          <div style="position:relative; width:100%;">
+            <img class="sn-ghost-img sn-ghost-next" src="" alt="" style="width:100%; opacity:.4;">
+            <div style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:40px; height:40px; border-radius:50%; background:rgba(255,252,234,.94); border:2.5px solid var(--ink); display:flex; align-items:center; justify-content:center; box-shadow:2px 2px 0 var(--ink);"><span style="font-family:'Archivo Black',sans-serif; font-size:1.1rem;">→</span></div>
+          </div>
+          <span class="sn-ghost-label-next" style="font-family:'Archivo Narrow',sans-serif; font-weight:700; text-transform:uppercase; letter-spacing:.07em; font-size:clamp(8px,1.1vw,10.5px); opacity:.5; display:block; margin-top:5px;"></span>
+        </button>
+      </div>
+
+      <div style="display:flex; gap:14px; justify-content:center; align-items:center; margin-top:20px;">
+        <button class="sn-prev" aria-label="Previous flavor" style="width:38px; height:38px; border-radius:50%; cursor:pointer; background:rgba(255,252,234,.92); border:2.5px solid var(--ink); box-shadow:3px 3px 0 var(--ink); font-family:'Archivo Black',sans-serif;">←</button>
+        <div class="sn-dots" style="display:flex; gap:9px; align-items:center;"></div>
+        <button class="sn-next" aria-label="Next flavor" style="width:38px; height:38px; border-radius:50%; cursor:pointer; background:rgba(255,252,234,.92); border:2.5px solid var(--ink); box-shadow:3px 3px 0 var(--ink); font-family:'Archivo Black',sans-serif;">→</button>
+      </div>
+
+      <p style="font-size:12.5px; line-height:1.5; opacity:.68; margin:18px auto 0; max-width:48ch; font-weight:600;">One serving of fruits &amp; veggies in every bag, with no artificial flavors or colors.</p>
+      <div style="margin-top:16px;">
+        <a href="{{ variety_url }}" class="sn-btn" style="display:inline-block; text-decoration:none; cursor:pointer; font-family:'Archivo Black',sans-serif; text-transform:uppercase; letter-spacing:.02em; font-size:.98rem; color:var(--cream); background:var(--ink); border:2.5px solid var(--ink); border-radius:12px; padding:13px 24px; box-shadow:4px 4px 0 var(--yellow);">Shop all flavors</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- REVIEWS -->
+  <section style="position:relative; background:var(--beige); border-top:3px solid var(--ink); padding:clamp(40px,6vw,74px) 0;">
+    <div style="max-width:1140px; margin:0 auto; padding:0 clamp(18px,5vw,40px); text-align:center;">
+      <h2 style="font-family:'Archivo Black',sans-serif; text-transform:uppercase; line-height:.9; font-size:clamp(1.9rem,5.4vw,3.2rem); margin:0;">What families are saying.</h2>
+    </div>
+    <div id="rev-strip" style="display:flex; gap:14px; overflow-x:auto; scroll-snap-type:x mandatory; padding:clamp(20px,2.8vw,28px) clamp(18px,5vw,40px) 10px;">
+      {%- assign rphotos = 'sn-review-1.jpg,sn-review-2.jpg,sn-review-3.jpg,sn-review-4.jpg,sn-review-5.jpg,sn-review-6.jpg,sn-review-7.jpg' | split: ',' -%}
+      {%- assign rq = 'We made sneakies the other day and they were delicious! The apple pie flavor was cozy and reminded us of oatmeal~Kirthi G.|We loved giving this to our daughter for a pancake breakfast, she ate them all and I was thrilled they had vegetables~Ty K.|My two-year old loves these pancakes! I feel great giving them to him because I know they are packed with nutritious ingredients. No more guilt for saying yes to pancakes for dinner!~Catherina W.|These pancakes were amazing!! And so healthy!~Arun G.|Delicious! Loved making these for our friends and family - can not wait to try more.~Richard L.|The whole family loves these pancakes, especially our 3 year old!~Danielle F.|Absolutely delicious. My one year old son loves them. There is nothing better than making a pack of Sneakies on a Sunday morning.~Michael J.|Amazing tasting, nutritious pancakes with great ingredients. We loved all the flavors but Apple Cinnamon was a house favorite.~Raul P.' | split: '|' -%}
+      {%- for i in (0..7) -%}
+        {%- assign pidx = i | modulo: 7 -%}
+        <div style="flex:none; width:240px; scroll-snap-align:start; border:2.5px solid var(--ink); border-radius:18px; overflow:hidden; background:var(--cream); box-shadow:5px 5px 0 var(--ink);">
+          <img src="{{ rphotos[pidx] | asset_url }}" alt="Sneakies pancakes" loading="lazy" style="width:100%; height:100%; object-fit:cover;">
+        </div>
+        {%- assign parts = rq[i] | split: '~' -%}
+        <div style="flex:none; width:290px; scroll-snap-align:start; border:2.5px solid var(--ink); border-radius:18px; background:var(--cream); box-shadow:5px 5px 0 var(--ink); padding:20px 18px; display:flex; flex-direction:column;">
+          <div style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
+            <div style="color:var(--yellow); -webkit-text-stroke:1px var(--ink); font-size:1rem; letter-spacing:2px;">★★★★★</div>
+            <span style="font-family:'Archivo Narrow',sans-serif; font-weight:700; text-transform:uppercase; letter-spacing:.05em; font-size:10px; color:var(--ink); background:#BBD06E; border:1.5px solid var(--ink); border-radius:99px; padding:3px 9px; white-space:nowrap; box-shadow:1px 1px 0 var(--ink);">Verified Buyer</span>
+          </div>
+          <p style="font-size:14.5px; line-height:1.5; font-weight:600; margin:10px 0 0;">“{{ parts[0] }}”</p>
+          <div style="margin-top:auto; padding-top:14px;">
+            <p style="font-family:'Archivo Black',sans-serif; text-transform:uppercase; font-size:12px; margin:0;">{{ parts[1] }}</p>
+          </div>
+        </div>
+      {%- endfor -%}
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer style="border-top:3px solid var(--ink); background:var(--ink); color:var(--cream); padding:clamp(30px,4vw,48px) clamp(18px,5vw,40px); text-align:center;">
+    <img src="{{ 'sn-logo.jpg' | asset_url }}" alt="Sneakies" style="height:70px; width:auto; margin:0 auto; filter:brightness(0) invert(1);">
+    <p style="font-family:'Archivo Narrow',sans-serif; font-weight:700; text-transform:uppercase; letter-spacing:.15em; font-size:12px; opacity:.8; margin:14px 0 0;">Fruits &amp; Veggies, Undercover</p>
+    <div style="margin:16px 0 0; display:flex; gap:18px; justify-content:center; flex-wrap:wrap; font-size:13px;">
+      <a href="{{ variety_url }}" style="color:var(--cream);">Shop</a>
+      <a href="/pages/about" style="color:var(--cream);">About</a>
+      <a href="https://www.instagram.com/sneakiespancakes/" target="_blank" rel="noopener" style="color:var(--cream);">Instagram</a>
+    </div>
+    <p style="font-size:11px; opacity:.5; margin:18px 0 0;">© {{ 'now' | date: '%Y' }} Sneakies. All rights reserved.</p>
+  </footer>
+
+</div>
+
+<script>
+(function(){
+  var root = document.getElementById('sn-root');
+  if(!root) return;
+  var NAMES = ['Banana Bonanza','Apple Pie Agents','Berry Bandits','Buttermilk Blast','Flavor Lab'];
+  var VEG   = ['with carrots','with spinach','with beets','with cauliflower','help us decide'];
+  var TASTE = ['Tastes like banana bread fresh off the griddle.','Tastes like warm apple pie on a fall day.','Tastes like a berry-picking Saturday.','Tastes like the diner classic, only fluffier.','Vote each month on our next flavor'];
+  var CALLOUTS = [['10g protein','½ banana','5 baby carrots'],['10g protein','½ apple','5 spinach leaves'],['10g protein','9 strawberries','17 raspberries'],['13g protein','¼ banana','3 cauliflower florets'],[]];
+  var CCOL = ['#D42B3B','#FDD223','#5F78B2','#76B638','#CED37B'];
+  var CTXT = ['#FFFCEA','#1B0305','#FFFCEA','#FFFCEA','#1B0305'];
+  var IMGS = [
+    {{ 'sn-pkg-banana.png' | asset_url | json }},
+    {{ 'sn-pkg-apple.png' | asset_url | json }},
+    {{ 'sn-pkg-berry.png' | asset_url | json }},
+    {{ 'sn-pkg-buttermilk.png' | asset_url | json }},
+    {{ 'sn-flavor-lab.jpg' | asset_url | json }}
+  ];
+  var idx = 0, N = NAMES.length, timer;
+  var centerImg = root.querySelector('.sn-center-img');
+  var nameEl = root.querySelector('.sn-name'), vegEl = root.querySelector('.sn-veg');
+  var coEl = root.querySelector('.sn-callouts'), tasteEl = root.querySelector('.sn-taste');
+  var ghostPrev = root.querySelector('.sn-ghost-prev'), ghostNext = root.querySelector('.sn-ghost-next');
+  var lblPrev = root.querySelector('.sn-ghost-label-prev'), lblNext = root.querySelector('.sn-ghost-label-next');
+  var dotsWrap = root.querySelector('.sn-dots');
+  for(var d=0; d<N; d++){ (function(k){ var b=document.createElement('button'); b.setAttribute('aria-label','Flavor '+(k+1));
+    b.style.cssText='width:11px;height:11px;border-radius:50%;cursor:pointer;border:2px solid #1B0305;background:#FFFCEA;padding:0;';
+    b.addEventListener('click',function(){ reset(); idx=k; render(); }); dotsWrap.appendChild(b); })(d); }
+  var dots = dotsWrap.querySelectorAll('button');
+  function render(){
+    centerImg.src = IMGS[idx]; centerImg.alt = NAMES[idx];
+    nameEl.textContent = NAMES[idx]; vegEl.textContent = VEG[idx]; tasteEl.textContent = TASTE[idx];
+    coEl.innerHTML='';
+    CALLOUTS[idx].forEach(function(c){ var s=document.createElement('span');
+      s.textContent=c; s.style.cssText='font-family:Archivo Narrow,sans-serif;font-weight:700;text-transform:uppercase;letter-spacing:.04em;font-size:11px;padding:5px 11px;border-radius:999px;border:2px solid #1B0305;box-shadow:2px 2px 0 #1B0305;background:'+CCOL[idx]+';color:'+CTXT[idx]+';';
+      coEl.appendChild(s); });
+    var p=(idx-1+N)%N, n=(idx+1)%N;
+    ghostPrev.src=IMGS[p]; ghostNext.src=IMGS[n];
+    lblPrev.textContent=NAMES[p]; lblNext.textContent=NAMES[n];
+    dots.forEach(function(dot,k){ dot.style.background = k===idx ? '#1B0305' : '#FFFCEA'; dot.style.width = k===idx?'26px':'11px'; dot.style.borderRadius = k===idx?'999px':'50%'; });
+  }
+  function next(){ idx=(idx+1)%N; render(); }
+  function prev(){ idx=(idx-1+N)%N; render(); }
+  function reset(){ clearInterval(timer); timer=setInterval(next,4500); }
+  root.querySelectorAll('.sn-next').forEach(function(b){ b.addEventListener('click',function(){ reset(); next(); }); });
+  root.querySelectorAll('.sn-prev').forEach(function(b){ b.addEventListener('click',function(){ reset(); prev(); }); });
+  render(); timer=setInterval(next,4500);
+
+  // Auto-scroll reviews
+  var strip=document.getElementById('rev-strip');
+  if(strip && !(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches)){
+    strip.style.scrollSnapType='none'; var paused=false;
+    strip.addEventListener('mouseenter',function(){paused=true;}); strip.addEventListener('mouseleave',function(){paused=false;});
+    strip.addEventListener('pointerdown',function(){paused=true;}); window.addEventListener('pointerup',function(){paused=false;});
+    function step(){ if(!paused){ var max=strip.scrollWidth-strip.clientWidth; if(max>4){ strip.scrollLeft+=0.7; if(strip.scrollLeft>=max-1) strip.scrollLeft=0; } } requestAnimationFrame(step); }
+    requestAnimationFrame(step);
+  }
+})();
+</script>
+
+{% schema %}
+{
+  "name": "Sneakies Landing",
+  "settings": [
+    { "type": "header", "content": "Products (link the cards & buttons)" },
+    { "type": "product", "id": "variety_product", "label": "Variety 4-Pack (main buy button)" },
+    { "type": "product", "id": "p_banana", "label": "Banana Bonanza product" },
+    { "type": "product", "id": "p_apple", "label": "Apple Pie Agents product" },
+    { "type": "product", "id": "p_berry", "label": "Berry Bandits product" },
+    { "type": "product", "id": "p_buttermilk", "label": "Buttermilk Blast product" },
+    { "type": "header", "content": "Content" },
+    { "type": "text", "id": "offer_headline", "label": "Offer headline", "default": "Get 10% off your first order" },
+    { "type": "image_picker", "id": "hero_band", "label": "Hero band image (optional override)" }
+  ],
+  "presets": [ { "name": "Sneakies Landing" } ]
+}
+{% endschema %}
