@@ -93,17 +93,17 @@
   <!-- HERO ILLUSTRATION BAND -->
   {%- if section.settings.hero_band != blank -%}
     <div style="width:100%; line-height:0;">
-      <img src="{{ section.settings.hero_band | image_url: width: 2000 }}" alt="The Sneakies squad, fruit and veggie characters peeking over a ledge" width="{{ section.settings.hero_band.width }}" height="{{ section.settings.hero_band.height }}">
+      <img src="{{ section.settings.hero_band | image_url: width: 3200 }}" alt="The Sneakies squad, fruit and veggie characters peeking over a ledge" width="{{ section.settings.hero_band.width }}" height="{{ section.settings.hero_band.height }}" style="width:100%; height:auto; display:block;">
     </div>
   {%- else -%}
     <div style="width:100%; line-height:0;">
-      <img src="{{ 'sn-hero-band.jpg' | asset_url }}" alt="The Sneakies squad, fruit and veggie characters peeking over a ledge">
+      <img src="{{ 'sn-hero.png' | asset_url }}" alt="The Sneakies squad, fruit and veggie characters peeking over a ledge" width="3024" height="942" style="width:100%; height:auto; display:block;">
     </div>
   {%- endif -%}
 
   <!-- LOGO -->
   <header style="display:flex; flex-direction:column; align-items:center; gap:10px; padding:0 clamp(18px,5vw,40px) clamp(4px,0.8vw,8px); text-align:center; background:var(--cream); position:relative; z-index:3;">
-    <img src="{{ 'sn-logo.jpg' | asset_url }}" alt="Sneakies" style="height:clamp(150px,19vw,240px); width:auto; max-width:100%; margin-top:clamp(-44px,-5.5vw,-24px); mix-blend-mode:multiply;">
+    <img src="{{ 'sn-logo.jpg' | asset_url }}" alt="Sneakies" style="height:clamp(150px,19vw,240px); width:auto; max-width:100%; margin-top:clamp(6px,1.5vw,16px); mix-blend-mode:multiply;">
   </header>
 
   <!-- HERO -->
