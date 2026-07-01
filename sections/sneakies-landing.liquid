@@ -13,11 +13,16 @@
 {%- endcomment -%}
 
 {%- style -%}
-  #sn-root{ --ink:#1B0305; --cream:#FFFCEA; --beige:#F3ECCF; --yellow:#F8DA34;
+  #sn-root{ --ink:#21050A; --cream:#FFF9DE; --beige:#F0E6C2; --yellow:#FBD01A;
             background:var(--cream); color:var(--ink);
             font-family:'Archivo',system-ui,sans-serif; -webkit-font-smoothing:antialiased; overflow-x:hidden; }
   #sn-root *{ box-sizing:border-box; }
-  #sn-root img{ max-width:100%; display:block; }
+  /* Centralized colour-grading pass: a small, uniform vibrance/contrast lift on every
+     image (illustrations, packaging renders, review photos) so artwork reads richer
+     and crisper without touching individual section markup or brand hex values. This
+     is scoped to <img> rather than #sn-root itself so it can't turn #sn-root into a
+     containing block for descendant position:fixed elements (the sticky CTA). */
+  #sn-root img{ max-width:100%; display:block; filter:saturate(1.08) contrast(1.05) brightness(1.02); }
   #sn-root ::selection{ background:var(--yellow); color:var(--ink); }
   #sn-root a{ color:inherit; }
   #sn-root input:focus-visible, #sn-root button:focus-visible, #sn-root a:focus-visible{ outline:3px solid #5F7AAF; outline-offset:2px; }
@@ -194,8 +199,8 @@
           <p style="font-family:'Archivo Narrow',sans-serif; font-weight:700; text-transform:uppercase; letter-spacing:.05em; font-size:10.5px; color:var(--ink); opacity:.68; margin:0 0 5px;">
             {%- if sold_out -%}Fully claimed · join the list for 50% off at launch.{%- else -%}{{ spots_claimed }} of {{ free_boxes }} free sample boxes claimed{%- endif -%}
           </p>
-          <div style="height:9px; border:2.5px solid var(--ink); border-radius:999px; background:rgba(27,3,5,.06); overflow:hidden;">
-            <div style="height:100%; width:{{ progress_pct }}%; background:repeating-linear-gradient(45deg,#1B0305,#1B0305 8px,#3a1416 8px,#3a1416 16px); {% if progress_pct > 0 %}border-right:2.5px solid var(--ink);{% endif %} transition:width .5s ease;"></div>
+          <div style="height:9px; border:2.5px solid var(--ink); border-radius:999px; background:rgba(33,5,10,.06); overflow:hidden;">
+            <div style="height:100%; width:{{ progress_pct }}%; background:repeating-linear-gradient(45deg,#21050A,#21050A 8px,#3a1416 8px,#3a1416 16px); {% if progress_pct > 0 %}border-right:2.5px solid var(--ink);{% endif %} transition:width .5s ease;"></div>
           </div>
         </div>
         <p style="font-size:11px; line-height:1.5; opacity:.56; margin:8px 0 0;">One per household. Unsubscribe anytime.</p>
@@ -237,7 +242,7 @@
         <button class="sn-ghost sn-prev" aria-label="Previous flavor" style="flex:none; width:clamp(66px,10vw,108px); cursor:pointer; background:none; border:none; padding:0;">
           <div style="position:relative; width:100%; padding:8%;">
             <img class="sn-ghost-img sn-ghost-prev" src="" alt="" style="width:100%; height:auto; object-fit:contain; opacity:.4; transition:opacity .2s;">
-            <div style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:40px; height:40px; border-radius:50%; background:rgba(255,252,234,.94); border:2.5px solid var(--ink); display:flex; align-items:center; justify-content:center; box-shadow:2px 2px 0 var(--ink);"><span style="font-family:'Archivo Black',sans-serif; font-size:1.1rem;">←</span></div>
+            <div style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:40px; height:40px; border-radius:50%; background:rgba(255,249,222,.94); border:2.5px solid var(--ink); display:flex; align-items:center; justify-content:center; box-shadow:2px 2px 0 var(--ink);"><span style="font-family:'Archivo Black',sans-serif; font-size:1.1rem;">←</span></div>
           </div>
           <span class="sn-ghost-label-prev" style="font-family:'Archivo Narrow',sans-serif; font-weight:700; text-transform:uppercase; letter-spacing:.07em; font-size:clamp(8px,1.1vw,10.5px); opacity:.5; display:block; margin-top:5px;"></span>
         </button>
@@ -257,16 +262,16 @@
         <button class="sn-ghost sn-next" aria-label="Next flavor" style="flex:none; width:clamp(66px,10vw,108px); cursor:pointer; background:none; border:none; padding:0;">
           <div style="position:relative; width:100%; padding:8%;">
             <img class="sn-ghost-img sn-ghost-next" src="" alt="" style="width:100%; height:auto; object-fit:contain; opacity:.4; transition:opacity .2s;">
-            <div style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:40px; height:40px; border-radius:50%; background:rgba(255,252,234,.94); border:2.5px solid var(--ink); display:flex; align-items:center; justify-content:center; box-shadow:2px 2px 0 var(--ink);"><span style="font-family:'Archivo Black',sans-serif; font-size:1.1rem;">→</span></div>
+            <div style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:40px; height:40px; border-radius:50%; background:rgba(255,249,222,.94); border:2.5px solid var(--ink); display:flex; align-items:center; justify-content:center; box-shadow:2px 2px 0 var(--ink);"><span style="font-family:'Archivo Black',sans-serif; font-size:1.1rem;">→</span></div>
           </div>
           <span class="sn-ghost-label-next" style="font-family:'Archivo Narrow',sans-serif; font-weight:700; text-transform:uppercase; letter-spacing:.07em; font-size:clamp(8px,1.1vw,10.5px); opacity:.5; display:block; margin-top:5px;"></span>
         </button>
       </div>
 
       <div style="display:flex; gap:14px; justify-content:center; align-items:center; margin-top:20px;">
-        <button class="sn-arrow sn-prev" aria-label="Previous flavor" style="width:38px; height:38px; border-radius:50%; cursor:pointer; background:rgba(255,252,234,.92); border:2.5px solid var(--ink); box-shadow:3px 3px 0 var(--ink); font-family:'Archivo Black',sans-serif;">←</button>
+        <button class="sn-arrow sn-prev" aria-label="Previous flavor" style="width:38px; height:38px; border-radius:50%; cursor:pointer; background:rgba(255,249,222,.92); border:2.5px solid var(--ink); box-shadow:3px 3px 0 var(--ink); font-family:'Archivo Black',sans-serif;">←</button>
         <div class="sn-dots" style="display:flex; gap:9px; align-items:center;"></div>
-        <button class="sn-arrow sn-next" aria-label="Next flavor" style="width:38px; height:38px; border-radius:50%; cursor:pointer; background:rgba(255,252,234,.92); border:2.5px solid var(--ink); box-shadow:3px 3px 0 var(--ink); font-family:'Archivo Black',sans-serif;">→</button>
+        <button class="sn-arrow sn-next" aria-label="Next flavor" style="width:38px; height:38px; border-radius:50%; cursor:pointer; background:rgba(255,249,222,.92); border:2.5px solid var(--ink); box-shadow:3px 3px 0 var(--ink); font-family:'Archivo Black',sans-serif;">→</button>
       </div>
 
       <p style="font-size:12.5px; line-height:1.5; opacity:.68; margin:18px auto 0; max-width:48ch; font-weight:600;">One serving of fruits &amp; veggies in every bag, with no artificial flavors or colors.</p>
@@ -312,7 +317,7 @@
   <!-- FOOTER -->
   <footer style="background:var(--ink); color:var(--cream); padding:clamp(28px,4.5vw,42px) clamp(18px,5vw,40px);">
     <div style="max-width:1140px; margin:0 auto; display:flex; flex-wrap:wrap; gap:16px 24px; align-items:center; justify-content:space-between;">
-      <img src="{{ 'sn-logo.jpg' | asset_url }}" alt="Sneakies" style="height:30px; width:auto; filter:brightness(0) invert(1);">
+      <img src="{{ 'sn-logo.png' | asset_url }}" alt="Sneakies" style="height:30px; width:auto; filter:brightness(0) invert(1);">
       <div style="font-family:'Archivo Narrow',sans-serif; font-weight:700; text-transform:uppercase; letter-spacing:.1em; font-size:11.5px; opacity:.82;">Fruits &amp; Veggies, Undercover · Sample boxes ship {{ ship_date }}</div>
       <a href="mailto:{{ contact_email }}" style="font-size:12.5px; color:var(--cream); opacity:.68; text-decoration:none;">{{ contact_user }}<span>@</span>{{ contact_domain_parts | join: '<span>.</span>' }}</a>
     </div>
@@ -320,7 +325,7 @@
 
   <!-- STICKY CTA -->
   <div id="sn-sticky-cta">
-    <button type="button" data-sn-scroll-offer style="cursor:pointer; font-family:'Archivo Black',sans-serif; text-transform:uppercase; letter-spacing:.03em; font-size:1.02rem; color:var(--ink); background:rgba(255,252,234,0.14); -webkit-backdrop-filter:blur(20px) saturate(180%); backdrop-filter:blur(20px) saturate(180%); border:2px solid rgba(27,3,5,0.28); border-radius:999px; padding:14px 34px; box-shadow:0 4px 24px rgba(27,3,5,0.12);">
+    <button type="button" data-sn-scroll-offer style="cursor:pointer; font-family:'Archivo Black',sans-serif; text-transform:uppercase; letter-spacing:.03em; font-size:1.02rem; color:var(--ink); background:rgba(255,249,222,0.14); -webkit-backdrop-filter:blur(20px) saturate(180%); backdrop-filter:blur(20px) saturate(180%); border:2px solid rgba(33,5,10,0.28); border-radius:999px; padding:14px 34px; box-shadow:0 4px 24px rgba(33,5,10,0.12);">
       Claim your offer →
     </button>
   </div>
@@ -329,8 +334,8 @@
 
 <!-- POST-SUBMIT POPUP -->
 {%- if form.posted_successfully? -%}
-<div data-sn-popup style="position:fixed; inset:0; z-index:80; background:rgba(27,3,5,.6); display:flex; align-items:flex-start; justify-content:center; overflow-y:auto; padding:24px 16px;">
-  <div role="dialog" aria-modal="true" aria-label="You're on the Sneakies waitlist" style="background:var(--cream); border:3px solid var(--ink); border-radius:24px; max-width:480px; width:100%; box-shadow:0 18px 0 rgba(27,3,5,.3); margin:auto; overflow:hidden; animation:sn-pop .3s ease both;">
+<div data-sn-popup style="position:fixed; inset:0; z-index:80; background:rgba(33,5,10,.6); display:flex; align-items:flex-start; justify-content:center; overflow-y:auto; padding:24px 16px;">
+  <div role="dialog" aria-modal="true" aria-label="You're on the Sneakies waitlist" style="background:var(--cream); border:3px solid var(--ink); border-radius:24px; max-width:480px; width:100%; box-shadow:0 18px 0 rgba(33,5,10,.3); margin:auto; overflow:hidden; animation:sn-pop .3s ease both;">
     <div style="background:var(--ink); color:var(--cream); padding:22px 26px 18px; text-align:center; position:relative;">
       <button type="button" data-sn-popup-close aria-label="Close" style="position:absolute; top:13px; right:13px; cursor:pointer; width:36px; height:36px; border-radius:50%; border:2.5px solid var(--cream); background:transparent; color:var(--cream); font-family:'Archivo Black',sans-serif; font-size:14px; line-height:1;">✕</button>
       <h2 style="font-family:'Archivo Black',sans-serif; text-transform:uppercase; line-height:.92; font-size:clamp(1.9rem,7vw,2.5rem); margin:0;">Congrats, You're In!</h2>
@@ -370,7 +375,7 @@
   var TASTE = ['Tastes like banana bread fresh off the griddle.','Tastes like warm apple pie on a fall day.','Tastes like a berry-picking Saturday.','Tastes like the diner classic, only fluffier.','Vote each month on our next flavor'];
   var CALLOUTS = [['10g protein','½ banana','5 baby carrots'],['10g protein','½ apple','5 spinach leaves'],['10g protein','9 strawberries','17 raspberries'],['13g protein','¼ banana','3 cauliflower florets'],[]];
   var CCOL = ['#D42B3B','#FDD223','#5F78B2','#76B638','#CED37B'];
-  var CTXT = ['#FFFCEA','#1B0305','#FFFCEA','#FFFCEA','#1B0305'];
+  var CTXT = ['#FFF9DE','#21050A','#FFF9DE','#FFF9DE','#21050A'];
   var LIGHT = ['#FBE07A','#BBD06E','#F2ABCB','#B6CDEA','#CED37B'];
   // Transparent packaging renders, one per index of NAMES/VEG/TASTE/CALLOUTS above:
   // 0 Banana Bonanza, 1 Apple Pie Agents, 2 Berry Bandits, 3 Buttermilk Blast, 4 Flavor Lab.
@@ -390,19 +395,19 @@
   var lblPrev = root.querySelector('.sn-ghost-label-prev'), lblNext = root.querySelector('.sn-ghost-label-next');
   var dotsWrap = root.querySelector('.sn-dots');
   for(var d=0; d<N; d++){ (function(k){ var b=document.createElement('button'); b.type='button'; b.setAttribute('aria-label','Go to '+NAMES[k]);
-    b.style.cssText='width:12px;height:12px;border-radius:50%;cursor:pointer;border:2.5px solid #1B0305;background:#FFFCEA;padding:0;transition:transform .18s ease, background .18s ease;';
+    b.style.cssText='width:12px;height:12px;border-radius:50%;cursor:pointer;border:2.5px solid #21050A;background:#FFF9DE;padding:0;transition:transform .18s ease, background .18s ease;';
     b.addEventListener('click',function(){ reset(); idx=k; render(); }); dotsWrap.appendChild(b); })(d); }
   var dots = dotsWrap.querySelectorAll('button');
   function render(){
     centerImg.src = IMGS[idx]; centerImg.alt = NAMES[idx] + ' packaging';
     nameEl.textContent = NAMES[idx]; vegEl.textContent = VEG[idx]; tasteEl.textContent = TASTE[idx];
-    vegEl.style.background = LIGHT[idx]; vegEl.style.color = '#1B0305';
+    vegEl.style.background = LIGHT[idx]; vegEl.style.color = '#21050A';
     activeCard.style.background = (window.CSS && CSS.supports && CSS.supports('background', 'color-mix(in srgb, red 55%, blue)'))
-      ? 'color-mix(in srgb, ' + LIGHT[idx] + ' 55%, #FFFCEA)'
+      ? 'color-mix(in srgb, ' + LIGHT[idx] + ' 55%, #FFF9DE)'
       : LIGHT[idx];
     coEl.innerHTML='';
     CALLOUTS[idx].forEach(function(c){ var s=document.createElement('span');
-      s.textContent=c; s.style.cssText='display:inline-block;font-family:Archivo Narrow,sans-serif;font-weight:700;font-style:italic;text-transform:uppercase;letter-spacing:.02em;font-size:13px;padding:7px 14px;border-radius:999px;border:2.5px solid #1B0305;box-shadow:2px 2px 0 #1B0305;white-space:nowrap;background:'+CCOL[idx]+';color:'+CTXT[idx]+';';
+      s.textContent=c; s.style.cssText='display:inline-block;font-family:Archivo Narrow,sans-serif;font-weight:700;font-style:italic;text-transform:uppercase;letter-spacing:.02em;font-size:13px;padding:7px 14px;border-radius:999px;border:2.5px solid #21050A;box-shadow:2px 2px 0 #21050A;white-space:nowrap;background:'+CCOL[idx]+';color:'+CTXT[idx]+';';
       coEl.appendChild(s); });
     var p=(idx-1+N)%N, n=(idx+1)%N;
     ghostPrev.src=IMGS[p]; ghostPrev.alt=''; ghostNext.src=IMGS[n]; ghostNext.alt='';
@@ -411,9 +416,9 @@
     root.querySelector('.sn-ghost.sn-next').setAttribute('aria-label','Next: '+NAMES[n]);
     dots.forEach(function(dot,k){
       var active = k===idx;
-      dot.style.background = active ? LIGHT[k] : '#FFFCEA';
+      dot.style.background = active ? LIGHT[k] : '#FFF9DE';
       dot.style.transform = active ? 'scale(1.3)' : 'none';
-      dot.style.boxShadow = active ? '2px 2px 0 #1B0305' : 'none';
+      dot.style.boxShadow = active ? '2px 2px 0 #21050A' : 'none';
     });
   }
   function next(){ idx=(idx+1)%N; render(); }
