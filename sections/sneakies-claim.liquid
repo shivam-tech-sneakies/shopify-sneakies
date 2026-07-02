@@ -120,27 +120,31 @@
   .sn-claim-box-item img{ width:100%; height:100%; object-fit:contain; }
 
   /* Address form (Address step) */
-  .sn-claim-address{ padding:clamp(10px,2vw,20px) clamp(18px,5vw,40px) clamp(48px,6vw,72px); }
-  .sn-claim-address-intro{ max-width:1180px; margin:0 auto; text-align:center; }
-  .sn-claim-address-grid{ max-width:1180px; margin:clamp(24px,3.4vw,34px) auto 0; display:grid; grid-template-columns:1fr 340px; gap:clamp(20px,3vw,32px); align-items:start; }
-  @media(max-width:860px){ .sn-claim-address-grid{ grid-template-columns:1fr; } }
-  .sn-claim-form{ display:flex; flex-direction:column; gap:clamp(14px,2vw,18px); }
-  .sn-claim-field-row{ display:grid; grid-template-columns:1fr 1fr; gap:clamp(12px,1.8vw,18px); }
+  .sn-claim-address{ padding:clamp(24px,4vw,44px) clamp(18px,5vw,40px) clamp(56px,7vw,84px); }
+  .sn-claim-address-intro{ max-width:1400px; margin:0 auto; text-align:center; }
+  .sn-claim-address-grid{ max-width:1400px; margin:clamp(32px,4.4vw,48px) auto 0; display:grid; grid-template-columns:1fr 360px; gap:clamp(28px,3.6vw,44px); align-items:start; }
+  @media(max-width:960px){ .sn-claim-address-grid{ grid-template-columns:1fr; } }
+  /* The form widens/breathes more here than the base .sn-claim-card default —
+     scoped so the Claim step's card (which also uses .sn-claim-card) is untouched. */
+  .sn-claim-address-grid .sn-claim-form{ padding:clamp(26px,3.2vw,38px); }
+  .sn-claim-form{ display:flex; flex-direction:column; gap:clamp(20px,2.6vw,26px); }
+  .sn-claim-field-row{ display:grid; grid-template-columns:1fr 1fr; gap:clamp(16px,2.2vw,24px); }
   .sn-claim-field-row--4{ grid-template-columns:1fr 1fr 1fr 1fr; }
   @media(max-width:620px){ .sn-claim-field-row, .sn-claim-field-row--4{ grid-template-columns:1fr 1fr; } }
-  .sn-claim-field{ display:flex; flex-direction:column; gap:6px; }
+  .sn-claim-field{ display:flex; flex-direction:column; gap:8px; }
   .sn-claim-field label{ font-family:'Archivo Narrow',sans-serif; font-weight:700; text-transform:uppercase; letter-spacing:.06em; font-size:11px; opacity:.62; }
-  .sn-claim-input{ font-family:'Archivo',sans-serif; font-size:15px; padding:12px 14px; border:1.5px solid rgba(33,5,10,.3); border-radius:11px; background:var(--cream); color:var(--ink); outline:none; width:100%; transition:border-color .15s ease; }
+  .sn-claim-input{ font-family:'Archivo',sans-serif; font-size:15px; padding:16px; border:2px solid rgba(33,5,10,.3); border-radius:12px; background:var(--cream); color:var(--ink); outline:none; width:100%; transition:border-color .15s ease; }
   .sn-claim-input::placeholder{ color:rgba(33,5,10,.35); }
   .sn-claim-input:focus{ border-color:var(--ink); }
   .sn-claim-input.has-error{ border-color:var(--claim-pink); }
   .sn-claim-error{ display:none; color:var(--claim-pink); font-size:11.5px; font-weight:600; }
   .sn-claim-error.is-visible{ display:block; }
+  .sn-claim-address-grid .sn-claim-cta--full{ margin-top:14px; }
   .sn-claim-address-summary{ position:sticky; top:20px; }
   /* Condensed order-summary card is scoped narrower/tighter here rather than
      duplicating .sn-claim-card — the Claim step's full-size card is untouched. */
-  .sn-claim-address-summary .sn-claim-card{ max-width:340px; padding:clamp(16px,2vw,20px); }
-  .sn-claim-address-summary .sn-claim-card-row{ padding:11px 0; }
+  .sn-claim-address-summary .sn-claim-card{ max-width:360px; padding:clamp(20px,2.4vw,26px); }
+  .sn-claim-address-summary .sn-claim-card-row{ padding:13px 0; }
 
   /* Confirmation + 50% off fallback (share the same centered layout) */
   .sn-claim-confirm{ max-width:640px; margin:0 auto; padding:clamp(30px,5vw,56px) clamp(18px,5vw,40px) clamp(48px,6vw,72px); text-align:center; }
