@@ -396,6 +396,29 @@
     </div>
   </section>
 
+  <!-- FOUNDER STORY -->
+  <section style="position:relative; border-top:3px solid var(--ink); padding:clamp(40px,6vw,74px) clamp(18px,5vw,40px);">
+    <div id="founder-grid" style="max-width:1140px; margin:0 auto;">
+      <div style="border:2.5px solid var(--ink); border-radius:20px; overflow:hidden; box-shadow:6px 6px 0 var(--ink); background:var(--beige); aspect-ratio:4/3;">
+        {%- if section.settings.founder_image != blank -%}
+          <img src="{{ section.settings.founder_image | image_url: width: 1200 }}" alt="{{ section.settings.founder_image.alt | default: founder_name }}" width="{{ section.settings.founder_image.width }}" height="{{ section.settings.founder_image.height }}" loading="lazy" style="width:100%; height:100%; object-fit:cover;">
+        {%- else -%}
+          <div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; font-family:'Archivo Narrow',sans-serif; font-weight:700; text-transform:uppercase; letter-spacing:.06em; font-size:12px; opacity:.5; text-align:center; padding:20px;">Add a founder photo in the Theme Editor</div>
+        {%- endif -%}
+      </div>
+
+      <div>
+        <p style="font-family:'Archivo Narrow',sans-serif; font-weight:700; text-transform:uppercase; letter-spacing:.09em; font-size:clamp(10.5px,1.1vw,12.5px); opacity:.60; margin:0; line-height:1.4;">{{ founder_eyebrow }}</p>
+        <h2 style="font-family:'Archivo Black',sans-serif; text-transform:uppercase; line-height:.95; font-size:clamp(1.6rem,3.6vw,2.5rem); margin:12px 0 0;">{{ founder_heading }}</h2>
+        <div class="sn-founder-copy" style="font-size:clamp(14.5px,1.6vw,16.5px); line-height:1.6; font-weight:500; opacity:.86; margin-top:clamp(14px,2vw,18px);">
+          {{ founder_story }}
+        </div>
+        <p style="font-family:'Archivo Narrow',cursive,sans-serif; font-style:italic; font-weight:700; font-size:clamp(1.4rem,2.6vw,1.8rem); margin:clamp(18px,2.5vw,24px) 0 0;">{{ founder_name }}</p>
+        <p style="font-family:'Archivo Narrow',sans-serif; font-weight:700; text-transform:uppercase; letter-spacing:.07em; font-size:11.5px; opacity:.6; margin:4px 0 0;">{{ founder_title }}</p>
+      </div>
+    </div>
+  </section>
+
   <!-- FOOTER -->
   <footer style="background:var(--ink); color:var(--cream); padding:clamp(28px,4.5vw,42px) clamp(18px,5vw,40px);">
     <div style="max-width:1140px; margin:0 auto; display:flex; flex-wrap:wrap; gap:16px 24px; align-items:center; justify-content:space-between;">
@@ -697,7 +720,14 @@
     { "type": "text", "id": "contact_email", "label": "Contact email", "default": "hello@eatsneakies.com" },
     { "type": "url", "id": "whatsapp_invite_url", "label": "\"Sneaky Parents Club\" WhatsApp invite link" },
     { "type": "url", "id": "share_url", "label": "Waitlist share link (defaults to store URL)" },
-    { "type": "image_picker", "id": "hero_band", "label": "Hero band image (optional override)" }
+    { "type": "image_picker", "id": "hero_band", "label": "Hero band image (optional override)" },
+    { "type": "header", "content": "Founder story" },
+    { "type": "image_picker", "id": "founder_image", "label": "Founder photo" },
+    { "type": "text", "id": "founder_eyebrow", "label": "Eyebrow", "default": "Sneakies by parents, for parents" },
+    { "type": "text", "id": "founder_heading", "label": "Heading", "default": "From our kitchen to your breakfast table" },
+    { "type": "richtext", "id": "founder_story", "label": "Story", "default": "<p>&#8220;When my daughter was little, she was a serious picky eater. Mealtimes could be hard, so like a lot of parents, we found little ways to sneak veggies into the foods she already loved.</p><p>Sunday pancakes were our family ritual. One morning, I mixed beets into her favorite berry pancakes. She loved them, asked for more, and that stack became the first version of Sneakies.</p><p>We still make Sneakies with the same rule I had in my own kitchen: real ingredients, fruits and veggies undercover, and nothing I wouldn&#8217;t feel good feeding my own family.&#8221;</p>" },
+    { "type": "text", "id": "founder_name", "label": "Founder name", "default": "Arun Gomatam" },
+    { "type": "text", "id": "founder_title", "label": "Founder designation", "default": "Dad & Founder of Sneakies" }
   ],
   "presets": [ { "name": "Sneakies Landing" } ]
 }
