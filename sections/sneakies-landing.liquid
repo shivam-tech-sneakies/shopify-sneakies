@@ -42,6 +42,22 @@
   #sn-root .sn-flip-scene.is-flipped .sn-flip-inner{ transform:rotateY(180deg); }
   #sn-root .sn-flip-face{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; backface-visibility:hidden; -webkit-backface-visibility:hidden; }
   #sn-root .sn-flip-back{ transform:rotateY(180deg); padding:8%; }
+  /* "Meet the flavors" active-card flip: click-triggered (front card ↔ ingredients),
+     deliberately separate from the hover/tap image flip above so mousing over the
+     card's own text content never accidentally flips it. Reuses the same perspective /
+     preserve-3d / backface-visibility / rotateY(180deg) technique and the shared
+     .sn-flip-face token above; only the trigger (click vs hover) and sizing differ. */
+  #sn-root .sn-flavor-flip-scene{ position:relative; perspective:1000px; }
+  #sn-root .sn-flavor-flip-inner{ position:relative; width:100%; min-height:clamp(230px,32vw,310px); transform-style:preserve-3d; -webkit-transform-style:preserve-3d; transition:transform .5s ease-in-out; will-change:transform; }
+  #sn-root .sn-flavor-flip-scene.is-flipped .sn-flavor-flip-inner{ transform:rotateY(180deg); }
+  #sn-root .sn-flip-face.sn-flavor-flip-face{ align-items:stretch; }
+  #sn-root .sn-flavor-flip-back{ transform:rotateY(180deg); }
+  #sn-root .sn-flip-trigger{ display:none; align-items:center; gap:5px; margin:0 0 8px; align-self:flex-end; background:none; border:none; cursor:pointer; padding:2px; font-family:'Archivo Narrow',cursive,sans-serif; font-style:italic; font-weight:700; font-size:clamp(12.5px,1.8vw,15px); color:var(--ink); text-decoration:underline; text-underline-offset:3px; }
+  #sn-root .sn-flip-trigger:hover{ opacity:.72; }
+  #sn-root .sn-back-content{ width:100%; height:100%; box-sizing:border-box; display:flex; flex-direction:column; align-items:center; position:relative; }
+  #sn-root .sn-flip-close{ position:absolute; top:10px; right:10px; width:32px; height:32px; border-radius:50%; border:2.5px solid var(--ink); background:var(--cream); color:var(--ink); cursor:pointer; font-family:'Archivo Black',sans-serif; font-size:14px; line-height:1; display:flex; align-items:center; justify-content:center; }
+  #sn-root .sn-back-btn{ margin-top:auto; cursor:pointer; font-family:'Archivo Black',sans-serif; text-transform:uppercase; letter-spacing:.02em; font-size:.82rem; color:var(--ink); background:var(--cream); border:2.5px solid var(--ink); border-radius:999px; padding:10px 18px; }
+  @media(prefers-reduced-motion:reduce){ #sn-root .sn-flavor-flip-inner{ transition:none; } }
   #sn-root #usp-grid{ display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); }
   @media(max-width:980px){ #sn-root #usp-grid{ grid-template-columns:repeat(2,minmax(0,1fr)); } }
   @media(max-width:520px){ #sn-root #usp-grid{ grid-template-columns:1fr; } }
@@ -268,11 +284,28 @@
           <div style="line-height:0; width:100%; height:clamp(360px,52vw,500px); padding:clamp(14px,3vw,32px); display:flex; align-items:center; justify-content:center; animation:sn-bounce 2.8s ease-in-out infinite;">
             <img class="sn-center-img" src="" alt="" style="max-width:100%; max-height:100%; width:auto; height:auto; object-fit:contain;">
           </div>
-          <div class="sn-active-card" style="width:100%; border:3px solid var(--ink); border-radius:20px; box-shadow:6px 6px 0 var(--ink); padding:clamp(16px,2.4vw,22px); text-align:center;">
-            <h3 class="sn-name" style="font-family:'Archivo Black',sans-serif; text-transform:uppercase; line-height:1; font-size:clamp(1.2rem,3.5vw,1.7rem); margin:0;"></h3>
-            <div class="sn-veg" style="display:inline-flex; align-items:center; gap:6px; margin-top:11px; border:2.5px solid var(--ink); border-radius:999px; padding:5px 14px; font-family:'Archivo Narrow',sans-serif; font-weight:700; text-transform:uppercase; letter-spacing:.06em; font-size:12px;"></div>
-            <div class="sn-callouts" style="display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin-top:15px;"></div>
-            <p class="sn-taste" style="font-size:clamp(13px,2vw,15px); line-height:1.45; font-weight:600; font-style:italic; margin:14px auto 0; max-width:32ch;"></p>
+          <button type="button" class="sn-flip-trigger" data-sn-flip-open aria-label="Flip card to see ingredients">Flip to see ingredients <span aria-hidden="true">↷</span></button>
+          <div class="sn-flavor-flip-scene">
+            <div class="sn-flavor-flip-inner">
+              <!-- FRONT — unchanged from the existing implementation -->
+              <div class="sn-flip-face sn-flavor-flip-face">
+                <div class="sn-active-card" style="width:100%; border:3px solid var(--ink); border-radius:20px; box-shadow:6px 6px 0 var(--ink); padding:clamp(16px,2.4vw,22px); text-align:center;">
+                  <h3 class="sn-name" style="font-family:'Archivo Black',sans-serif; text-transform:uppercase; line-height:1; font-size:clamp(1.2rem,3.5vw,1.7rem); margin:0;"></h3>
+                  <div class="sn-veg" style="display:inline-flex; align-items:center; gap:6px; margin-top:11px; border:2.5px solid var(--ink); border-radius:999px; padding:5px 14px; font-family:'Archivo Narrow',sans-serif; font-weight:700; text-transform:uppercase; letter-spacing:.06em; font-size:12px;"></div>
+                  <div class="sn-callouts" style="display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin-top:15px;"></div>
+                  <p class="sn-taste" style="font-size:clamp(13px,2vw,15px); line-height:1.45; font-weight:600; font-style:italic; margin:14px auto 0; max-width:32ch;"></p>
+                </div>
+              </div>
+              <!-- BACK — ingredients panel, same dimensions/radius/shadow/flavour tint as the front -->
+              <div class="sn-flip-face sn-flavor-flip-face sn-flavor-flip-back">
+                <div class="sn-back-content" style="border:3px solid var(--ink); border-radius:20px; box-shadow:6px 6px 0 var(--ink); padding:clamp(16px,2.4vw,22px);">
+                  <button type="button" class="sn-flip-close" data-sn-flip-close aria-label="Close ingredients, back to flavor">×</button>
+                  <h3 style="font-family:'Archivo Black',sans-serif; text-transform:uppercase; line-height:1; font-size:clamp(1.2rem,3.5vw,1.7rem); margin:6px 0 0;">Ingredients</h3>
+                  <div class="sn-ingredients-list" style="border:2.5px dashed var(--ink); border-radius:16px; padding:clamp(12px,2vw,18px); margin:clamp(14px,2.2vw,20px) 0; font-family:ui-monospace,'SFMono-Regular',Menlo,Consolas,monospace; font-size:clamp(11.5px,1.6vw,13.5px); line-height:1.6; opacity:.82;"></div>
+                  <button type="button" class="sn-back-btn" data-sn-flip-close><span aria-hidden="true">←</span> Back to flavor</button>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -394,6 +427,17 @@
   var CCOL = ['#D42B3B','#FDD223','#5F78B2','#76B638','#CED37B'];
   var CTXT = ['#FFF9DE','#21050A','#FFF9DE','#FFF9DE','#21050A'];
   var LIGHT = ['#FBE07A','#BBD06E','#F2ABCB','#B6CDEA','#CED37B'];
+  // Ingredients-panel data for the active-card flip, one per index of NAMES above.
+  // Flip is intentionally disabled for Flavor Lab (index 4) — no ingredient list exists
+  // yet for a rotating vote-driven flavor, so it keeps its current, non-flippable card.
+  var FLIP_ENABLED = [true, true, true, true, false];
+  var INGREDIENTS = [
+    'Approved ingredient list pending. Add the exact, in-order ingredient panel here before launch.',
+    'Approved ingredient list pending. Add the exact, in-order ingredient panel here before launch.',
+    'Approved ingredient list pending. Add the exact, in-order ingredient panel here before launch.',
+    'Approved ingredient list pending. Add the exact, in-order ingredient panel here before launch.',
+    ''
+  ];
   // Transparent packaging renders, one per index of NAMES/VEG/TASTE/CALLOUTS above:
   // 0 Banana Bonanza, 1 Apple Pie Agents, 2 Berry Bandits, 3 Buttermilk Blast, 4 Flavor Lab.
   var IMGS = [
@@ -411,6 +455,16 @@
   var ghostPrev = root.querySelector('.sn-ghost-prev'), ghostNext = root.querySelector('.sn-ghost-next');
   var lblPrev = root.querySelector('.sn-ghost-label-prev'), lblNext = root.querySelector('.sn-ghost-label-next');
   var dotsWrap = root.querySelector('.sn-dots');
+  var flavorFlipScene = root.querySelector('.sn-flavor-flip-scene');
+  var flipTrigger = root.querySelector('.sn-flip-trigger');
+  var backCard = root.querySelector('.sn-back-content');
+  var ingredientsEl = root.querySelector('.sn-ingredients-list');
+  // Shared by both faces so the tint is never computed (or can drift) twice.
+  function cardBg(i){
+    return (window.CSS && CSS.supports && CSS.supports('background', 'color-mix(in srgb, red 55%, blue)'))
+      ? 'color-mix(in srgb, ' + LIGHT[i] + ' 55%, #FFF9DE)'
+      : LIGHT[i];
+  }
   for(var d=0; d<N; d++){ (function(k){ var b=document.createElement('button'); b.type='button'; b.setAttribute('aria-label','Go to '+NAMES[k]);
     b.style.cssText='width:12px;height:12px;border-radius:50%;cursor:pointer;border:2.5px solid #21050A;background:#FFF9DE;padding:0;transition:transform .18s ease, background .18s ease;';
     b.addEventListener('click',function(){ reset(); idx=k; render(); }); dotsWrap.appendChild(b); })(d); }
@@ -419,9 +473,13 @@
     centerImg.src = IMGS[idx]; centerImg.alt = NAMES[idx] + ' packaging';
     nameEl.textContent = NAMES[idx]; vegEl.textContent = VEG[idx]; tasteEl.textContent = TASTE[idx];
     vegEl.style.background = LIGHT[idx]; vegEl.style.color = '#21050A';
-    activeCard.style.background = (window.CSS && CSS.supports && CSS.supports('background', 'color-mix(in srgb, red 55%, blue)'))
-      ? 'color-mix(in srgb, ' + LIGHT[idx] + ' 55%, #FFF9DE)'
-      : LIGHT[idx];
+    activeCard.style.background = cardBg(idx);
+    if(backCard) backCard.style.background = cardBg(idx);
+    if(ingredientsEl) ingredientsEl.textContent = INGREDIENTS[idx];
+    if(flipTrigger) flipTrigger.style.display = FLIP_ENABLED[idx] ? 'inline-flex' : 'none';
+    // Card content just changed underneath the flip — always land back on the front
+    // face so a stale ingredients panel from the previous flavor is never shown.
+    if(flavorFlipScene) flavorFlipScene.classList.remove('is-flipped');
     coEl.innerHTML='';
     CALLOUTS[idx].forEach(function(c){ var s=document.createElement('span');
       s.textContent=c; s.style.cssText='display:inline-block;font-family:Archivo Narrow,sans-serif;font-weight:700;font-style:italic;text-transform:uppercase;letter-spacing:.02em;font-size:13px;padding:7px 14px;border-radius:999px;border:2.5px solid #21050A;box-shadow:2px 2px 0 #21050A;white-space:nowrap;background:'+CCOL[idx]+';color:'+CTXT[idx]+';';
@@ -460,6 +518,20 @@
     });
     document.addEventListener('click', function(){
       flipScenes.forEach(function(s){ s.classList.remove('is-flipped'); });
+    });
+  }
+
+  // "Meet the flavors" active-card flip: a single delegated listener handles the
+  // open trigger and both close controls (× and "Back to flavor") via data
+  // attributes, rather than binding three separate listeners. Carousel navigation
+  // (next/prev/dots/autoplay) is untouched by this — it only ever toggles a class.
+  if(flavorFlipScene){
+    root.addEventListener('click', function(ev){
+      if(ev.target.closest('[data-sn-flip-open]')){
+        if(FLIP_ENABLED[idx]) flavorFlipScene.classList.add('is-flipped');
+      } else if(ev.target.closest('[data-sn-flip-close]')){
+        flavorFlipScene.classList.remove('is-flipped');
+      }
     });
   }
 
