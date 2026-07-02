@@ -124,6 +124,10 @@
 {%- assign email_subject_enc = 'Sneakies waitlist: free sample box / launch offer' | url_encode -%}
 {%- assign email_body_enc = email_share_body | url_encode -%}
 {%- assign email_href = 'mailto:?subject=' | append: email_subject_enc | append: '&body=' | append: email_body_enc -%}
+{%- comment -%} "Join the Waitlist"-labeled CTAs go straight to the new Claim page
+  preview (see sections/sneakies-claim.liquid); other CTAs like "Claim your offer"
+  and the sticky bar still scroll to the real signup form below. {%- endcomment -%}
+{%- assign claim_url = pages['claim'].url | default: '/pages/claim' -%}
 
 <div id="sn-root">
 
@@ -156,7 +160,7 @@
 
     <!-- Join the waitlist banner -->
     <div style="display:flex; justify-content:center; margin:clamp(20px,3vw,32px) auto 0;">
-      <a href="#sn-offer" data-sn-scroll-offer class="sn-btn" style="text-decoration:none; display:inline-flex; align-items:center; gap:8px; background:var(--yellow); border:2.5px solid var(--ink); border-radius:999px; padding:12px 26px; box-shadow:3px 3px 0 var(--ink); font-family:'Archivo Narrow',sans-serif; font-weight:700; text-transform:uppercase; letter-spacing:.10em; font-size:clamp(11px,1.6vw,14px); color:var(--ink); white-space:nowrap;">
+      <a href="{{ claim_url }}" class="sn-btn" style="text-decoration:none; display:inline-flex; align-items:center; gap:8px; background:var(--yellow); border:2.5px solid var(--ink); border-radius:999px; padding:12px 26px; box-shadow:3px 3px 0 var(--ink); font-family:'Archivo Narrow',sans-serif; font-weight:700; text-transform:uppercase; letter-spacing:.10em; font-size:clamp(11px,1.6vw,14px); color:var(--ink); white-space:nowrap;">
         ★ Join the waitlist&nbsp;·&nbsp;exclusive launch offer
       </a>
     </div>
@@ -333,7 +337,7 @@
 
       <p style="font-size:12.5px; line-height:1.5; opacity:.68; margin:18px auto 0; max-width:48ch; font-weight:600;">One serving of fruits &amp; veggies in every bag, with no artificial flavors or colors.</p>
       <div style="margin-top:16px;">
-        <a href="#sn-offer" data-sn-scroll-offer class="sn-cta-flavors" style="display:inline-block; text-decoration:none; cursor:pointer; font-family:'Archivo Black',sans-serif; text-transform:uppercase; letter-spacing:.02em; font-size:.98rem; color:var(--cream); background:var(--ink); border:2.5px solid var(--ink); border-radius:12px; padding:13px 24px; box-shadow:4px 4px 0 var(--yellow);">Join the waitlist</a>
+        <a href="{{ claim_url }}" class="sn-cta-flavors" style="display:inline-block; text-decoration:none; cursor:pointer; font-family:'Archivo Black',sans-serif; text-transform:uppercase; letter-spacing:.02em; font-size:.98rem; color:var(--cream); background:var(--ink); border:2.5px solid var(--ink); border-radius:12px; padding:13px 24px; box-shadow:4px 4px 0 var(--yellow);">Join the waitlist</a>
       </div>
     </div>
   </section>

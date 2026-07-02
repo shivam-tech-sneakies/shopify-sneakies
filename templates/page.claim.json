@@ -1,0 +1,9 @@
+{
+  "sections": {
+    "main": {
+      "type": "sneakies-claim",
+      "settings": {}
+    }
+  },
+  "order": ["main"]
+}

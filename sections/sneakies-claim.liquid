@@ -1,0 +1,224 @@
+{%- comment -%}
+  Sneakies — Claim page.
+  The first step of a multi-step "you're in" flow reached from any "Join the
+  Waitlist" CTA on the homepage (sneakies-landing.liquid). Reuses the same
+  design tokens, typography, and button interaction states already
+  established there (#sn-root ink/cream/beige/yellow palette, Archivo Black/
+  Narrow type, .sn-submit button hover/active states) so this reads as a
+  natural continuation of the site rather than a separate landing page.
+
+  Dev-only scope: this build only implements "Claim page". The top preview
+  strip (Claim page / Address form / Confirmation / 50% off fallback) is a
+  reusable nav shell for the rest of the flow — the other three steps don't
+  exist yet, so their pills render as inert placeholders. No checkout/order
+  logic runs here; "Continue to checkout" is a visual placeholder pending
+  that next step being built.
+{%- endcomment -%}
+
+{%- style -%}
+  .sn-claim{
+    --ink:#21050A; --cream:#FFF9DE; --beige:#F0E6C2; --yellow:#FBD01A;
+    --claim-green:#76B638; --claim-green-bg:#BBD06E; --claim-blue-bg:#B6CDEA; --claim-pink:#CA3779;
+    background:var(--cream); color:var(--ink);
+    font-family:'Archivo',system-ui,sans-serif; -webkit-font-smoothing:antialiased;
+    overflow-x:hidden; min-height:100vh;
+  }
+  .sn-claim *{ box-sizing:border-box; }
+  .sn-claim img{ max-width:100%; display:block; filter:saturate(1.08) contrast(1.05) brightness(1.02); }
+  .sn-claim a{ color:inherit; }
+  .sn-claim ::selection{ background:var(--yellow); color:var(--ink); }
+  .sn-claim input:focus-visible, .sn-claim button:focus-visible, .sn-claim a:focus-visible{ outline:3px solid #5F7AAF; outline-offset:2px; }
+
+  /* Reused primary-button interaction states — matches .sn-submit on the homepage
+     exactly so this CTA feels/behaves like the rest of the site. */
+  .sn-claim .sn-submit{ transition:transform .08s, box-shadow .08s; text-decoration:none; display:inline-flex; align-items:center; justify-content:center; gap:8px; cursor:pointer; }
+  .sn-claim .sn-submit:hover{ transform:translateY(2px); box-shadow:0 3px 0 var(--yellow); }
+  .sn-claim .sn-submit:active{ transform:translateY(5px); box-shadow:0 0 0 var(--yellow); }
+
+  /* Dev preview nav */
+  .sn-claim-devnav{ border-bottom:2px dashed rgba(33,5,10,.25); background:var(--beige); }
+  .sn-claim-devnav-inner{ max-width:1180px; margin:0 auto; padding:14px clamp(18px,5vw,40px); display:flex; flex-wrap:wrap; align-items:center; gap:12px 18px; }
+  .sn-claim-devnav-label{ font-family:'Archivo Narrow',sans-serif; font-weight:700; text-transform:uppercase; letter-spacing:.1em; font-size:11.5px; opacity:.55; white-space:nowrap; }
+  .sn-claim-devnav-pills{ display:flex; flex-wrap:wrap; gap:8px; }
+  .sn-claim-pill{ font-family:'Archivo Narrow',sans-serif; font-weight:700; text-transform:uppercase; letter-spacing:.04em; font-size:12.5px; padding:8px 16px; border-radius:999px; border:2px solid var(--ink); background:var(--cream); white-space:nowrap; }
+  .sn-claim-pill--active{ background:var(--ink); color:var(--cream); }
+  .sn-claim-pill--disabled{ opacity:.42; }
+
+  /* Back to homepage */
+  .sn-claim-back-wrap{ max-width:1180px; margin:0 auto; padding:16px clamp(18px,5vw,40px) 0; }
+  .sn-claim-back{ display:inline-flex; align-items:center; gap:6px; text-decoration:none; font-family:'Archivo Narrow',sans-serif; font-weight:700; text-transform:uppercase; letter-spacing:.06em; font-size:12px; color:var(--ink); opacity:.72; transition:opacity .15s ease; }
+  .sn-claim-back:hover{ opacity:1; }
+
+  /* Header */
+  .sn-claim-header{ display:flex; flex-direction:column; align-items:center; gap:6px; text-align:center; padding:clamp(18px,3vw,30px) clamp(18px,5vw,40px) clamp(8px,1.6vw,16px); }
+  .sn-claim-logo{ height:clamp(44px,6vw,60px); width:auto; }
+  .sn-claim-tagline{ margin:0; font-family:'Archivo Narrow',sans-serif; font-weight:700; text-transform:uppercase; letter-spacing:.14em; font-size:11px; opacity:.55; }
+
+  /* Hero */
+  .sn-claim-hero{ padding:clamp(10px,2vw,20px) clamp(18px,5vw,40px) clamp(36px,5vw,56px); }
+  .sn-claim-hero-grid{ max-width:1180px; margin:0 auto; display:grid; grid-template-columns:1.15fr 1fr; gap:clamp(28px,5vw,60px); align-items:start; }
+  @media(max-width:860px){ .sn-claim-hero-grid{ grid-template-columns:1fr; } }
+
+  .sn-claim-badge{ display:inline-flex; align-items:center; gap:8px; font-family:'Archivo Narrow',sans-serif; font-weight:700; text-transform:uppercase; letter-spacing:.06em; font-size:12px; color:var(--ink); background:var(--claim-green-bg); border:2px solid var(--ink); border-radius:999px; padding:7px 16px; }
+  .sn-claim-h1{ font-family:'Archivo Black',sans-serif; font-weight:900; line-height:1.06; letter-spacing:-.01em; font-size:clamp(1.9rem,4.4vw,3rem); margin:clamp(14px,2vw,20px) 0 0; }
+  .sn-claim-h1 mark{ background:var(--yellow); color:var(--ink); box-decoration-break:clone; -webkit-box-decoration-break:clone; padding:0 4px; }
+  .sn-claim-desc{ font-size:clamp(15px,1.6vw,18px); line-height:1.5; opacity:.78; font-weight:500; max-width:46ch; margin:clamp(12px,1.6vw,18px) 0 0; }
+
+  .sn-claim-cta-wrap{ position:relative; display:inline-block; margin:clamp(24px,3.4vw,34px) 0 0; }
+  .sn-claim-annotation{ position:absolute; right:10px; bottom:100%; margin-bottom:2px; font-family:'Archivo Narrow',cursive,sans-serif; font-style:italic; font-weight:700; font-size:14px; color:var(--claim-pink); transform:rotate(-4deg); white-space:nowrap; pointer-events:none; }
+  .sn-claim-cta{ font-family:'Archivo Black',sans-serif; text-transform:none; letter-spacing:0; font-size:clamp(1rem,1.6vw,1.15rem); color:var(--cream); background:var(--ink); border:2.5px solid var(--ink); border-radius:18px; padding:18px 30px; box-shadow:0 6px 0 var(--yellow); }
+  .sn-claim-helper{ font-family:'Archivo Narrow',sans-serif; font-weight:700; text-transform:uppercase; letter-spacing:.06em; font-size:11px; opacity:.6; margin:clamp(14px,2vw,18px) 0 0; }
+
+  .sn-claim-hero-right{ display:flex; justify-content:center; }
+  .sn-claim-card{ width:100%; max-width:420px; background:var(--cream); border:3px solid var(--ink); border-radius:20px; box-shadow:6px 6px 0 var(--ink); padding:clamp(20px,2.6vw,28px); }
+  .sn-claim-card-top{ display:flex; align-items:flex-start; justify-content:space-between; gap:12px; }
+  .sn-claim-card-label{ margin:0; font-family:'Archivo Narrow',sans-serif; font-weight:700; text-transform:uppercase; letter-spacing:.08em; font-size:11px; opacity:.55; }
+  .sn-claim-card-title{ margin:4px 0 0; font-family:'Archivo Black',sans-serif; font-weight:900; font-size:clamp(1.15rem,2vw,1.4rem); line-height:1.15; text-transform:none; }
+  .sn-claim-badge-pack{ flex:none; font-family:'Archivo Narrow',sans-serif; font-weight:700; text-transform:uppercase; letter-spacing:.04em; font-size:12px; color:var(--ink); background:var(--claim-blue-bg); border:2px solid var(--ink); border-radius:999px; padding:6px 14px; white-space:nowrap; }
+  .sn-claim-card-row{ display:flex; align-items:center; justify-content:space-between; gap:12px; padding:14px 0; border-bottom:1.5px dashed rgba(33,5,10,.28); font-size:14.5px; }
+  .sn-claim-card-row:first-of-type{ margin-top:18px; }
+  .sn-claim-card-row span{ opacity:.62; font-weight:600; }
+  .sn-claim-card-row strong{ font-weight:800; text-align:right; }
+  .sn-claim-code{ font-family:ui-monospace,'SFMono-Regular',Menlo,Consolas,monospace; font-weight:700; font-size:13px; background:var(--beige); border:1.5px dashed var(--ink); border-radius:8px; padding:4px 10px; letter-spacing:.03em; }
+  .sn-claim-card-divider{ height:2px; margin:6px 0 16px; background:repeating-linear-gradient(to right, rgba(33,5,10,.35) 0 8px, transparent 8px 14px); }
+  .sn-claim-card-total{ display:flex; align-items:flex-end; justify-content:space-between; gap:12px; }
+  .sn-claim-card-total-label{ margin:0; font-weight:800; font-size:15px; }
+  .sn-claim-card-total-sub{ margin:2px 0 0; font-weight:700; font-size:12.5px; color:var(--claim-green); }
+  .sn-claim-card-total-amount{ margin:0; font-family:'Archivo Black',sans-serif; font-size:clamp(1.6rem,3vw,2.1rem); }
+
+  /* Inside your box */
+  .sn-claim-box{ padding:0 clamp(18px,5vw,40px) clamp(40px,6vw,64px); }
+  .sn-claim-box-inner{ max-width:1180px; margin:0 auto; position:relative; border:2.5px dashed rgba(33,5,10,.35); border-radius:24px; padding:clamp(30px,4vw,44px) clamp(18px,4vw,32px) clamp(28px,4vw,36px); text-align:center; }
+  .sn-claim-box-badge{ position:absolute; top:0; left:clamp(20px,4vw,40px); transform:translateY(-50%); font-family:'Archivo Narrow',sans-serif; font-weight:700; text-transform:uppercase; letter-spacing:.06em; font-size:12px; color:var(--ink); background:var(--yellow); border:2px solid var(--ink); border-radius:999px; padding:7px 18px; white-space:nowrap; }
+  .sn-claim-box-heading{ margin:clamp(16px,2vw,22px) 0 0; font-family:'Archivo Black',sans-serif; text-transform:uppercase; line-height:1; font-size:clamp(1.3rem,3vw,1.9rem); }
+  .sn-claim-box-grid{ display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:clamp(10px,1.6vw,18px); margin-top:clamp(20px,3vw,30px); }
+  @media(max-width:700px){ .sn-claim-box-grid{ grid-template-columns:repeat(2,minmax(0,1fr)); } }
+  .sn-claim-box-item{ border:2.5px solid var(--ink); border-radius:16px; overflow:hidden; box-shadow:4px 4px 0 var(--ink); background:#fff; aspect-ratio:3/4; }
+  .sn-claim-box-item img{ width:100%; height:100%; object-fit:contain; }
+
+  @media(prefers-reduced-motion:reduce){ .sn-claim *{ transition:none !important; } }
+{%- endstyle -%}
+
+{%- assign ship_date = section.settings.ship_date | default: 'August 2026' -%}
+{%- assign discount_code = section.settings.discount_code | default: 'SPECIAL500' -%}
+{%- assign sample_size = section.settings.sample_size | default: '4-pack, one of each flavor' -%}
+{%- assign product_name = section.settings.product_name | default: 'Sneakies Free Sample Box' -%}
+
+<div id="sn-root" class="sn-claim">
+
+  <!-- PREVIEW NAV (dev only — reusable shell for the rest of the claim flow) -->
+  <nav class="sn-claim-devnav" aria-label="Development preview steps">
+    <div class="sn-claim-devnav-inner">
+      <span class="sn-claim-devnav-label">Preview · Dev Only</span>
+      <div class="sn-claim-devnav-pills" role="group" aria-label="Claim flow steps">
+        <span class="sn-claim-pill sn-claim-pill--active" aria-current="step">Claim page</span>
+        <span class="sn-claim-pill sn-claim-pill--disabled" aria-disabled="true" title="Not built yet">Address form</span>
+        <span class="sn-claim-pill sn-claim-pill--disabled" aria-disabled="true" title="Not built yet">Confirmation</span>
+        <span class="sn-claim-pill sn-claim-pill--disabled" aria-disabled="true" title="Not built yet">50% off fallback</span>
+      </div>
+    </div>
+  </nav>
+
+  <div class="sn-claim-back-wrap">
+    <a href="{{ routes.root_url }}" class="sn-claim-back">
+      <span aria-hidden="true">←</span> Back to homepage
+    </a>
+  </div>
+
+  <!-- HEADER -->
+  <header class="sn-claim-header">
+    <a href="{{ routes.root_url }}" aria-label="Sneakies home">
+      <img src="{{ 'sn-logo.png' | asset_url }}" alt="Sneakies" class="sn-claim-logo">
+    </a>
+    <p class="sn-claim-tagline">Fruits &amp; Veggies, Undercover</p>
+  </header>
+
+  <!-- HERO -->
+  <section class="sn-claim-hero">
+    <div class="sn-claim-hero-grid">
+
+      <!-- Left: confirmation copy + CTA -->
+      <div class="sn-claim-hero-left">
+        <span class="sn-claim-badge"><span aria-hidden="true">●</span> Waitlist Confirmed</span>
+        <h1 class="sn-claim-h1">You&#8217;re in. Your <mark>free sample box</mark> is ready.</h1>
+        <p class="sn-claim-desc">Your box is on us. Add your shipping details next so we know where to send it.</p>
+
+        <div class="sn-claim-cta-wrap">
+          <span class="sn-claim-annotation" aria-hidden="true">no payment needed!</span>
+          <a href="#" class="sn-submit sn-claim-cta">Continue to checkout <span aria-hidden="true">→</span></a>
+        </div>
+
+        <p class="sn-claim-helper">No payment required · One per household · Ships in {{ ship_date }}</p>
+      </div>
+
+      <!-- Right: claim summary card -->
+      <div class="sn-claim-hero-right">
+        <div class="sn-claim-card">
+          <div class="sn-claim-card-top">
+            <div>
+              <p class="sn-claim-card-label">Your Claim</p>
+              <h2 class="sn-claim-card-title">{{ product_name }}</h2>
+            </div>
+            <span class="sn-claim-badge-pack">4-pack</span>
+          </div>
+
+          <div class="sn-claim-card-row">
+            <span>Sample size</span>
+            <strong>{{ sample_size }}</strong>
+          </div>
+          <div class="sn-claim-card-row">
+            <span>Ships</span>
+            <strong>{{ ship_date }}</strong>
+          </div>
+          <div class="sn-claim-card-row">
+            <span>Discount code</span>
+            <code class="sn-claim-code">{{ discount_code }}</code>
+          </div>
+
+          <div class="sn-claim-card-divider" aria-hidden="true"></div>
+
+          <div class="sn-claim-card-total">
+            <div>
+              <p class="sn-claim-card-total-label">Today&#8217;s total</p>
+              <p class="sn-claim-card-total-sub">No payment required</p>
+            </div>
+            <p class="sn-claim-card-total-amount">$0</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- INSIDE YOUR BOX -->
+  <section class="sn-claim-box">
+    <div class="sn-claim-box-inner">
+      <span class="sn-claim-box-badge">Inside your box</span>
+      <h2 class="sn-claim-box-heading">Try one of each of our flagship flavors.</h2>
+      <div class="sn-claim-box-grid">
+        {%- assign flavor_names = 'Apple Pie Agents,Banana Bonanza,Berry Bandits,Buttermilk Blast' | split: ',' -%}
+        {%- assign flavor_imgs = 'applepieagentswithspinach.png,bananabonanzawithcarrots.png,berrybanditswithbeets.png,buttermilkblastwithcauliflower.png' | split: ',' -%}
+        {%- for i in (0..3) -%}
+          <div class="sn-claim-box-item">
+            <img src="{{ flavor_imgs[i] | asset_url }}" alt="{{ flavor_names[i] }} packaging" loading="lazy">
+          </div>
+        {%- endfor -%}
+      </div>
+    </div>
+  </section>
+
+</div>
+
+{% schema %}
+{
+  "name": "Sneakies Claim Page",
+  "settings": [
+    { "type": "header", "content": "Claim details" },
+    { "type": "text", "id": "product_name", "label": "Product name", "default": "Sneakies Free Sample Box" },
+    { "type": "text", "id": "sample_size", "label": "Sample size", "default": "4-pack, one of each flavor" },
+    { "type": "text", "id": "ship_date", "label": "Ship date", "default": "August 2026" },
+    { "type": "text", "id": "discount_code", "label": "Discount code", "default": "SPECIAL500" }
+  ],
+  "presets": [ { "name": "Sneakies Claim Page" } ]
+}
+{% endschema %}
