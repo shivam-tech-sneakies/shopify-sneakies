@@ -126,7 +126,10 @@
   @media(max-width:960px){ .sn-claim-address-grid{ grid-template-columns:1fr; } }
   /* The form widens/breathes more here than the base .sn-claim-card default —
      scoped so the Claim step's card (which also uses .sn-claim-card) is untouched. */
-  .sn-claim-address-grid .sn-claim-form{ padding:clamp(26px,3.2vw,38px); }
+  /* .sn-claim-card (shared with the Claim step's card) hard-caps max-width:420px —
+     override just that for the form so it actually fills its 1fr grid track
+     instead of staying pinned narrow while the gap to the summary balloons. */
+  .sn-claim-address-grid .sn-claim-form{ max-width:none; width:100%; padding:clamp(26px,3.2vw,38px); }
   .sn-claim-form{ display:flex; flex-direction:column; gap:clamp(20px,2.6vw,26px); }
   .sn-claim-field-row{ display:grid; grid-template-columns:1fr 1fr; gap:clamp(16px,2.2vw,24px); }
   .sn-claim-field-row--4{ grid-template-columns:1fr 1fr 1fr 1fr; }
