@@ -47,10 +47,11 @@
      card's own text content never accidentally flips it. Reuses the same perspective /
      preserve-3d / backface-visibility / rotateY(180deg) technique and the shared
      .sn-flip-face token above; only the trigger (click vs hover) and sizing differ. */
-  #sn-root .sn-flavor-flip-scene{ position:relative; perspective:1000px; }
-  #sn-root .sn-flavor-flip-inner{ position:relative; width:100%; min-height:clamp(230px,32vw,310px); transform-style:preserve-3d; -webkit-transform-style:preserve-3d; transition:transform .5s ease-in-out; will-change:transform; }
+  #sn-root .sn-flavor-flip-scene{ position:relative; width:100%; perspective:1000px; }
+  #sn-root .sn-flavor-flip-inner{ position:relative; width:100%; transform-style:preserve-3d; -webkit-transform-style:preserve-3d; transition:transform .5s ease-in-out; will-change:transform; }
   #sn-root .sn-flavor-flip-scene.is-flipped .sn-flavor-flip-inner{ transform:rotateY(180deg); }
   #sn-root .sn-flip-face.sn-flavor-flip-face{ align-items:stretch; }
+  #sn-root .sn-flip-face.sn-flavor-flip-face > *{ width:100%; }
   #sn-root .sn-flavor-flip-back{ transform:rotateY(180deg); }
   #sn-root .sn-flip-trigger{ display:none; align-items:center; gap:5px; margin:0 0 8px; align-self:flex-end; background:none; border:none; cursor:pointer; padding:2px; font-family:'Archivo Narrow',cursive,sans-serif; font-style:italic; font-weight:700; font-size:clamp(12.5px,1.8vw,15px); color:var(--ink); text-decoration:underline; text-underline-offset:3px; }
   #sn-root .sn-flip-trigger:hover{ opacity:.72; }
@@ -456,9 +457,23 @@
   var lblPrev = root.querySelector('.sn-ghost-label-prev'), lblNext = root.querySelector('.sn-ghost-label-next');
   var dotsWrap = root.querySelector('.sn-dots');
   var flavorFlipScene = root.querySelector('.sn-flavor-flip-scene');
+  var flavorFlipInner = root.querySelector('.sn-flavor-flip-inner');
   var flipTrigger = root.querySelector('.sn-flip-trigger');
   var backCard = root.querySelector('.sn-back-content');
   var ingredientsEl = root.querySelector('.sn-ingredients-list');
+  // Both flip faces are position:absolute (so neither ever influences the parent's
+  // box during layout or mid-animation), which means .sn-flavor-flip-inner has no
+  // in-flow content to derive a height from on its own. Measure the taller of the
+  // two faces' natural content height (each face's own child is a normal in-flow
+  // block, so its scrollHeight is reliable regardless of the absolutely-positioned
+  // ancestor) and lock the shared container to that exact pixel height — front and
+  // back then always render at identical, non-clipping dimensions.
+  function syncFlipHeight(){
+    if(!flavorFlipInner || !activeCard) return;
+    var h = activeCard.scrollHeight;
+    if(backCard) h = Math.max(h, backCard.scrollHeight);
+    if(h) flavorFlipInner.style.height = h + 'px';
+  }
   // Shared by both faces so the tint is never computed (or can drift) twice.
   function cardBg(i){
     return (window.CSS && CSS.supports && CSS.supports('background', 'color-mix(in srgb, red 55%, blue)'))
@@ -495,6 +510,7 @@
       dot.style.transform = active ? 'scale(1.3)' : 'none';
       dot.style.boxShadow = active ? '2px 2px 0 #21050A' : 'none';
     });
+    syncFlipHeight();
   }
   function next(){ idx=(idx+1)%N; render(); }
   function prev(){ idx=(idx-1+N)%N; render(); }
@@ -532,6 +548,14 @@
       } else if(ev.target.closest('[data-sn-flip-close]')){
         flavorFlipScene.classList.remove('is-flipped');
       }
+    });
+    // Card content re-wraps at different viewport widths (clamp()-driven font
+    // sizes), so the locked height must be re-measured on resize, not just on
+    // flavor change.
+    var flipResizeT;
+    window.addEventListener('resize', function(){
+      clearTimeout(flipResizeT);
+      flipResizeT = setTimeout(syncFlipHeight, 150);
     });
   }
 
