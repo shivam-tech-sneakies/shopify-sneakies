@@ -52,6 +52,12 @@
   #sn-root .sn-flavor-flip-scene.is-flipped .sn-flavor-flip-inner{ transform:rotateY(180deg); }
   #sn-root .sn-flip-face.sn-flavor-flip-face{ align-items:stretch; }
   #sn-root .sn-flip-face.sn-flavor-flip-face > *{ width:100%; }
+  /* One shared card face used by every flavour (including flip-disabled Flavor Lab):
+     fixed height comes from .sn-flavor-flip-inner (locked by JS to the tallest content
+     across all 5 flavours), and content is vertically centred inside it so shorter
+     copy (e.g. Flavor Lab's "Coming Soon") never looks stranded at the top of a taller
+     box. No flavour gets its own sizing rule — only text/colour differ per flavour. */
+  #sn-root .sn-active-card{ height:100%; box-sizing:border-box; display:flex; flex-direction:column; justify-content:center; align-items:center; }
   #sn-root .sn-flavor-flip-back{ transform:rotateY(180deg); }
   #sn-root .sn-flip-trigger{ display:none; align-items:center; gap:5px; margin:0 0 8px; align-self:flex-end; background:none; border:none; cursor:pointer; padding:2px; font-family:'Archivo Narrow',cursive,sans-serif; font-style:italic; font-weight:700; font-size:clamp(12.5px,1.8vw,15px); color:var(--ink); text-decoration:underline; text-underline-offset:3px; }
   #sn-root .sn-flip-trigger:hover{ opacity:.72; }
@@ -463,16 +469,44 @@
   var ingredientsEl = root.querySelector('.sn-ingredients-list');
   // Both flip faces are position:absolute (so neither ever influences the parent's
   // box during layout or mid-animation), which means .sn-flavor-flip-inner has no
-  // in-flow content to derive a height from on its own. Measure the taller of the
-  // two faces' natural content height (each face's own child is a normal in-flow
-  // block, so its scrollHeight is reliable regardless of the absolutely-positioned
-  // ancestor) and lock the shared container to that exact pixel height — front and
-  // back then always render at identical, non-clipping dimensions.
-  function syncFlipHeight(){
-    if(!flavorFlipInner || !activeCard) return;
-    var h = activeCard.scrollHeight;
-    if(backCard) h = Math.max(h, backCard.scrollHeight);
-    if(h) flavorFlipInner.style.height = h + 'px';
+  // in-flow content to derive a height from on its own — it needs an explicit height.
+  // That height must be ONE fixed value shared by every flavour (not remeasured per
+  // flavour), otherwise the carousel viewport itself resizes and shifts the page
+  // every time next()/prev() swaps content. So: briefly render each flavour's real
+  // copy into the live front/back faces, record the tallest result across all of
+  // them (each face's card is a normal in-flow block, so scrollHeight is reliable
+  // regardless of the absolutely-positioned ancestor), then restore whatever content
+  // was showing before the sweep. A small fixed buffer is added on top for breathing
+  // room so the box isn't a bare tight fit around the longest flavour's content.
+  var CARD_HEIGHT_BUFFER = 28;
+  function computeMaxCardHeight(){
+    if(!activeCard || !backCard) return 0;
+    var savedName = nameEl.textContent, savedVeg = vegEl.textContent, savedTaste = tasteEl.textContent,
+        savedCallouts = coEl.innerHTML, savedIngredients = ingredientsEl ? ingredientsEl.textContent : '';
+    var max = 0;
+    for(var i=0; i<N; i++){
+      nameEl.textContent = NAMES[i];
+      vegEl.textContent = VEG[i];
+      tasteEl.textContent = TASTE[i];
+      coEl.innerHTML = '';
+      CALLOUTS[i].forEach(function(c){
+        var s = document.createElement('span');
+        s.textContent = c;
+        s.style.cssText = 'display:inline-block;font-family:Archivo Narrow,sans-serif;font-weight:700;font-style:italic;text-transform:uppercase;letter-spacing:.02em;font-size:13px;padding:7px 14px;border-radius:999px;border:2.5px solid #21050A;white-space:nowrap;';
+        coEl.appendChild(s);
+      });
+      if(ingredientsEl) ingredientsEl.textContent = INGREDIENTS[i];
+      max = Math.max(max, activeCard.scrollHeight, backCard.scrollHeight);
+    }
+    nameEl.textContent = savedName; vegEl.textContent = savedVeg; tasteEl.textContent = savedTaste;
+    coEl.innerHTML = savedCallouts;
+    if(ingredientsEl) ingredientsEl.textContent = savedIngredients;
+    return max;
+  }
+  function lockCardHeight(){
+    if(!flavorFlipInner) return;
+    var h = computeMaxCardHeight();
+    if(h) flavorFlipInner.style.height = (h + CARD_HEIGHT_BUFFER) + 'px';
   }
   // Shared by both faces so the tint is never computed (or can drift) twice.
   function cardBg(i){
@@ -510,14 +544,21 @@
       dot.style.transform = active ? 'scale(1.3)' : 'none';
       dot.style.boxShadow = active ? '2px 2px 0 #21050A' : 'none';
     });
-    syncFlipHeight();
   }
   function next(){ idx=(idx+1)%N; render(); }
   function prev(){ idx=(idx-1+N)%N; render(); }
   function reset(){ clearInterval(timer); timer=setInterval(next,4500); }
   root.querySelectorAll('.sn-next').forEach(function(b){ b.addEventListener('click',function(){ reset(); next(); }); });
   root.querySelectorAll('.sn-prev').forEach(function(b){ b.addEventListener('click',function(){ reset(); prev(); }); });
-  render(); timer=setInterval(next,4500);
+  render();
+  // Lock the carousel's card box to one fixed height (the tallest content across
+  // every flavour, plus a breathing-room buffer) so switching flavours or flipping
+  // never resizes the box or shifts the page. Re-run once webfonts finish loading
+  // (Archivo Black/Narrow render with different metrics than the fallback stack, so
+  // an initial measurement taken before they're ready can undershoot).
+  lockCardHeight();
+  if(window.document.fonts && document.fonts.ready){ document.fonts.ready.then(lockCardHeight); }
+  timer=setInterval(next,4500);
 
   // Flavour card image flip: CSS :hover already drives this on devices that support
   // hover. On touch devices (no hover), tap the white image container to flip it;
@@ -550,12 +591,13 @@
       }
     });
     // Card content re-wraps at different viewport widths (clamp()-driven font
-    // sizes), so the locked height must be re-measured on resize, not just on
-    // flavor change.
+    // sizes), so the fixed height must be re-measured (across every flavor again)
+    // on resize, not just on flavor change — desktop/tablet/mobile each get their
+    // own correct fixed height, still shared across all 5 flavors at that width.
     var flipResizeT;
     window.addEventListener('resize', function(){
       clearTimeout(flipResizeT);
-      flipResizeT = setTimeout(syncFlipHeight, 150);
+      flipResizeT = setTimeout(lockCardHeight, 150);
     });
   }
 
