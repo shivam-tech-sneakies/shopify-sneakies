@@ -70,6 +70,10 @@
   @media(max-width:520px){ #sn-root #usp-grid{ grid-template-columns:1fr; } }
   #sn-root #tier-grid{ display:grid; grid-template-columns:1fr 1fr; }
   @media(max-width:620px){ #sn-root #tier-grid{ grid-template-columns:1fr; } }
+  #sn-root #founder-grid{ display:grid; grid-template-columns:1fr 1fr; gap:clamp(28px,4vw,56px); align-items:center; }
+  @media(max-width:860px){ #sn-root #founder-grid{ grid-template-columns:1fr; } }
+  #sn-root .sn-founder-copy p{ margin:0 0 14px; }
+  #sn-root .sn-founder-copy p:last-child{ margin-bottom:0; }
   #sn-root .sn-ghost{ display:flex; flex-direction:column; align-items:center; gap:6px; }
   @media(max-width:520px){ #sn-root .sn-ghost{ display:none !important; } }
   #sn-root #rev-strip{ scrollbar-width:thin; scrollbar-color:var(--ink) transparent; }
@@ -128,6 +132,11 @@
   preview (see sections/sneakies-claim.liquid); other CTAs like "Claim your offer"
   and the sticky bar still scroll to the real signup form below. {%- endcomment -%}
 {%- assign claim_url = pages['claim'].url | default: '/pages/claim' -%}
+{%- assign founder_eyebrow = section.settings.founder_eyebrow | default: 'Sneakies by parents, for parents' -%}
+{%- assign founder_heading = section.settings.founder_heading | default: 'From our kitchen to your breakfast table' -%}
+{%- assign founder_story = section.settings.founder_story -%}
+{%- assign founder_name = section.settings.founder_name | default: 'Arun Gomatam' -%}
+{%- assign founder_title = section.settings.founder_title | default: 'Dad & Founder of Sneakies' -%}
 
 <div id="sn-root">
 
