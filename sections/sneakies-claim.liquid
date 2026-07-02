@@ -122,7 +122,7 @@
   /* Address form (Address step) */
   .sn-claim-address{ padding:clamp(10px,2vw,20px) clamp(18px,5vw,40px) clamp(48px,6vw,72px); }
   .sn-claim-address-intro{ max-width:1180px; margin:0 auto; text-align:center; }
-  .sn-claim-address-grid{ max-width:1180px; margin:clamp(24px,3.4vw,34px) auto 0; display:grid; grid-template-columns:1fr 380px; gap:clamp(24px,3.4vw,40px); align-items:start; }
+  .sn-claim-address-grid{ max-width:1180px; margin:clamp(24px,3.4vw,34px) auto 0; display:grid; grid-template-columns:1fr 340px; gap:clamp(20px,3vw,32px); align-items:start; }
   @media(max-width:860px){ .sn-claim-address-grid{ grid-template-columns:1fr; } }
   .sn-claim-form{ display:flex; flex-direction:column; gap:clamp(14px,2vw,18px); }
   .sn-claim-field-row{ display:grid; grid-template-columns:1fr 1fr; gap:clamp(12px,1.8vw,18px); }
@@ -137,6 +137,10 @@
   .sn-claim-error{ display:none; color:var(--claim-pink); font-size:11.5px; font-weight:600; }
   .sn-claim-error.is-visible{ display:block; }
   .sn-claim-address-summary{ position:sticky; top:20px; }
+  /* Condensed order-summary card is scoped narrower/tighter here rather than
+     duplicating .sn-claim-card — the Claim step's full-size card is untouched. */
+  .sn-claim-address-summary .sn-claim-card{ max-width:340px; padding:clamp(16px,2vw,20px); }
+  .sn-claim-address-summary .sn-claim-card-row{ padding:11px 0; }
 
   /* Confirmation + 50% off fallback (share the same centered layout) */
   .sn-claim-confirm{ max-width:640px; margin:0 auto; padding:clamp(30px,5vw,56px) clamp(18px,5vw,40px) clamp(48px,6vw,72px); text-align:center; }
@@ -150,13 +154,18 @@
   .sn-claim-survey-heading{ margin:0; font-family:'Archivo Black',sans-serif; font-weight:900; font-size:clamp(1.15rem,2vw,1.4rem); text-transform:none; }
   .sn-claim-survey-subtitle{ margin:4px 0 0; font-size:13.5px; opacity:.6; font-weight:600; }
   .sn-claim-survey-options{ display:flex; flex-direction:column; gap:10px; margin-top:clamp(16px,2.2vw,20px); }
-  .sn-claim-survey-option{ display:flex; align-items:center; gap:12px; border:1.5px solid rgba(33,5,10,.3); border-radius:13px; padding:14px 16px; cursor:pointer; font-size:15px; font-weight:600; transition:border-color .15s ease, background .15s ease; }
-  .sn-claim-survey-option:hover{ border-color:var(--ink); }
-  .sn-claim-survey-option:has(.sn-claim-survey-input:checked){ border-color:var(--ink); background:rgba(251,208,26,.18); }
-  .sn-claim-survey-input{ width:19px; height:19px; accent-color:var(--ink); flex:none; cursor:pointer; }
+  .sn-claim-survey-option{ display:flex; align-items:center; gap:12px; border:2px solid rgba(33,5,10,.22); border-radius:13px; padding:14px 16px; cursor:pointer; font-size:15px; font-weight:600; transition:border-color .15s ease, background .15s ease; }
+  .sn-claim-survey-option:hover{ border-color:rgba(33,5,10,.55); }
+  .sn-claim-survey-option:has(.sn-claim-survey-input:checked){ border-color:var(--ink); background:var(--claim-green-bg); }
+  /* Custom checkbox/radio: same ink-fill + yellow-check treatment for both
+     modes, so the two survey instances read as one consistent component. */
+  .sn-claim-survey-input{ appearance:none; -webkit-appearance:none; width:22px; height:22px; flex:none; cursor:pointer; margin:0; border:2px solid rgba(33,5,10,.35); background:var(--cream); background-repeat:no-repeat; background-position:center; background-size:13px 13px; transition:background-color .15s ease, border-color .15s ease; }
+  .sn-claim-survey-input[type="checkbox"]{ border-radius:6px; }
+  .sn-claim-survey-input[type="radio"]{ border-radius:50%; }
+  .sn-claim-survey-input:checked{ background-color:var(--ink); border-color:var(--ink); background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23FBD01A' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='3.5 8.5 6.5 11.5 12.5 4.5'/%3E%3C/svg%3E"); }
   .sn-claim-survey-actions{ display:flex; align-items:center; gap:18px; margin-top:clamp(18px,2.4vw,22px); flex-wrap:wrap; }
-  .sn-claim-survey-submit{ padding:14px 26px; border-radius:14px; box-shadow:0 5px 0 var(--yellow); }
-  .sn-claim-survey-submit:disabled{ opacity:.5; cursor:not-allowed; box-shadow:none; background:var(--beige); color:rgba(33,5,10,.55); border-color:rgba(33,5,10,.25); transform:none; }
+  .sn-claim-survey-submit{ padding:15px 26px; }
+  .sn-claim-survey-submit:disabled{ opacity:1; cursor:not-allowed; box-shadow:none; background:var(--beige); color:rgba(33,5,10,.55); border-color:rgba(33,5,10,.25); transform:none; }
   .sn-claim-survey-skip{ background:none; border:none; cursor:pointer; font-family:'Archivo Narrow',sans-serif; font-weight:700; text-decoration:underline; text-underline-offset:3px; font-size:13.5px; color:var(--ink); opacity:.75; }
   .sn-claim-survey-skip:hover{ opacity:1; }
   .sn-claim-survey-thanks{ margin:clamp(16px,2vw,20px) 0 0; font-weight:700; }
