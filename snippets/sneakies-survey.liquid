@@ -1,0 +1,39 @@
+{%- comment -%}
+  Reusable single/multi-select survey card, shared by the Confirmation step
+  (radio, single-select) and the 50% Off Fallback step (checkbox, multi-select).
+  All interaction (enabling the Submit button, saving the answer, advancing to
+  the next step) is wired up generically in sneakies-claim.liquid's script via
+  the [data-survey] / [data-survey-mode] / [data-survey-name] attributes below,
+  so this snippet stays presentation-only and doesn't need to know what comes
+  after it.
+
+  Params:
+  - mode: 'radio' or 'checkbox'
+  - name: unique id (e.g. 'confirm', 'fallback') — becomes the input group name
+    and the sessionStorage key for the saved answer, so multiple instances on
+    the same page never collide
+  - heading, subtitle: copy
+  - options: pipe-separated list of choice labels
+{%- endcomment -%}
+
+{%- assign survey_options = options | split: '|' -%}
+<div class="sn-claim-survey" data-survey data-survey-mode="{{ mode }}" data-survey-name="{{ name }}">
+  <h3 class="sn-claim-survey-heading">{{ heading }}</h3>
+  <p class="sn-claim-survey-subtitle">{{ subtitle }}</p>
+
+  <div class="sn-claim-survey-options" role="{% if mode == 'radio' %}radiogroup{% else %}group{% endif %}" aria-label="{{ heading }}">
+    {%- for opt in survey_options -%}
+      {%- assign opt_clean = opt | strip -%}
+      {%- assign opt_id = name | append: '-opt-' | append: forloop.index -%}
+      <label class="sn-claim-survey-option" for="{{ opt_id }}">
+        <input type="{{ mode }}" id="{{ opt_id }}" name="{{ name }}-survey" value="{{ opt_clean }}" class="sn-claim-survey-input">
+        <span>{{ opt_clean }}</span>
+      </label>
+    {%- endfor -%}
+  </div>
+
+  <div class="sn-claim-survey-actions">
+    <button type="button" class="sn-submit sn-claim-survey-submit" data-survey-submit disabled>Submit answer</button>
+    <button type="button" class="sn-claim-survey-skip" data-survey-skip>Skip for now</button>
+  </div>
+</div>

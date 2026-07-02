@@ -1,0 +1,53 @@
+{%- comment -%}
+  Reusable claim-flow order summary card, shared by the Claim step (full) and
+  the Address Form step (condensed), so the markup/styling only exists once.
+
+  Params:
+  - variant: 'full' (adds the 4-pack badge + sample size + retail value rows)
+             or 'condensed' (product + ships + discount + total only)
+  - product_name, sample_size, retail_value, ship_date, discount_code
+{%- endcomment -%}
+
+<div class="sn-claim-card sn-claim-summary">
+  <div class="sn-claim-card-top">
+    <div>
+      <p class="sn-claim-card-label">{% if variant == 'full' %}Your Claim{% else %}Order Summary{% endif %}</p>
+      <h2 class="sn-claim-card-title">{{ product_name }}</h2>
+    </div>
+    {%- if variant == 'full' -%}
+      <span class="sn-claim-badge-pack">4-pack</span>
+    {%- endif -%}
+  </div>
+
+  {%- if variant == 'full' -%}
+    <div class="sn-claim-card-row">
+      <span>Sample size</span>
+      <strong>{{ sample_size }}</strong>
+    </div>
+    {%- if retail_value != blank -%}
+      <div class="sn-claim-card-row">
+        <span>Retail value</span>
+        <strong><s class="sn-claim-strike">{{ retail_value }}</s> <span class="sn-claim-free">$0</span></strong>
+      </div>
+    {%- endif -%}
+  {%- endif -%}
+
+  <div class="sn-claim-card-row">
+    <span>Ships</span>
+    <strong>{{ ship_date }}</strong>
+  </div>
+  <div class="sn-claim-card-row">
+    <span>Discount code</span>
+    <code class="sn-claim-code">{{ discount_code }}</code>
+  </div>
+
+  <div class="sn-claim-card-divider" aria-hidden="true"></div>
+
+  <div class="sn-claim-card-total">
+    <div>
+      <p class="sn-claim-card-total-label">Today&#8217;s total</p>
+      <p class="sn-claim-card-total-sub">No payment required</p>
+    </div>
+    <p class="sn-claim-card-total-amount">$0</p>
+  </div>
+</div>

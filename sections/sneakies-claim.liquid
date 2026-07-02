@@ -1,18 +1,26 @@
 {%- comment -%}
-  Sneakies — Claim page.
-  The first step of a multi-step "you're in" flow reached from any "Join the
-  Waitlist" CTA on the homepage (sneakies-landing.liquid). Reuses the same
-  design tokens, typography, and button interaction states already
+  Sneakies — Claim flow (4 steps, client-side).
+  Reached from any "Join the Waitlist" CTA on the homepage (sneakies-landing.liquid).
+  Reuses the same design tokens, typography, and button interaction states
   established there (#sn-root ink/cream/beige/yellow palette, Archivo Black/
   Narrow type, .sn-submit button hover/active states) so this reads as a
   natural continuation of the site rather than a separate landing page.
 
-  Dev-only scope: this build only implements "Claim page". The top preview
-  strip (Claim page / Address form / Confirmation / 50% off fallback) is a
-  reusable nav shell for the rest of the flow — the other three steps don't
-  exist yet, so their pills render as inert placeholders. No checkout/order
-  logic runs here; "Continue to checkout" is a visual placeholder pending
-  that next step being built.
+  Architecture: all 4 steps (Claim / Address form / Confirmation / 50% off
+  fallback) live in this one section as sibling panels ([data-step-panel]),
+  toggled by a small vanilla-JS state machine at the bottom of the file —
+  there's no page reload between steps, matching the "one continuous
+  experience" requirement. Current step + address form values + survey
+  answers are persisted to sessionStorage (see STORE_KEY below) so a refresh
+  doesn't lose progress. No backend/order logic runs here — this is a
+  dev-only preview of the funnel design, reachable step-by-step via the
+  actual CTAs or directly via the preview nav pills at the top.
+
+  Reusable pieces: snippets/sneakies-order-summary.liquid (full variant on
+  the Claim step, condensed variant on the Address step) and
+  snippets/sneakies-survey.liquid (radio mode on Confirmation, checkbox mode
+  on the Fallback step) — both are rendered twice each rather than having
+  their markup duplicated inline.
 {%- endcomment -%}
 
 {%- style -%}
@@ -27,49 +35,62 @@
   .sn-claim img{ max-width:100%; display:block; filter:saturate(1.08) contrast(1.05) brightness(1.02); }
   .sn-claim a{ color:inherit; }
   .sn-claim ::selection{ background:var(--yellow); color:var(--ink); }
-  .sn-claim input:focus-visible, .sn-claim button:focus-visible, .sn-claim a:focus-visible{ outline:3px solid #5F7AAF; outline-offset:2px; }
+  .sn-claim input:focus-visible, .sn-claim select:focus-visible, .sn-claim button:focus-visible, .sn-claim a:focus-visible{ outline:3px solid #5F7AAF; outline-offset:2px; }
 
   /* Reused primary-button interaction states — matches .sn-submit on the homepage
-     exactly so this CTA feels/behaves like the rest of the site. */
+     exactly so every CTA in this flow feels/behaves like the rest of the site. */
   .sn-claim .sn-submit{ transition:transform .08s, box-shadow .08s; text-decoration:none; display:inline-flex; align-items:center; justify-content:center; gap:8px; cursor:pointer; }
   .sn-claim .sn-submit:hover{ transform:translateY(2px); box-shadow:0 3px 0 var(--yellow); }
   .sn-claim .sn-submit:active{ transform:translateY(5px); box-shadow:0 0 0 var(--yellow); }
 
-  /* Dev preview nav */
+  /* Step panels: only one visible at a time, swapped by the script below. */
+  .sn-claim-step{ display:none; }
+  .sn-claim-step.is-active{ display:block; }
+
+  /* Dev preview nav — every pill is a real button now (all 4 steps exist), so
+     clicking any of them jumps straight there for design review. */
   .sn-claim-devnav{ border-bottom:2px dashed rgba(33,5,10,.25); background:var(--beige); }
   .sn-claim-devnav-inner{ max-width:1180px; margin:0 auto; padding:14px clamp(18px,5vw,40px); display:flex; flex-wrap:wrap; align-items:center; gap:12px 18px; }
   .sn-claim-devnav-label{ font-family:'Archivo Narrow',sans-serif; font-weight:700; text-transform:uppercase; letter-spacing:.1em; font-size:11.5px; opacity:.55; white-space:nowrap; }
   .sn-claim-devnav-pills{ display:flex; flex-wrap:wrap; gap:8px; }
-  .sn-claim-pill{ font-family:'Archivo Narrow',sans-serif; font-weight:700; text-transform:uppercase; letter-spacing:.04em; font-size:12.5px; padding:8px 16px; border-radius:999px; border:2px solid var(--ink); background:var(--cream); white-space:nowrap; }
+  .sn-claim-pill{ font-family:'Archivo Narrow',sans-serif; font-weight:700; text-transform:uppercase; letter-spacing:.04em; font-size:12.5px; padding:8px 16px; border-radius:999px; border:2px solid var(--ink); background:var(--cream); white-space:nowrap; cursor:pointer; }
   .sn-claim-pill--active{ background:var(--ink); color:var(--cream); }
-  .sn-claim-pill--disabled{ opacity:.42; }
 
-  /* Back to homepage */
+  /* Back to homepage — lives inside the Claim step only (matches reference:
+     later steps don't show it). */
   .sn-claim-back-wrap{ max-width:1180px; margin:0 auto; padding:16px clamp(18px,5vw,40px) 0; }
   .sn-claim-back{ display:inline-flex; align-items:center; gap:6px; text-decoration:none; font-family:'Archivo Narrow',sans-serif; font-weight:700; text-transform:uppercase; letter-spacing:.06em; font-size:12px; color:var(--ink); opacity:.72; transition:opacity .15s ease; }
   .sn-claim-back:hover{ opacity:1; }
 
-  /* Header */
+  /* Header (shared across all 4 steps) */
   .sn-claim-header{ display:flex; flex-direction:column; align-items:center; gap:6px; text-align:center; padding:clamp(18px,3vw,30px) clamp(18px,5vw,40px) clamp(8px,1.6vw,16px); }
   .sn-claim-logo{ height:clamp(44px,6vw,60px); width:auto; }
   .sn-claim-tagline{ margin:0; font-family:'Archivo Narrow',sans-serif; font-weight:700; text-transform:uppercase; letter-spacing:.14em; font-size:11px; opacity:.55; }
 
-  /* Hero */
+  /* Hero (Claim step) */
   .sn-claim-hero{ padding:clamp(10px,2vw,20px) clamp(18px,5vw,40px) clamp(36px,5vw,56px); }
   .sn-claim-hero-grid{ max-width:1180px; margin:0 auto; display:grid; grid-template-columns:1.15fr 1fr; gap:clamp(28px,5vw,60px); align-items:start; }
   @media(max-width:860px){ .sn-claim-hero-grid{ grid-template-columns:1fr; } }
 
   .sn-claim-badge{ display:inline-flex; align-items:center; gap:8px; font-family:'Archivo Narrow',sans-serif; font-weight:700; text-transform:uppercase; letter-spacing:.06em; font-size:12px; color:var(--ink); background:var(--claim-green-bg); border:2px solid var(--ink); border-radius:999px; padding:7px 16px; }
   .sn-claim-h1{ font-family:'Archivo Black',sans-serif; font-weight:900; line-height:1.06; letter-spacing:-.01em; font-size:clamp(1.9rem,4.4vw,3rem); margin:clamp(14px,2vw,20px) 0 0; }
+  .sn-claim-h1--sm{ font-size:clamp(1.5rem,3.4vw,2.2rem); }
+  .sn-claim-h1--center{ text-align:center; }
   .sn-claim-h1 mark{ background:var(--yellow); color:var(--ink); box-decoration-break:clone; -webkit-box-decoration-break:clone; padding:0 4px; }
   .sn-claim-desc{ font-size:clamp(15px,1.6vw,18px); line-height:1.5; opacity:.78; font-weight:500; max-width:46ch; margin:clamp(12px,1.6vw,18px) 0 0; }
+  .sn-claim-desc--center{ text-align:center; margin-left:auto; margin-right:auto; }
 
   .sn-claim-cta-wrap{ position:relative; display:inline-block; margin:clamp(24px,3.4vw,34px) 0 0; }
   .sn-claim-annotation{ position:absolute; right:10px; bottom:100%; margin-bottom:2px; font-family:'Archivo Narrow',cursive,sans-serif; font-style:italic; font-weight:700; font-size:14px; color:var(--claim-pink); transform:rotate(-4deg); white-space:nowrap; pointer-events:none; }
   .sn-claim-cta{ font-family:'Archivo Black',sans-serif; text-transform:none; letter-spacing:0; font-size:clamp(1rem,1.6vw,1.15rem); color:var(--cream); background:var(--ink); border:2.5px solid var(--ink); border-radius:18px; padding:18px 30px; box-shadow:0 6px 0 var(--yellow); }
+  .sn-claim-cta--full{ width:100%; margin-top:6px; }
   .sn-claim-helper{ font-family:'Archivo Narrow',sans-serif; font-weight:700; text-transform:uppercase; letter-spacing:.06em; font-size:11px; opacity:.6; margin:clamp(14px,2vw,18px) 0 0; }
+  .sn-claim-helper--center{ text-align:center; }
 
   .sn-claim-hero-right{ display:flex; justify-content:center; }
+
+  /* Order summary card (rendered via snippets/sneakies-order-summary.liquid,
+     full variant on Claim, condensed variant on Address form). */
   .sn-claim-card{ width:100%; max-width:420px; background:var(--cream); border:3px solid var(--ink); border-radius:20px; box-shadow:6px 6px 0 var(--ink); padding:clamp(20px,2.6vw,28px); }
   .sn-claim-card-top{ display:flex; align-items:flex-start; justify-content:space-between; gap:12px; }
   .sn-claim-card-label{ margin:0; font-family:'Archivo Narrow',sans-serif; font-weight:700; text-transform:uppercase; letter-spacing:.08em; font-size:11px; opacity:.55; }
@@ -79,6 +100,8 @@
   .sn-claim-card-row:first-of-type{ margin-top:18px; }
   .sn-claim-card-row span{ opacity:.62; font-weight:600; }
   .sn-claim-card-row strong{ font-weight:800; text-align:right; }
+  .sn-claim-strike{ opacity:.5; font-weight:600; margin-right:6px; }
+  .sn-claim-free{ color:var(--claim-green); }
   .sn-claim-code{ font-family:ui-monospace,'SFMono-Regular',Menlo,Consolas,monospace; font-weight:700; font-size:13px; background:var(--beige); border:1.5px dashed var(--ink); border-radius:8px; padding:4px 10px; letter-spacing:.03em; }
   .sn-claim-card-divider{ height:2px; margin:6px 0 16px; background:repeating-linear-gradient(to right, rgba(33,5,10,.35) 0 8px, transparent 8px 14px); }
   .sn-claim-card-total{ display:flex; align-items:flex-end; justify-content:space-between; gap:12px; }
@@ -86,7 +109,7 @@
   .sn-claim-card-total-sub{ margin:2px 0 0; font-weight:700; font-size:12.5px; color:var(--claim-green); }
   .sn-claim-card-total-amount{ margin:0; font-family:'Archivo Black',sans-serif; font-size:clamp(1.6rem,3vw,2.1rem); }
 
-  /* Inside your box */
+  /* Inside your box (Claim step) */
   .sn-claim-box{ padding:0 clamp(18px,5vw,40px) clamp(40px,6vw,64px); }
   .sn-claim-box-inner{ max-width:1180px; margin:0 auto; position:relative; border:2.5px dashed rgba(33,5,10,.35); border-radius:24px; padding:clamp(30px,4vw,44px) clamp(18px,4vw,32px) clamp(28px,4vw,36px); text-align:center; }
   .sn-claim-box-badge{ position:absolute; top:0; left:clamp(20px,4vw,40px); transform:translateY(-50%); font-family:'Archivo Narrow',sans-serif; font-weight:700; text-transform:uppercase; letter-spacing:.06em; font-size:12px; color:var(--ink); background:var(--yellow); border:2px solid var(--ink); border-radius:999px; padding:7px 18px; white-space:nowrap; }
@@ -96,6 +119,48 @@
   .sn-claim-box-item{ border:2.5px solid var(--ink); border-radius:16px; overflow:hidden; box-shadow:4px 4px 0 var(--ink); background:#fff; aspect-ratio:3/4; }
   .sn-claim-box-item img{ width:100%; height:100%; object-fit:contain; }
 
+  /* Address form (Address step) */
+  .sn-claim-address{ padding:clamp(10px,2vw,20px) clamp(18px,5vw,40px) clamp(48px,6vw,72px); }
+  .sn-claim-address-intro{ max-width:1180px; margin:0 auto; text-align:center; }
+  .sn-claim-address-grid{ max-width:1180px; margin:clamp(24px,3.4vw,34px) auto 0; display:grid; grid-template-columns:1fr 380px; gap:clamp(24px,3.4vw,40px); align-items:start; }
+  @media(max-width:860px){ .sn-claim-address-grid{ grid-template-columns:1fr; } }
+  .sn-claim-form{ display:flex; flex-direction:column; gap:clamp(14px,2vw,18px); }
+  .sn-claim-field-row{ display:grid; grid-template-columns:1fr 1fr; gap:clamp(12px,1.8vw,18px); }
+  .sn-claim-field-row--4{ grid-template-columns:1fr 1fr 1fr 1fr; }
+  @media(max-width:620px){ .sn-claim-field-row, .sn-claim-field-row--4{ grid-template-columns:1fr 1fr; } }
+  .sn-claim-field{ display:flex; flex-direction:column; gap:6px; }
+  .sn-claim-field label{ font-family:'Archivo Narrow',sans-serif; font-weight:700; text-transform:uppercase; letter-spacing:.06em; font-size:11px; opacity:.62; }
+  .sn-claim-input{ font-family:'Archivo',sans-serif; font-size:15px; padding:12px 14px; border:1.5px solid rgba(33,5,10,.3); border-radius:11px; background:var(--cream); color:var(--ink); outline:none; width:100%; transition:border-color .15s ease; }
+  .sn-claim-input::placeholder{ color:rgba(33,5,10,.35); }
+  .sn-claim-input:focus{ border-color:var(--ink); }
+  .sn-claim-input.has-error{ border-color:var(--claim-pink); }
+  .sn-claim-error{ display:none; color:var(--claim-pink); font-size:11.5px; font-weight:600; }
+  .sn-claim-error.is-visible{ display:block; }
+  .sn-claim-address-summary{ position:sticky; top:20px; }
+
+  /* Confirmation + 50% off fallback (share the same centered layout) */
+  .sn-claim-confirm{ max-width:640px; margin:0 auto; padding:clamp(30px,5vw,56px) clamp(18px,5vw,40px) clamp(48px,6vw,72px); text-align:center; }
+  .sn-claim-confirm-icon{ width:64px; height:64px; margin:0 auto; border-radius:50%; background:var(--claim-green-bg); border:2.5px solid var(--ink); display:flex; align-items:center; justify-content:center; font-size:1.7rem; font-weight:900; color:var(--ink); }
+  .sn-claim-offer-badge{ display:inline-block; font-family:'Archivo Narrow',sans-serif; font-weight:700; text-transform:uppercase; letter-spacing:.05em; font-size:11.5px; color:var(--ink); background:var(--beige); border:2px solid var(--ink); border-radius:999px; padding:7px 18px; }
+  .sn-claim-survey-wrap{ margin-top:clamp(28px,4vw,40px); text-align:left; }
+
+  /* Survey card (rendered via snippets/sneakies-survey.liquid, radio mode on
+     Confirmation, checkbox mode on the Fallback step). */
+  .sn-claim-survey{ border:3px solid var(--ink); border-radius:20px; box-shadow:6px 6px 0 var(--ink); background:var(--cream); padding:clamp(22px,3vw,30px); }
+  .sn-claim-survey-heading{ margin:0; font-family:'Archivo Black',sans-serif; font-weight:900; font-size:clamp(1.15rem,2vw,1.4rem); text-transform:none; }
+  .sn-claim-survey-subtitle{ margin:4px 0 0; font-size:13.5px; opacity:.6; font-weight:600; }
+  .sn-claim-survey-options{ display:flex; flex-direction:column; gap:10px; margin-top:clamp(16px,2.2vw,20px); }
+  .sn-claim-survey-option{ display:flex; align-items:center; gap:12px; border:1.5px solid rgba(33,5,10,.3); border-radius:13px; padding:14px 16px; cursor:pointer; font-size:15px; font-weight:600; transition:border-color .15s ease, background .15s ease; }
+  .sn-claim-survey-option:hover{ border-color:var(--ink); }
+  .sn-claim-survey-option:has(.sn-claim-survey-input:checked){ border-color:var(--ink); background:rgba(251,208,26,.18); }
+  .sn-claim-survey-input{ width:19px; height:19px; accent-color:var(--ink); flex:none; cursor:pointer; }
+  .sn-claim-survey-actions{ display:flex; align-items:center; gap:18px; margin-top:clamp(18px,2.4vw,22px); flex-wrap:wrap; }
+  .sn-claim-survey-submit{ padding:14px 26px; border-radius:14px; box-shadow:0 5px 0 var(--yellow); }
+  .sn-claim-survey-submit:disabled{ opacity:.5; cursor:not-allowed; box-shadow:none; background:var(--beige); color:rgba(33,5,10,.55); border-color:rgba(33,5,10,.25); transform:none; }
+  .sn-claim-survey-skip{ background:none; border:none; cursor:pointer; font-family:'Archivo Narrow',sans-serif; font-weight:700; text-decoration:underline; text-underline-offset:3px; font-size:13.5px; color:var(--ink); opacity:.75; }
+  .sn-claim-survey-skip:hover{ opacity:1; }
+  .sn-claim-survey-thanks{ margin:clamp(16px,2vw,20px) 0 0; font-weight:700; }
+
   @media(prefers-reduced-motion:reduce){ .sn-claim *{ transition:none !important; } }
 {%- endstyle -%}
 
@@ -103,29 +168,24 @@
 {%- assign discount_code = section.settings.discount_code | default: 'SPECIAL500' -%}
 {%- assign sample_size = section.settings.sample_size | default: '4-pack, one of each flavor' -%}
 {%- assign product_name = section.settings.product_name | default: 'Sneakies Free Sample Box' -%}
+{%- assign retail_value = section.settings.retail_value | default: '$19.99' -%}
 
 <div id="sn-root" class="sn-claim">
 
-  <!-- PREVIEW NAV (dev only — reusable shell for the rest of the claim flow) -->
+  <!-- PREVIEW NAV (dev only) — jumps directly to any step for design review -->
   <nav class="sn-claim-devnav" aria-label="Development preview steps">
     <div class="sn-claim-devnav-inner">
       <span class="sn-claim-devnav-label">Preview · Dev Only</span>
       <div class="sn-claim-devnav-pills" role="group" aria-label="Claim flow steps">
-        <span class="sn-claim-pill sn-claim-pill--active" aria-current="step">Claim page</span>
-        <span class="sn-claim-pill sn-claim-pill--disabled" aria-disabled="true" title="Not built yet">Address form</span>
-        <span class="sn-claim-pill sn-claim-pill--disabled" aria-disabled="true" title="Not built yet">Confirmation</span>
-        <span class="sn-claim-pill sn-claim-pill--disabled" aria-disabled="true" title="Not built yet">50% off fallback</span>
+        <button type="button" class="sn-claim-pill" data-goto-step="claim">Claim page</button>
+        <button type="button" class="sn-claim-pill" data-goto-step="address">Address form</button>
+        <button type="button" class="sn-claim-pill" data-goto-step="confirmation">Confirmation</button>
+        <button type="button" class="sn-claim-pill" data-goto-step="fallback">50% off fallback</button>
       </div>
     </div>
   </nav>
 
-  <div class="sn-claim-back-wrap">
-    <a href="{{ routes.root_url }}" class="sn-claim-back">
-      <span aria-hidden="true">←</span> Back to homepage
-    </a>
-  </div>
-
-  <!-- HEADER -->
+  <!-- HEADER (shared across all 4 steps) -->
   <header class="sn-claim-header">
     <a href="{{ routes.root_url }}" aria-label="Sneakies home">
       <img src="{{ 'sn-logo.png' | asset_url }}" alt="Sneakies" class="sn-claim-logo">
@@ -133,81 +193,357 @@
     <p class="sn-claim-tagline">Fruits &amp; Veggies, Undercover</p>
   </header>
 
-  <!-- HERO -->
-  <section class="sn-claim-hero">
-    <div class="sn-claim-hero-grid">
+  <!-- STEP 1: CLAIM PAGE -->
+  <div class="sn-claim-step is-active" data-step-panel="claim">
 
-      <!-- Left: confirmation copy + CTA -->
-      <div class="sn-claim-hero-left">
-        <span class="sn-claim-badge"><span aria-hidden="true">●</span> Waitlist Confirmed</span>
-        <h1 class="sn-claim-h1">You&#8217;re in. Your <mark>free sample box</mark> is ready.</h1>
-        <p class="sn-claim-desc">Your box is on us. Add your shipping details next so we know where to send it.</p>
+    <div class="sn-claim-back-wrap">
+      <a href="{{ routes.root_url }}" class="sn-claim-back">
+        <span aria-hidden="true">←</span> Back to homepage
+      </a>
+    </div>
 
-        <div class="sn-claim-cta-wrap">
-          <span class="sn-claim-annotation" aria-hidden="true">no payment needed!</span>
-          <a href="#" class="sn-submit sn-claim-cta">Continue to checkout <span aria-hidden="true">→</span></a>
+    <section class="sn-claim-hero">
+      <div class="sn-claim-hero-grid">
+
+        <!-- Left: confirmation copy + CTA -->
+        <div class="sn-claim-hero-left">
+          <span class="sn-claim-badge"><span aria-hidden="true">●</span> Waitlist Confirmed</span>
+          <h1 class="sn-claim-h1">You&#8217;re in. Your <mark>free sample box</mark> is ready.</h1>
+          <p class="sn-claim-desc">Your box is on us. Add your shipping details next so we know where to send it.</p>
+
+          <div class="sn-claim-cta-wrap">
+            <span class="sn-claim-annotation" aria-hidden="true">no payment needed!</span>
+            <button type="button" class="sn-submit sn-claim-cta" data-goto-step="address">Continue to checkout <span aria-hidden="true">→</span></button>
+          </div>
+
+          <p class="sn-claim-helper">No payment required · One per household · Ships in {{ ship_date }}</p>
         </div>
 
-        <p class="sn-claim-helper">No payment required · One per household · Ships in {{ ship_date }}</p>
+        <!-- Right: claim summary card -->
+        <div class="sn-claim-hero-right">
+          {%- render 'sneakies-order-summary', variant: 'full', product_name: product_name, sample_size: sample_size, retail_value: retail_value, ship_date: ship_date, discount_code: discount_code -%}
+        </div>
+
       </div>
+    </section>
 
-      <!-- Right: claim summary card -->
-      <div class="sn-claim-hero-right">
-        <div class="sn-claim-card">
-          <div class="sn-claim-card-top">
-            <div>
-              <p class="sn-claim-card-label">Your Claim</p>
-              <h2 class="sn-claim-card-title">{{ product_name }}</h2>
+    <section class="sn-claim-box">
+      <div class="sn-claim-box-inner">
+        <span class="sn-claim-box-badge">Inside your box</span>
+        <h2 class="sn-claim-box-heading">Try one of each of our flagship flavors.</h2>
+        <div class="sn-claim-box-grid">
+          {%- assign flavor_names = 'Apple Pie Agents,Banana Bonanza,Berry Bandits,Buttermilk Blast' | split: ',' -%}
+          {%- assign flavor_imgs = 'applepieagentswithspinach.png,bananabonanzawithcarrots.png,berrybanditswithbeets.png,buttermilkblastwithcauliflower.png' | split: ',' -%}
+          {%- for i in (0..3) -%}
+            <div class="sn-claim-box-item">
+              <img src="{{ flavor_imgs[i] | asset_url }}" alt="{{ flavor_names[i] }} packaging" loading="lazy">
             </div>
-            <span class="sn-claim-badge-pack">4-pack</span>
-          </div>
-
-          <div class="sn-claim-card-row">
-            <span>Sample size</span>
-            <strong>{{ sample_size }}</strong>
-          </div>
-          <div class="sn-claim-card-row">
-            <span>Ships</span>
-            <strong>{{ ship_date }}</strong>
-          </div>
-          <div class="sn-claim-card-row">
-            <span>Discount code</span>
-            <code class="sn-claim-code">{{ discount_code }}</code>
-          </div>
-
-          <div class="sn-claim-card-divider" aria-hidden="true"></div>
-
-          <div class="sn-claim-card-total">
-            <div>
-              <p class="sn-claim-card-total-label">Today&#8217;s total</p>
-              <p class="sn-claim-card-total-sub">No payment required</p>
-            </div>
-            <p class="sn-claim-card-total-amount">$0</p>
-          </div>
+          {%- endfor -%}
         </div>
       </div>
+    </section>
+  </div>
 
-    </div>
-  </section>
-
-  <!-- INSIDE YOUR BOX -->
-  <section class="sn-claim-box">
-    <div class="sn-claim-box-inner">
-      <span class="sn-claim-box-badge">Inside your box</span>
-      <h2 class="sn-claim-box-heading">Try one of each of our flagship flavors.</h2>
-      <div class="sn-claim-box-grid">
-        {%- assign flavor_names = 'Apple Pie Agents,Banana Bonanza,Berry Bandits,Buttermilk Blast' | split: ',' -%}
-        {%- assign flavor_imgs = 'applepieagentswithspinach.png,bananabonanzawithcarrots.png,berrybanditswithbeets.png,buttermilkblastwithcauliflower.png' | split: ',' -%}
-        {%- for i in (0..3) -%}
-          <div class="sn-claim-box-item">
-            <img src="{{ flavor_imgs[i] | asset_url }}" alt="{{ flavor_names[i] }} packaging" loading="lazy">
-          </div>
-        {%- endfor -%}
+  <!-- STEP 2: ADDRESS FORM -->
+  <div class="sn-claim-step" data-step-panel="address">
+    <section class="sn-claim-address">
+      <div class="sn-claim-address-intro">
+        <h1 class="sn-claim-h1 sn-claim-h1--sm sn-claim-h1--center">Where should we send your box?</h1>
+        <p class="sn-claim-desc sn-claim-desc--center">Add your shipping details so we can send your Sneakies sample box in {{ ship_date }}.</p>
       </div>
-    </div>
-  </section>
+
+      <div class="sn-claim-address-grid">
+        <form class="sn-claim-card sn-claim-form" data-address-form novalidate>
+          <div class="sn-claim-field-row">
+            <div class="sn-claim-field">
+              <label for="sn-claim-fn">First name</label>
+              <input type="text" id="sn-claim-fn" name="first_name" class="sn-claim-input" placeholder="Jamie" autocomplete="given-name" required>
+              <span class="sn-claim-error" data-error-for="first_name"></span>
+            </div>
+            <div class="sn-claim-field">
+              <label for="sn-claim-ln">Last name</label>
+              <input type="text" id="sn-claim-ln" name="last_name" class="sn-claim-input" placeholder="Rivera" autocomplete="family-name" required>
+              <span class="sn-claim-error" data-error-for="last_name"></span>
+            </div>
+          </div>
+
+          <div class="sn-claim-field">
+            <label for="sn-claim-email">Email</label>
+            <input type="email" id="sn-claim-email" name="email" class="sn-claim-input" placeholder="jamie@email.com" autocomplete="email" required>
+            <span class="sn-claim-error" data-error-for="email"></span>
+          </div>
+
+          <div class="sn-claim-field">
+            <label for="sn-claim-addr">Street address</label>
+            <input type="text" id="sn-claim-addr" name="address1" class="sn-claim-input" placeholder="123 Orchard Way" autocomplete="address-line1" required>
+            <span class="sn-claim-error" data-error-for="address1"></span>
+          </div>
+
+          <div class="sn-claim-field">
+            <label for="sn-claim-addr2">Apartment, suite, etc. (optional)</label>
+            <input type="text" id="sn-claim-addr2" name="address2" class="sn-claim-input" placeholder="Apt 4B" autocomplete="address-line2">
+          </div>
+
+          <div class="sn-claim-field-row sn-claim-field-row--4">
+            <div class="sn-claim-field">
+              <label for="sn-claim-city">City</label>
+              <input type="text" id="sn-claim-city" name="city" class="sn-claim-input" placeholder="Portland" autocomplete="address-level2" required>
+              <span class="sn-claim-error" data-error-for="city"></span>
+            </div>
+            <div class="sn-claim-field">
+              <label for="sn-claim-state">State</label>
+              <input type="text" id="sn-claim-state" name="state" class="sn-claim-input" placeholder="OR" autocomplete="address-level1" required>
+              <span class="sn-claim-error" data-error-for="state"></span>
+            </div>
+            <div class="sn-claim-field">
+              <label for="sn-claim-zip">Zip code</label>
+              <input type="text" id="sn-claim-zip" name="zip" class="sn-claim-input" placeholder="97201" autocomplete="postal-code" required>
+              <span class="sn-claim-error" data-error-for="zip"></span>
+            </div>
+            <div class="sn-claim-field">
+              <label for="sn-claim-country">Country</label>
+              <select id="sn-claim-country" name="country" class="sn-claim-input" autocomplete="country">
+                <option value="United States" selected>United States</option>
+                <option value="Canada">Canada</option>
+                <option value="United Kingdom">United Kingdom</option>
+                <option value="Australia">Australia</option>
+              </select>
+            </div>
+          </div>
+
+          <button type="submit" class="sn-submit sn-claim-cta sn-claim-cta--full">Complete free order</button>
+          <p class="sn-claim-helper sn-claim-helper--center">No payment required. We only need your address to ship the box.</p>
+        </form>
+
+        <div class="sn-claim-address-summary">
+          {%- render 'sneakies-order-summary', variant: 'condensed', product_name: product_name, ship_date: ship_date, discount_code: discount_code -%}
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- STEP 3: CONFIRMATION -->
+  <div class="sn-claim-step" data-step-panel="confirmation">
+    <section class="sn-claim-confirm">
+      <div class="sn-claim-confirm-icon" aria-hidden="true">✓</div>
+      <h1 class="sn-claim-h1 sn-claim-h1--sm sn-claim-h1--center">Your free box is claimed.</h1>
+      <p class="sn-claim-desc sn-claim-desc--center">We&#8217;ve got your shipping details. Your Sneakies sample box will ship in {{ ship_date }}.</p>
+
+      <div class="sn-claim-survey-wrap">
+        {%- render 'sneakies-survey',
+          mode: 'radio',
+          name: 'confirm',
+          heading: 'What are you most excited about?',
+          subtitle: 'Optional, but it helps us make Sneakies better.',
+          options: 'Getting more fruits and veggies into breakfast|Trying the Sneakies flavors|Easier weekday breakfasts|Finding something my kids will actually eat|Being part of the first Sneakies testers'
+        -%}
+      </div>
+    </section>
+  </div>
+
+  <!-- STEP 4: 50% OFF FALLBACK -->
+  <div class="sn-claim-step" data-step-panel="fallback">
+    <section class="sn-claim-confirm">
+      <span class="sn-claim-offer-badge">Launch Offer Unlocked</span>
+      <h1 class="sn-claim-h1 sn-claim-h1--sm sn-claim-h1--center">You&#8217;re on the list for 50% off.</h1>
+      <p class="sn-claim-desc sn-claim-desc--center">We&#8217;ll send your special coupon before Sneakies launches in September.</p>
+
+      <div class="sn-claim-survey-wrap">
+        {%- render 'sneakies-survey',
+          mode: 'checkbox',
+          name: 'fallback',
+          heading: 'What are you most excited about?',
+          subtitle: 'Select all that apply.',
+          options: 'Getting more fruits and veggies into breakfast|Trying the Sneakies flavors|Easier weekday breakfasts|Finding something my kids will actually eat|Being part of the first Sneakies testers'
+        -%}
+      </div>
+    </section>
+  </div>
 
 </div>
+
+<script>
+(function(){
+  var root = document.getElementById('sn-root');
+  if(!root || !root.classList.contains('sn-claim')) return;
+
+  var STEPS = ['claim', 'address', 'confirmation', 'fallback'];
+  var STORE_KEY = 'sn_claim_state';
+
+  function loadState(){
+    try{
+      var raw = sessionStorage.getItem(STORE_KEY);
+      return raw ? JSON.parse(raw) : {};
+    }catch(e){ return {}; }
+  }
+  function saveState(){
+    try{ sessionStorage.setItem(STORE_KEY, JSON.stringify(state)); }catch(e){}
+  }
+
+  var state = loadState();
+  state.step = (state.step && STEPS.indexOf(state.step) > -1) ? state.step : 'claim';
+  state.address = state.address || {};
+  state.surveys = state.surveys || {};
+
+  var panels = {};
+  STEPS.forEach(function(s){ panels[s] = root.querySelector('[data-step-panel="' + s + '"]'); });
+  var pills = root.querySelectorAll('[data-goto-step]');
+
+  function showStep(step, opts){
+    if(STEPS.indexOf(step) === -1) return;
+    STEPS.forEach(function(s){
+      if(panels[s]) panels[s].classList.toggle('is-active', s === step);
+    });
+    pills.forEach(function(p){
+      var active = p.getAttribute('data-goto-step') === step;
+      p.classList.toggle('sn-claim-pill--active', active);
+      if(active){ p.setAttribute('aria-current', 'step'); } else { p.removeAttribute('aria-current'); }
+    });
+    state.step = step;
+    saveState();
+    if(!opts || !opts.silent){
+      root.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }
+
+  // Every step-jump control (dev nav pills, the Claim CTA, anything else
+  // tagged [data-goto-step]) shares one delegated listener.
+  root.addEventListener('click', function(ev){
+    var trigger = ev.target.closest('[data-goto-step]');
+    if(trigger){ showStep(trigger.getAttribute('data-goto-step')); }
+  });
+
+  // ---- Address form: inline validation + save + advance ----
+  var form = root.querySelector('[data-address-form]');
+  if(form){
+    var requiredFields = ['first_name', 'last_name', 'email', 'address1', 'city', 'state', 'zip'];
+
+    Object.keys(state.address).forEach(function(key){
+      var el = form.elements[key];
+      if(el) el.value = state.address[key];
+    });
+
+    function setError(name, message){
+      var input = form.elements[name];
+      var errorEl = form.querySelector('[data-error-for="' + name + '"]');
+      if(input) input.classList.toggle('has-error', !!message);
+      if(errorEl){
+        errorEl.textContent = message || '';
+        errorEl.classList.toggle('is-visible', !!message);
+      }
+    }
+
+    function validate(){
+      var isValid = true;
+      requiredFields.forEach(function(name){ setError(name, ''); });
+
+      requiredFields.forEach(function(name){
+        var value = (form.elements[name] && form.elements[name].value || '').trim();
+        if(!value){ setError(name, 'This field is required.'); isValid = false; }
+      });
+
+      var email = (form.elements.email.value || '').trim();
+      if(email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){
+        setError('email', 'Enter a valid email address.');
+        isValid = false;
+      }
+
+      var zip = (form.elements.zip.value || '').trim();
+      if(zip && !/^[A-Za-z0-9][A-Za-z0-9\s-]{2,9}$/.test(zip)){
+        setError('zip', 'Enter a valid zip/postal code.');
+        isValid = false;
+      }
+
+      return isValid;
+    }
+
+    form.addEventListener('input', function(ev){
+      if(ev.target.name) setError(ev.target.name, '');
+    });
+
+    form.addEventListener('submit', function(ev){
+      ev.preventDefault();
+      if(!validate()){
+        var firstInvalid = form.querySelector('.has-error');
+        if(firstInvalid) firstInvalid.focus();
+        return;
+      }
+      var data = {};
+      Array.prototype.forEach.call(form.elements, function(el){
+        if(el.name) data[el.name] = el.value;
+      });
+      state.address = data;
+      saveState();
+      showStep('confirmation');
+    });
+  }
+
+  // ---- Surveys: shared logic for both the radio (Confirmation) and
+  // checkbox (Fallback) instances rendered by snippets/sneakies-survey.liquid ----
+  root.querySelectorAll('[data-survey]').forEach(function(survey){
+    var name = survey.getAttribute('data-survey-name');
+    var mode = survey.getAttribute('data-survey-mode');
+    var submitBtn = survey.querySelector('[data-survey-submit]');
+    var skipBtn = survey.querySelector('[data-survey-skip]');
+    var inputs = survey.querySelectorAll('.sn-claim-survey-input');
+
+    var saved = state.surveys[name];
+    if(saved){
+      inputs.forEach(function(input){
+        input.checked = Array.isArray(saved) ? saved.indexOf(input.value) > -1 : saved === input.value;
+      });
+    }
+
+    function refreshSubmitState(){
+      var anyChecked = Array.prototype.some.call(inputs, function(input){ return input.checked; });
+      if(submitBtn) submitBtn.disabled = !anyChecked;
+    }
+    refreshSubmitState();
+    survey.addEventListener('change', refreshSubmitState);
+
+    function collectAnswer(){
+      if(mode === 'checkbox'){
+        return Array.prototype.filter.call(inputs, function(input){ return input.checked; })
+          .map(function(input){ return input.value; });
+      }
+      var checked = survey.querySelector('.sn-claim-survey-input:checked');
+      return checked ? checked.value : null;
+    }
+
+    // Confirmation's survey always leads into the fallback step (per spec:
+    // "Both proceed to next step"); the fallback survey is currently the
+    // last step in the flow, so it just locks itself and shows a thank-you.
+    function finishSurvey(){
+      inputs.forEach(function(input){ input.disabled = true; });
+      if(submitBtn) submitBtn.disabled = true;
+      if(skipBtn) skipBtn.disabled = true;
+      if(!survey.querySelector('.sn-claim-survey-thanks')){
+        var thanks = document.createElement('p');
+        thanks.className = 'sn-claim-survey-thanks';
+        thanks.textContent = 'Thanks — we’ll be in touch!';
+        survey.appendChild(thanks);
+      }
+    }
+
+    if(submitBtn){
+      submitBtn.addEventListener('click', function(){
+        state.surveys[name] = collectAnswer();
+        saveState();
+        if(name === 'confirm'){ showStep('fallback'); } else { finishSurvey(); }
+      });
+    }
+    if(skipBtn){
+      skipBtn.addEventListener('click', function(){
+        if(name === 'confirm'){ showStep('fallback'); } else { finishSurvey(); }
+      });
+    }
+  });
+
+  // Restore whichever step was active before a refresh, without an
+  // unsolicited scroll on first paint.
+  showStep(state.step, { silent: true });
+})();
+</script>
 
 {% schema %}
 {
@@ -216,6 +552,7 @@
     { "type": "header", "content": "Claim details" },
     { "type": "text", "id": "product_name", "label": "Product name", "default": "Sneakies Free Sample Box" },
     { "type": "text", "id": "sample_size", "label": "Sample size", "default": "4-pack, one of each flavor" },
+    { "type": "text", "id": "retail_value", "label": "Retail value (shown crossed out)", "default": "$19.99" },
     { "type": "text", "id": "ship_date", "label": "Ship date", "default": "August 2026" },
     { "type": "text", "id": "discount_code", "label": "Discount code", "default": "SPECIAL500" }
   ],
