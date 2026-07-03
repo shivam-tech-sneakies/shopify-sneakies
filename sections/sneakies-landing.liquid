@@ -13,7 +13,7 @@
 {%- endcomment -%}
 
 {%- style -%}
-  #sn-root{ --ink:#21050A; --cream:#FFFFF8; --beige:#F0E6C2; --yellow:#FBD01A;
+  #sn-root{ --ink:#21050A; --cream:#FFFFF8; --beige:#F0E6C2; --yellow:#FBD01A; --section-tint:#F2ECD2;
             background:var(--cream); color:var(--ink);
             font-family:'Archivo',system-ui,sans-serif; -webkit-font-smoothing:antialiased; overflow-x:hidden; }
   #sn-root *{ box-sizing:border-box; }
@@ -211,7 +211,7 @@
   </section>
 
   <!-- OFFER + CAPTURE -->
-  <section id="sn-offer" style="position:relative; background:var(--cream); border-top:3px solid var(--ink); padding:clamp(28px,4.5vw,52px) clamp(18px,5vw,40px);">
+  <section id="sn-offer" style="position:relative; background:var(--section-tint); border-top:3px solid var(--ink); padding:clamp(28px,4.5vw,52px) clamp(18px,5vw,40px);">
     <div style="max-width:620px; margin:0 auto; text-align:center;">
       <h2 style="font-family:'Archivo Black',sans-serif; text-transform:uppercase; line-height:.9; font-size:clamp(1.9rem,5.4vw,3.2rem); margin:0;">
         {%- if sold_out -%}50% Off Giveaway!{%- else -%}Free Sample Box Giveaway!{%- endif -%}
@@ -371,7 +371,7 @@
   </section>
 
   <!-- REVIEWS -->
-  <section style="position:relative; background:var(--cream); border-top:3px solid var(--ink); padding:clamp(40px,6vw,74px) 0;">
+  <section style="position:relative; background:var(--section-tint); border-top:3px solid var(--ink); padding:clamp(40px,6vw,74px) 0;">
     <div style="max-width:1140px; margin:0 auto; padding:0 clamp(18px,5vw,40px); text-align:center;">
       <h2 style="font-family:'Archivo Black',sans-serif; text-transform:uppercase; line-height:.9; font-size:clamp(1.9rem,5.4vw,3.2rem); margin:0;">What families are saying.</h2>
     </div>
