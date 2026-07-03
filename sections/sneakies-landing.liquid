@@ -70,8 +70,15 @@
   @media(max-width:520px){ #sn-root #usp-grid{ grid-template-columns:1fr; } }
   #sn-root #tier-grid{ display:grid; grid-template-columns:1fr 1fr; }
   @media(max-width:620px){ #sn-root #tier-grid{ grid-template-columns:1fr; } }
-  #sn-root #founder-grid{ display:grid; grid-template-columns:1fr 1fr; gap:clamp(28px,4vw,56px); align-items:center; }
+  #sn-root #founder-grid{ display:grid; grid-template-columns:1fr 1fr; gap:clamp(28px,4vw,56px); align-items:stretch; }
   @media(max-width:860px){ #sn-root #founder-grid{ grid-template-columns:1fr; } }
+  /* Photo stretches to match the text column's natural height on desktop
+     (album-style aspect-ratio would otherwise leave it shorter, floating
+     centered with empty space above/below); falls back to a fixed aspect
+     ratio once the columns stack on mobile, where "match the text height"
+     doesn't apply. */
+  #sn-root .sn-founder-photo{ height:100%; min-height:320px; }
+  @media(max-width:860px){ #sn-root .sn-founder-photo{ height:auto; min-height:0; aspect-ratio:4/3; } }
   #sn-root .sn-founder-copy p{ margin:0 0 14px; }
   #sn-root .sn-founder-copy p:last-child{ margin-bottom:0; }
   #sn-root .sn-ghost{ display:flex; flex-direction:column; align-items:center; gap:6px; }
@@ -399,7 +406,7 @@
   <!-- FOUNDER STORY -->
   <section style="position:relative; border-top:3px solid var(--ink); padding:clamp(40px,6vw,74px) clamp(18px,5vw,40px);">
     <div id="founder-grid" style="max-width:1140px; margin:0 auto;">
-      <div style="border:2.5px solid var(--ink); border-radius:20px; overflow:hidden; box-shadow:6px 6px 0 var(--ink); background:var(--beige); aspect-ratio:4/3;">
+      <div class="sn-founder-photo" style="border:2.5px solid var(--ink); border-radius:20px; overflow:hidden; box-shadow:6px 6px 0 var(--ink); background:var(--beige);">
         {%- if section.settings.founder_image != blank -%}
           <img src="{{ section.settings.founder_image | image_url: width: 1200 }}" alt="{{ section.settings.founder_image.alt | default: founder_name }}" width="{{ section.settings.founder_image.width }}" height="{{ section.settings.founder_image.height }}" loading="lazy" style="width:100%; height:100%; object-fit:cover;">
         {%- else -%}
