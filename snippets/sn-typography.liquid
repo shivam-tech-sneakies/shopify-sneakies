@@ -1,0 +1,58 @@
+{%- comment -%}
+  Global typography system for the Sneakies site — Home Page AND the entire
+  Claim Flow both render this once, near the top of their own {%- style -%}
+  block, so every component inherits from the same three tokens instead of
+  hardcoding a font-family on individual elements:
+
+  - --font-display : Azo Super Uber       — hero/section headlines, product &
+                       flavor names, ingredient titles, confirmation/offer
+                       headings, large marketing copy.
+  - --font-heading  : Stenciletta Solid Bold — subtitles, nav labels, button
+                       text, badges, pills, card titles, form section
+                       headings, highlighted info.
+  - --font-body     : Gimlet Sans Variable   — paragraphs, descriptions,
+                       footer text, form labels/helper/placeholder text,
+                       inputs, small informational copy.
+
+  Only one @font-face block per typeface is declared no matter how many times
+  this snippet is rendered on a page, since browsers de-dupe identical
+  @font-face rules by (font-family, src, weight, style) — safe even though
+  both sneakies-landing.liquid and sneakies-claim.liquid render it.
+{%- endcomment -%}
+@font-face{
+  font-family:'Azo Super Uber';
+  src:url({{ 'AzoSuperUber.woff2' | asset_url }}) format('woff2'),
+      url({{ 'AzoSuperUber.woff' | asset_url }}) format('woff');
+  font-weight:400;
+  font-style:normal;
+  font-display:swap;
+}
+@font-face{
+  font-family:'Stenciletta Solid Bold';
+  src:url({{ 'StencilettaSolidBold.woff2' | asset_url }}) format('woff2'),
+      url({{ 'StencilettaSolidBold.woff' | asset_url }}) format('woff');
+  font-weight:700;
+  font-style:normal;
+  font-display:swap;
+}
+@font-face{
+  font-family:'Gimlet Sans Variable';
+  src:url({{ 'GimletSansVariable.woff2' | asset_url }}) format('woff2'),
+      url({{ 'GimletSansVariable.woff' | asset_url }}) format('woff');
+  font-weight:300 900;
+  font-style:normal;
+  font-display:swap;
+}
+@font-face{
+  font-family:'Gimlet Sans Variable';
+  src:url({{ 'GimletSansVariable.woff2' | asset_url }}) format('woff2'),
+      url({{ 'GimletSansVariable.woff' | asset_url }}) format('woff');
+  font-weight:300 900;
+  font-style:italic;
+  font-display:swap;
+}
+:root{
+  --font-display:'Azo Super Uber', Impact, 'Arial Narrow', sans-serif;
+  --font-heading:'Stenciletta Solid Bold', 'Archivo Narrow', sans-serif;
+  --font-body:'Gimlet Sans Variable', 'Archivo', system-ui, sans-serif;
+}

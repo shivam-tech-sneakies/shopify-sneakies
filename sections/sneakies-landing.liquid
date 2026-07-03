@@ -13,9 +13,10 @@
 {%- endcomment -%}
 
 {%- style -%}
+  {%- render 'sn-typography' -%}
   #sn-root{ --ink:#21050A; --cream:#FFFFF8; --beige:#F0E6C2; --yellow:#FBD01A; --section-tint:#F2ECD2;
             background:var(--cream); color:var(--ink);
-            font-family:'Archivo',system-ui,sans-serif; -webkit-font-smoothing:antialiased; overflow-x:hidden; }
+            font-family:var(--font-body); -webkit-font-smoothing:antialiased; overflow-x:hidden; }
   #sn-root *{ box-sizing:border-box; }
   /* Centralized colour-grading pass: a small, uniform vibrance/contrast lift on every
      image (illustrations, packaging renders, review photos) so artwork reads richer
@@ -59,12 +60,12 @@
      box. No flavour gets its own sizing rule — only text/colour differ per flavour. */
   #sn-root .sn-active-card{ height:100%; box-sizing:border-box; display:flex; flex-direction:column; justify-content:center; align-items:center; }
   #sn-root .sn-flavor-flip-back{ transform:rotateY(180deg); }
-  #sn-root .sn-flip-trigger{ display:none; align-items:center; gap:4px; margin:0 clamp(6px,1.6vw,14px) -8px 0; align-self:flex-end; background:none; border:none; cursor:pointer; padding:2px; font-family:'Archivo Narrow',cursive,sans-serif; font-style:italic; font-weight:800; font-size:clamp(13px,1.9vw,16px); color:var(--ink); text-decoration:underline; text-decoration-style:wavy; text-decoration-thickness:1.4px; text-underline-offset:4px; transform:rotate(-3deg); position:relative; z-index:2; }
+  #sn-root .sn-flip-trigger{ display:none; align-items:center; gap:4px; margin:0 clamp(6px,1.6vw,14px) -8px 0; align-self:flex-end; background:none; border:none; cursor:pointer; padding:2px; font-family:var(--font-heading); font-style:italic; font-weight:800; font-size:clamp(13px,1.9vw,16px); color:var(--ink); text-decoration:underline; text-decoration-style:wavy; text-decoration-thickness:1.4px; text-underline-offset:4px; transform:rotate(-3deg); position:relative; z-index:2; }
   #sn-root .sn-flip-trigger:hover{ opacity:.72; }
   #sn-root .sn-back-content{ width:100%; height:100%; box-sizing:border-box; display:flex; flex-direction:column; align-items:center; position:relative; }
-  #sn-root .sn-ingredient-pill{ display:inline-flex; align-items:center; border-radius:9999px; border:2.5px solid var(--ink); color:var(--ink); font-family:'Archivo Narrow',sans-serif; font-weight:700; font-style:italic; text-transform:uppercase; letter-spacing:.02em; font-size:clamp(10.5px,1.5vw,12px); line-height:1.3; padding:6px 13px; white-space:nowrap; }
-  #sn-root .sn-flip-close{ position:absolute; top:10px; right:10px; width:32px; height:32px; border-radius:50%; border:2.5px solid var(--ink); background:var(--cream); color:var(--ink); cursor:pointer; font-family:'Archivo Black',sans-serif; font-size:14px; line-height:1; display:flex; align-items:center; justify-content:center; }
-  #sn-root .sn-back-btn{ margin-top:auto; cursor:pointer; font-family:'Archivo Black',sans-serif; text-transform:uppercase; letter-spacing:.02em; font-size:.82rem; color:var(--ink); background:var(--cream); border:2.5px solid var(--ink); border-radius:999px; padding:10px 18px; }
+  #sn-root .sn-ingredient-pill{ display:inline-flex; align-items:center; border-radius:9999px; border:2.5px solid var(--ink); color:var(--ink); font-family:var(--font-heading); font-weight:700; font-style:italic; text-transform:uppercase; letter-spacing:.02em; font-size:clamp(10.5px,1.5vw,12px); line-height:1.3; padding:6px 13px; white-space:nowrap; }
+  #sn-root .sn-flip-close{ position:absolute; top:10px; right:10px; width:32px; height:32px; border-radius:50%; border:2.5px solid var(--ink); background:var(--cream); color:var(--ink); cursor:pointer; font-family:var(--font-heading); font-size:14px; line-height:1; display:flex; align-items:center; justify-content:center; }
+  #sn-root .sn-back-btn{ margin-top:auto; cursor:pointer; font-family:var(--font-heading); text-transform:uppercase; letter-spacing:.02em; font-size:.82rem; color:var(--ink); background:var(--cream); border:2.5px solid var(--ink); border-radius:999px; padding:10px 18px; }
   @media(prefers-reduced-motion:reduce){ #sn-root .sn-flavor-flip-inner{ transition:none; } }
   #sn-root #usp-grid{ display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); }
   @media(max-width:980px){ #sn-root #usp-grid{ grid-template-columns:repeat(2,minmax(0,1fr)); } }
@@ -167,7 +168,7 @@
   <!-- HERO -->
   <section style="padding:clamp(2px,0.4vw,5px) clamp(18px,5vw,40px) clamp(32px,5vw,52px);">
     <div style="max-width:900px; margin:0 auto; text-align:center;">
-      <h1 style="font-family:'Archivo Black',sans-serif; text-transform:uppercase; line-height:.88; letter-spacing:-.015em; font-size:clamp(1.9rem,6vw,4rem); margin:0;">
+      <h1 style="font-family:var(--font-display); text-transform:uppercase; line-height:.88; letter-spacing:-.015em; font-size:clamp(1.9rem,6vw,4rem); margin:0;">
         Fruits &amp; Veggies,<br>Undercover.
       </h1>
       <p style="font-size:clamp(1rem,2vw,1.3rem); line-height:1.45; opacity:.84; max-width:44ch; margin:clamp(10px,1.5vw,16px) auto 0; font-weight:500;">
@@ -177,7 +178,7 @@
 
     <!-- Join the waitlist banner -->
     <div style="display:flex; justify-content:center; margin:clamp(20px,3vw,32px) auto 0;">
-      <a href="{{ claim_url }}" class="sn-btn" style="text-decoration:none; display:inline-flex; align-items:center; gap:8px; background:var(--yellow); border:2.5px solid var(--ink); border-radius:999px; padding:12px 26px; box-shadow:3px 3px 0 var(--ink); font-family:'Archivo Narrow',sans-serif; font-weight:700; text-transform:uppercase; letter-spacing:.10em; font-size:clamp(11px,1.6vw,14px); color:var(--ink); white-space:nowrap;">
+      <a href="{{ claim_url }}" class="sn-btn" style="text-decoration:none; display:inline-flex; align-items:center; gap:8px; background:var(--yellow); border:2.5px solid var(--ink); border-radius:999px; padding:12px 26px; box-shadow:3px 3px 0 var(--ink); font-family:var(--font-heading); font-weight:700; text-transform:uppercase; letter-spacing:.10em; font-size:clamp(11px,1.6vw,14px); color:var(--ink); white-space:nowrap;">
         ★ Join the waitlist&nbsp;·&nbsp;exclusive launch offer
       </a>
     </div>
@@ -203,8 +204,8 @@
             </div>
           </div>
           <div style="padding:8px 14px 14px; text-align:center; background:{{ fcols[i] }}; border-top:2.5px solid var(--ink);">
-            <h3 style="font-family:'Archivo Black',sans-serif; text-transform:uppercase; line-height:1.05; font-size:.98rem; margin:0; min-height:2.05em; display:flex; align-items:center; justify-content:center;">{{ fnames[i] }}</h3>
-            <p style="font-family:'Archivo Narrow',sans-serif; font-weight:700; font-size:11px; text-transform:uppercase; letter-spacing:.06em; color:var(--ink); background:var(--cream); border:2px solid var(--ink); border-radius:999px; padding:4px 13px; box-shadow:2px 2px 0 var(--ink); margin:8px 0 0; display:inline-block;">{{ fvegs[i] }}</p>
+            <h3 style="font-family:var(--font-display); text-transform:uppercase; line-height:1.05; font-size:.98rem; margin:0; min-height:2.05em; display:flex; align-items:center; justify-content:center;">{{ fnames[i] }}</h3>
+            <p style="font-family:var(--font-heading); font-weight:700; font-size:11px; text-transform:uppercase; letter-spacing:.06em; color:var(--ink); background:var(--cream); border:2px solid var(--ink); border-radius:999px; padding:4px 13px; box-shadow:2px 2px 0 var(--ink); margin:8px 0 0; display:inline-block;">{{ fvegs[i] }}</p>
           </div>
         </div>
       {%- endfor -%}
@@ -214,7 +215,7 @@
   <!-- OFFER + CAPTURE -->
   <section id="sn-offer" style="position:relative; background:var(--section-tint); border-top:3px solid var(--ink); padding:clamp(28px,4.5vw,52px) clamp(18px,5vw,40px);">
     <div style="max-width:620px; margin:0 auto; text-align:center;">
-      <h2 style="font-family:'Archivo Black',sans-serif; text-transform:uppercase; line-height:.9; font-size:clamp(1.9rem,5.4vw,3.2rem); margin:0;">
+      <h2 style="font-family:var(--font-display); text-transform:uppercase; line-height:.9; font-size:clamp(1.9rem,5.4vw,3.2rem); margin:0;">
         {%- if sold_out -%}50% Off Giveaway!{%- else -%}Free Sample Box Giveaway!{%- endif -%}
       </h2>
 
@@ -225,10 +226,10 @@
           <div style="height:7px; background:var(--yellow); border-bottom:2.5px solid var(--ink);"></div>
           <div style="padding:clamp(16px,2.8vw,22px) clamp(14px,2.4vw,20px); flex:1; display:flex; flex-direction:column; align-items:center; gap:7px;">
             {%- if sold_out -%}
-              <span style="font-family:'Archivo Narrow',sans-serif; font-weight:700; text-transform:uppercase; letter-spacing:.05em; font-size:11px; color:var(--cream); background:#CA3779; border:2.5px solid var(--ink); border-radius:999px; padding:4px 12px; box-shadow:2px 2px 0 var(--ink);">Fully Claimed</span>
-              <h3 style="font-family:'Archivo Black',sans-serif; text-transform:uppercase; line-height:1; font-size:clamp(1.15rem,2.6vw,1.5rem); margin:0; color:var(--ink); opacity:.42; text-decoration:line-through; text-decoration-thickness:clamp(3px,0.6vw,4px); text-decoration-color:var(--ink); min-height:2.3em; display:flex; align-items:center; justify-content:center;">Free Sample Box</h3>
+              <span style="font-family:var(--font-heading); font-weight:700; text-transform:uppercase; letter-spacing:.05em; font-size:11px; color:var(--cream); background:#CA3779; border:2.5px solid var(--ink); border-radius:999px; padding:4px 12px; box-shadow:2px 2px 0 var(--ink);">Fully Claimed</span>
+              <h3 style="font-family:var(--font-heading); text-transform:uppercase; line-height:1; font-size:clamp(1.15rem,2.6vw,1.5rem); margin:0; color:var(--ink); opacity:.42; text-decoration:line-through; text-decoration-thickness:clamp(3px,0.6vw,4px); text-decoration-color:var(--ink); min-height:2.3em; display:flex; align-items:center; justify-content:center;">Free Sample Box</h3>
             {%- else -%}
-              <h3 style="font-family:'Archivo Black',sans-serif; text-transform:uppercase; line-height:1; font-size:clamp(1.15rem,2.6vw,1.5rem); margin:0; min-height:2.3em; display:flex; align-items:center; justify-content:center;">Free Sample Box</h3>
+              <h3 style="font-family:var(--font-heading); text-transform:uppercase; line-height:1; font-size:clamp(1.15rem,2.6vw,1.5rem); margin:0; min-height:2.3em; display:flex; align-items:center; justify-content:center;">Free Sample Box</h3>
             {%- endif -%}
             <p style="font-size:13.5px; line-height:1.4; font-weight:600; opacity:.82; margin:0; max-width:26ch;">For the first {{ free_boxes }} to join the waitlist.</p>
           </div>
@@ -237,7 +238,7 @@
         <div style="border:2.5px solid var(--ink); border-radius:16px; background:var(--cream); box-shadow:4px 4px 0 var(--ink); overflow:hidden; display:flex; flex-direction:column;">
           <div style="height:7px; background:#B6CDEA; border-bottom:2.5px solid var(--ink);"></div>
           <div style="padding:clamp(16px,2.8vw,22px) clamp(14px,2.4vw,20px); flex:1; display:flex; flex-direction:column; align-items:center; gap:7px;">
-            <h3 style="font-family:'Archivo Black',sans-serif; text-transform:uppercase; line-height:1; font-size:clamp(1.15rem,2.6vw,1.5rem); margin:0; min-height:2.3em; display:flex; align-items:center; justify-content:center;">50% Off Your First Order</h3>
+            <h3 style="font-family:var(--font-heading); text-transform:uppercase; line-height:1; font-size:clamp(1.15rem,2.6vw,1.5rem); margin:0; min-height:2.3em; display:flex; align-items:center; justify-content:center;">50% Off Your First Order</h3>
             <p style="font-size:13.5px; line-height:1.4; font-weight:600; opacity:.82; margin:0; max-width:26ch;">For everyone who joins the waitlist before launch.</p>
           </div>
         </div>
@@ -247,17 +248,17 @@
       {%- form 'customer', id: 'sn-waitlist-form', style: 'margin:16px auto 0; max-width:420px;' -%}
         <input type="hidden" name="contact[tags]" value="waitlist">
         <div style="display:flex; flex-wrap:wrap; gap:8px;">
-          <input id="sn-fn" type="text" name="contact[first_name]" required autocomplete="given-name" aria-label="First name" placeholder="First name *" style="flex:1 1 110px; min-width:100px; font-family:'Archivo',sans-serif; font-size:15px; padding:12px 14px; border:2.5px solid var(--ink); border-radius:11px; background:var(--cream); color:var(--ink); outline:none;">
-          <input id="sn-em" type="email" name="contact[email]" required autocomplete="email" aria-label="Email" placeholder="you@email.com" style="flex:2 1 160px; min-width:140px; font-family:'Archivo',sans-serif; font-size:15px; padding:12px 14px; border:2.5px solid var(--ink); border-radius:11px; background:var(--cream); color:var(--ink); outline:none;">
+          <input id="sn-fn" type="text" name="contact[first_name]" required autocomplete="given-name" aria-label="First name" placeholder="First name *" style="flex:1 1 110px; min-width:100px; font-family:var(--font-body); font-size:15px; padding:12px 14px; border:2.5px solid var(--ink); border-radius:11px; background:var(--cream); color:var(--ink); outline:none;">
+          <input id="sn-em" type="email" name="contact[email]" required autocomplete="email" aria-label="Email" placeholder="you@email.com" style="flex:2 1 160px; min-width:140px; font-family:var(--font-body); font-size:15px; padding:12px 14px; border:2.5px solid var(--ink); border-radius:11px; background:var(--cream); color:var(--ink); outline:none;">
         </div>
         {%- if form.errors -%}
           <div role="alert" style="color:#CA3779; font-size:12px; font-weight:600; margin-top:6px; text-align:left;">{{ form.errors.messages[form.errors.first] | default: 'Please enter a valid email so we can save your spot.' }}</div>
         {%- endif -%}
-        <button type="submit" class="sn-submit" style="margin-top:9px; width:100%; cursor:pointer; font-family:'Archivo Black',sans-serif; text-transform:uppercase; letter-spacing:.02em; font-size:clamp(.98rem,2.1vw,1.12rem); color:var(--cream); background:var(--ink); border:2.5px solid var(--ink); border-radius:12px; padding:15px 20px; box-shadow:0 5px 0 var(--yellow);">
+        <button type="submit" class="sn-submit" style="margin-top:9px; width:100%; cursor:pointer; font-family:var(--font-heading); text-transform:uppercase; letter-spacing:.02em; font-size:clamp(.98rem,2.1vw,1.12rem); color:var(--cream); background:var(--ink); border:2.5px solid var(--ink); border-radius:12px; padding:15px 20px; box-shadow:0 5px 0 var(--yellow);">
           Claim your offer
         </button>
         <div style="margin-top:12px; text-align:left;">
-          <p style="font-family:'Archivo Narrow',sans-serif; font-weight:700; text-transform:uppercase; letter-spacing:.05em; font-size:10.5px; color:var(--ink); opacity:.68; margin:0 0 5px;">
+          <p style="font-family:var(--font-heading); font-weight:700; text-transform:uppercase; letter-spacing:.05em; font-size:10.5px; color:var(--ink); opacity:.68; margin:0 0 5px;">
             {%- if sold_out -%}Fully claimed · join the list for 50% off at launch.{%- else -%}{{ spots_claimed }} of {{ free_boxes }} free sample boxes claimed{%- endif -%}
           </p>
           <div style="height:9px; border:2.5px solid var(--ink); border-radius:999px; background:rgba(33,5,10,.06); overflow:hidden;">
@@ -272,8 +273,8 @@
   <!-- OUR SECRET SAUCE -->
   <section style="position:relative; border-top:3px solid var(--ink); padding:clamp(26px,4vw,48px) clamp(18px,5vw,40px);">
     <div style="max-width:1100px; margin:0 auto;">
-      <h2 style="font-family:'Archivo Black',sans-serif; text-transform:uppercase; line-height:.9; font-size:clamp(1.9rem,5.4vw,3.2rem); margin:0; text-align:center;">Our Secret Sauce</h2>
-      <p style="font-family:'Archivo Narrow',sans-serif; font-weight:700; text-transform:uppercase; letter-spacing:.09em; font-size:clamp(10.5px,1.1vw,12.5px); opacity:.60; margin:14px auto clamp(24px,3.5vw,40px); max-width:54ch; line-height:1.4; text-align:center;">Why families love our single-serve pancake mixes</p>
+      <h2 style="font-family:var(--font-display); text-transform:uppercase; line-height:.9; font-size:clamp(1.9rem,5.4vw,3.2rem); margin:0; text-align:center;">Our Secret Sauce</h2>
+      <p style="font-family:var(--font-heading); font-weight:700; text-transform:uppercase; letter-spacing:.09em; font-size:clamp(10.5px,1.1vw,12.5px); opacity:.60; margin:14px auto clamp(24px,3.5vw,40px); max-width:54ch; line-height:1.4; text-align:center;">Why families love our single-serve pancake mixes</p>
       <div id="usp-grid" style="gap:clamp(14px,2vw,20px);">
         {%- assign usp_titles = 'Super Convenient|Sneaky Fruits & Veggies|Real Ingredients|Nostalgic Flavors' | split: '|' -%}
         {%- assign usp_cols = '#FBE07A,#BBD06E,#F2ABCB,#B6CDEA' | split: ',' -%}
@@ -283,7 +284,7 @@
           <div style="height:11px; background:{{ usp_cols[i] }}; border-bottom:2.5px solid var(--ink);"></div>
           <div style="padding:22px 20px 26px; display:flex; flex-direction:column; gap:16px; align-items:center; text-align:center; flex:1;">
             <div style="width:100%; min-height:76px; display:flex; align-items:center; justify-content:center; background:{{ usp_cols[i] }}; border:2.5px solid var(--ink); border-radius:14px; padding:10px 16px; box-shadow:3px 3px 0 var(--ink);">
-              <span style="font-family:'Archivo Black',sans-serif; text-transform:uppercase; font-size:clamp(1rem,1.8vw,1.2rem); line-height:1.08; text-wrap:balance;">{{ usp_titles[i] }}</span>
+              <span style="font-family:var(--font-heading); text-transform:uppercase; font-size:clamp(1rem,1.8vw,1.2rem); line-height:1.08; text-wrap:balance;">{{ usp_titles[i] }}</span>
             </div>
             <p style="font-size:14px; line-height:1.55; opacity:.84; margin:0; font-weight:500;">{{ usp_body[i] }}</p>
           </div>
@@ -296,8 +297,8 @@
   <!-- MEET THE FLAVORS (carousel) -->
   <section id="sn-flavors" style="position:relative; border-top:3px solid var(--ink); padding:clamp(40px,6vw,74px) clamp(18px,5vw,40px); overflow:hidden;">
     <div style="max-width:860px; margin:0 auto; text-align:center;">
-      <h2 style="font-family:'Archivo Black',sans-serif; text-transform:uppercase; line-height:.9; font-size:clamp(1.9rem,5.4vw,3.2rem); margin:0;">Meet the flavors.</h2>
-      <p style="font-family:'Archivo Narrow',sans-serif; font-weight:700; text-transform:uppercase; letter-spacing:.09em; font-size:clamp(10.5px,1.1vw,12.5px); opacity:.60; margin:14px auto 0; max-width:54ch; line-height:1.4;">Four nostalgic flavors with new flavor releases each month for subscribers</p>
+      <h2 style="font-family:var(--font-display); text-transform:uppercase; line-height:.9; font-size:clamp(1.9rem,5.4vw,3.2rem); margin:0;">Meet the flavors.</h2>
+      <p style="font-family:var(--font-heading); font-weight:700; text-transform:uppercase; letter-spacing:.09em; font-size:clamp(10.5px,1.1vw,12.5px); opacity:.60; margin:14px auto 0; max-width:54ch; line-height:1.4;">Four nostalgic flavors with new flavor releases each month for subscribers</p>
 
       <div style="display:flex; flex-direction:column; align-items:center; gap:clamp(10px,1.6vw,16px); margin-top:clamp(14px,2.4vw,22px);">
 
@@ -309,9 +310,9 @@
           <button class="sn-ghost sn-prev" aria-label="Previous flavor" style="flex:none; width:clamp(66px,10vw,108px); cursor:pointer; background:none; border:none; padding:0;">
             <div style="position:relative; width:100%; padding:8%;">
               <img class="sn-ghost-img sn-ghost-prev" src="" alt="" style="width:100%; height:auto; object-fit:contain; opacity:.4; transition:opacity .2s;">
-              <div style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:40px; height:40px; border-radius:50%; background:rgba(255,249,222,.94); border:2.5px solid var(--ink); display:flex; align-items:center; justify-content:center; box-shadow:2px 2px 0 var(--ink);"><span style="font-family:'Archivo Black',sans-serif; font-size:1.1rem;">←</span></div>
+              <div style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:40px; height:40px; border-radius:50%; background:rgba(255,249,222,.94); border:2.5px solid var(--ink); display:flex; align-items:center; justify-content:center; box-shadow:2px 2px 0 var(--ink);"><span style="font-family:var(--font-heading); font-size:1.1rem;">←</span></div>
             </div>
-            <span class="sn-ghost-label-prev" style="font-family:'Archivo Narrow',sans-serif; font-weight:700; text-transform:uppercase; letter-spacing:.07em; font-size:clamp(8px,1.1vw,10.5px); opacity:.5; display:block; margin-top:5px;"></span>
+            <span class="sn-ghost-label-prev" style="font-family:var(--font-heading); font-weight:700; text-transform:uppercase; letter-spacing:.07em; font-size:clamp(8px,1.1vw,10.5px); opacity:.5; display:block; margin-top:5px;"></span>
           </button>
 
           <div style="flex:1; min-width:0; max-width:clamp(260px,50vw,440px); line-height:0; width:100%; height:clamp(360px,52vw,500px); padding:clamp(14px,3vw,32px); display:flex; align-items:center; justify-content:center; animation:sn-bounce 2.8s ease-in-out infinite;">
@@ -321,9 +322,9 @@
           <button class="sn-ghost sn-next" aria-label="Next flavor" style="flex:none; width:clamp(66px,10vw,108px); cursor:pointer; background:none; border:none; padding:0;">
             <div style="position:relative; width:100%; padding:8%;">
               <img class="sn-ghost-img sn-ghost-next" src="" alt="" style="width:100%; height:auto; object-fit:contain; opacity:.4; transition:opacity .2s;">
-              <div style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:40px; height:40px; border-radius:50%; background:rgba(255,249,222,.94); border:2.5px solid var(--ink); display:flex; align-items:center; justify-content:center; box-shadow:2px 2px 0 var(--ink);"><span style="font-family:'Archivo Black',sans-serif; font-size:1.1rem;">→</span></div>
+              <div style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:40px; height:40px; border-radius:50%; background:rgba(255,249,222,.94); border:2.5px solid var(--ink); display:flex; align-items:center; justify-content:center; box-shadow:2px 2px 0 var(--ink);"><span style="font-family:var(--font-heading); font-size:1.1rem;">→</span></div>
             </div>
-            <span class="sn-ghost-label-next" style="font-family:'Archivo Narrow',sans-serif; font-weight:700; text-transform:uppercase; letter-spacing:.07em; font-size:clamp(8px,1.1vw,10.5px); opacity:.5; display:block; margin-top:5px;"></span>
+            <span class="sn-ghost-label-next" style="font-family:var(--font-heading); font-weight:700; text-transform:uppercase; letter-spacing:.07em; font-size:clamp(8px,1.1vw,10.5px); opacity:.5; display:block; margin-top:5px;"></span>
           </button>
         </div>
 
@@ -337,8 +338,8 @@
               <!-- FRONT — unchanged from the existing implementation -->
               <div class="sn-flip-face sn-flavor-flip-face">
                 <div class="sn-active-card" style="width:100%; border:3px solid var(--ink); border-radius:24px; box-shadow:7px 7px 0 var(--ink); padding:clamp(18px,2.6vw,24px); text-align:center;">
-                  <h3 class="sn-name" style="font-family:'Archivo Black',sans-serif; text-transform:uppercase; line-height:1; font-size:clamp(1.2rem,3.5vw,1.7rem); margin:0;"></h3>
-                  <div class="sn-veg" style="display:inline-flex; align-items:center; gap:6px; margin-top:14px; border:2.5px solid var(--ink); border-radius:999px; padding:5px 14px; font-family:'Archivo Narrow',sans-serif; font-weight:700; text-transform:uppercase; letter-spacing:.06em; font-size:12px;"></div>
+                  <h3 class="sn-name" style="font-family:var(--font-display); text-transform:uppercase; line-height:1; font-size:clamp(1.2rem,3.5vw,1.7rem); margin:0;"></h3>
+                  <div class="sn-veg" style="display:inline-flex; align-items:center; gap:6px; margin-top:14px; border:2.5px solid var(--ink); border-radius:999px; padding:5px 14px; font-family:var(--font-heading); font-weight:700; text-transform:uppercase; letter-spacing:.06em; font-size:12px;"></div>
                   <div class="sn-callouts" style="display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin-top:18px;"></div>
                   <p class="sn-taste" style="font-size:clamp(13px,2vw,15px); line-height:1.45; font-weight:600; font-style:italic; margin:16px auto 0; max-width:32ch;"></p>
                 </div>
@@ -347,7 +348,7 @@
               <div class="sn-flip-face sn-flavor-flip-face sn-flavor-flip-back">
                 <div class="sn-back-content" style="border:3px solid var(--ink); border-radius:24px; box-shadow:7px 7px 0 var(--ink); padding:clamp(18px,2.6vw,24px);">
                   <button type="button" class="sn-flip-close" data-sn-flip-close aria-label="Close ingredients, back to flavor">×</button>
-                  <h3 style="font-family:'Archivo Black',sans-serif; text-transform:uppercase; line-height:1; font-size:clamp(1.2rem,3.5vw,1.7rem); margin:6px 0 0;">Ingredients</h3>
+                  <h3 style="font-family:var(--font-display); text-transform:uppercase; line-height:1; font-size:clamp(1.2rem,3.5vw,1.7rem); margin:6px 0 0;">Ingredients</h3>
                   <div class="sn-ingredients-pills" style="display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin:clamp(14px,2.2vw,20px) 0 clamp(14px,2.2vw,20px);"></div>
                   <button type="button" class="sn-back-btn" data-sn-flip-close><span aria-hidden="true">←</span> Back to flavor</button>
                 </div>
@@ -359,14 +360,14 @@
       </div>
 
       <div style="display:flex; gap:14px; justify-content:center; align-items:center; margin-top:clamp(10px,1.6vw,14px);">
-        <button class="sn-arrow sn-prev" aria-label="Previous flavor" style="width:38px; height:38px; border-radius:50%; cursor:pointer; background:rgba(255,249,222,.92); border:2.5px solid var(--ink); box-shadow:3px 3px 0 var(--ink); font-family:'Archivo Black',sans-serif;">←</button>
+        <button class="sn-arrow sn-prev" aria-label="Previous flavor" style="width:38px; height:38px; border-radius:50%; cursor:pointer; background:rgba(255,249,222,.92); border:2.5px solid var(--ink); box-shadow:3px 3px 0 var(--ink); font-family:var(--font-heading);">←</button>
         <div class="sn-dots" style="display:flex; gap:9px; align-items:center;"></div>
-        <button class="sn-arrow sn-next" aria-label="Next flavor" style="width:38px; height:38px; border-radius:50%; cursor:pointer; background:rgba(255,249,222,.92); border:2.5px solid var(--ink); box-shadow:3px 3px 0 var(--ink); font-family:'Archivo Black',sans-serif;">→</button>
+        <button class="sn-arrow sn-next" aria-label="Next flavor" style="width:38px; height:38px; border-radius:50%; cursor:pointer; background:rgba(255,249,222,.92); border:2.5px solid var(--ink); box-shadow:3px 3px 0 var(--ink); font-family:var(--font-heading);">→</button>
       </div>
 
       <p style="font-size:12.5px; line-height:1.5; opacity:.68; margin:clamp(10px,1.6vw,14px) auto 0; max-width:48ch; font-weight:600;">One serving of fruits &amp; veggies in every bag, with no artificial flavors or colors.</p>
       <div style="margin-top:clamp(8px,1.2vw,12px);">
-        <a href="{{ claim_url }}" class="sn-cta-flavors" style="display:inline-block; text-decoration:none; cursor:pointer; font-family:'Archivo Black',sans-serif; text-transform:uppercase; letter-spacing:.02em; font-size:.98rem; color:var(--cream); background:var(--ink); border:2.5px solid var(--ink); border-radius:12px; padding:13px 24px; box-shadow:4px 4px 0 var(--yellow);">Join the waitlist</a>
+        <a href="{{ claim_url }}" class="sn-cta-flavors" style="display:inline-block; text-decoration:none; cursor:pointer; font-family:var(--font-heading); text-transform:uppercase; letter-spacing:.02em; font-size:.98rem; color:var(--cream); background:var(--ink); border:2.5px solid var(--ink); border-radius:12px; padding:13px 24px; box-shadow:4px 4px 0 var(--yellow);">Join the waitlist</a>
       </div>
     </div>
   </section>
@@ -374,7 +375,7 @@
   <!-- REVIEWS -->
   <section style="position:relative; background:var(--section-tint); border-top:3px solid var(--ink); padding:clamp(40px,6vw,74px) 0;">
     <div style="max-width:1140px; margin:0 auto; padding:0 clamp(18px,5vw,40px); text-align:center;">
-      <h2 style="font-family:'Archivo Black',sans-serif; text-transform:uppercase; line-height:.9; font-size:clamp(1.9rem,5.4vw,3.2rem); margin:0;">What families are saying.</h2>
+      <h2 style="font-family:var(--font-display); text-transform:uppercase; line-height:.9; font-size:clamp(1.9rem,5.4vw,3.2rem); margin:0;">What families are saying.</h2>
     </div>
     <div id="rev-strip" style="display:flex; gap:14px; overflow-x:auto; scroll-snap-type:x mandatory; padding:clamp(20px,2.8vw,28px) clamp(18px,5vw,40px) 10px;">
       {%- assign rphotos = 'sn-review-1.jpg,sn-review-2.jpg,sn-review-3.jpg,sn-review-4.jpg,sn-review-5.jpg,sn-review-6.jpg,sn-review-7.jpg' | split: ',' -%}
@@ -389,11 +390,11 @@
         <div style="flex:none; width:290px; scroll-snap-align:start; border:2.5px solid var(--ink); border-radius:18px; background:var(--cream); box-shadow:5px 5px 0 var(--ink); padding:20px 18px; display:flex; flex-direction:column;">
           <div style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
             <div style="color:var(--yellow); -webkit-text-stroke:1px var(--ink); font-size:1rem; letter-spacing:2px;">★★★★★</div>
-            <span style="font-family:'Archivo Narrow',sans-serif; font-weight:700; text-transform:uppercase; letter-spacing:.05em; font-size:10px; color:var(--ink); background:#BBD06E; border:1.5px solid var(--ink); border-radius:99px; padding:3px 9px; white-space:nowrap; box-shadow:1px 1px 0 var(--ink);">Verified Buyer</span>
+            <span style="font-family:var(--font-heading); font-weight:700; text-transform:uppercase; letter-spacing:.05em; font-size:10px; color:var(--ink); background:#BBD06E; border:1.5px solid var(--ink); border-radius:99px; padding:3px 9px; white-space:nowrap; box-shadow:1px 1px 0 var(--ink);">Verified Buyer</span>
           </div>
           <p style="font-size:14.5px; line-height:1.5; font-weight:600; margin:10px 0 0;">“{{ parts[0] }}”</p>
           <div style="margin-top:auto; padding-top:14px;">
-            <p style="font-family:'Archivo Black',sans-serif; text-transform:uppercase; font-size:12px; margin:0;">{{ parts[1] }}</p>
+            <p style="font-family:var(--font-heading); text-transform:uppercase; font-size:12px; margin:0;">{{ parts[1] }}</p>
           </div>
         </div>
         {%- assign pidx = i | plus: 1 | modulo: rphoto_count -%}
@@ -416,13 +417,13 @@
       </div>
 
       <div>
-        <p style="font-family:'Archivo Narrow',sans-serif; font-weight:700; text-transform:uppercase; letter-spacing:.09em; font-size:clamp(10.5px,1.1vw,12.5px); opacity:.60; margin:0; line-height:1.4;">{{ founder_eyebrow }}</p>
-        <h2 style="font-family:'Archivo Black',sans-serif; text-transform:uppercase; line-height:.95; font-size:clamp(1.6rem,3.6vw,2.5rem); margin:12px 0 0;">{{ founder_heading }}</h2>
+        <p style="font-family:var(--font-heading); font-weight:700; text-transform:uppercase; letter-spacing:.09em; font-size:clamp(10.5px,1.1vw,12.5px); opacity:.60; margin:0; line-height:1.4;">{{ founder_eyebrow }}</p>
+        <h2 style="font-family:var(--font-display); text-transform:uppercase; line-height:.95; font-size:clamp(1.6rem,3.6vw,2.5rem); margin:12px 0 0;">{{ founder_heading }}</h2>
         <div class="sn-founder-copy" style="font-size:clamp(14.5px,1.6vw,16.5px); line-height:1.6; font-weight:500; opacity:.86; margin-top:clamp(14px,2vw,18px);">
           {{ founder_story }}
         </div>
-        <p style="font-family:'Archivo Narrow',cursive,sans-serif; font-style:italic; font-weight:700; font-size:clamp(1.4rem,2.6vw,1.8rem); margin:clamp(18px,2.5vw,24px) 0 0;">{{ founder_name }}</p>
-        <p style="font-family:'Archivo Narrow',sans-serif; font-weight:700; text-transform:uppercase; letter-spacing:.07em; font-size:11.5px; opacity:.6; margin:4px 0 0;">{{ founder_title }}</p>
+        <p style="font-family:var(--font-heading); font-style:italic; font-weight:700; font-size:clamp(1.4rem,2.6vw,1.8rem); margin:clamp(18px,2.5vw,24px) 0 0;">{{ founder_name }}</p>
+        <p style="font-family:var(--font-heading); font-weight:700; text-transform:uppercase; letter-spacing:.07em; font-size:11.5px; opacity:.6; margin:4px 0 0;">{{ founder_title }}</p>
       </div>
     </div>
   </section>
@@ -431,14 +432,14 @@
   <footer style="background:var(--ink); color:var(--cream); padding:clamp(28px,4.5vw,42px) clamp(18px,5vw,40px);">
     <div style="max-width:1140px; margin:0 auto; display:flex; flex-wrap:wrap; gap:16px 24px; align-items:center; justify-content:space-between;">
       <img src="{{ 'sn-sneakies-footer-new.png' | asset_url }}" alt="Sneakies" class="sn-sneakies-footer-new" style="height:30px; width:auto;">
-      <div style="font-family:'Archivo Narrow',sans-serif; font-weight:700; text-transform:uppercase; letter-spacing:.1em; font-size:11.5px; opacity:.82;">Fruits &amp; Veggies, Undercover · Sample boxes ship {{ ship_date }}</div>
+      <div style="font-family:var(--font-body); font-weight:700; text-transform:uppercase; letter-spacing:.1em; font-size:11.5px; opacity:.82;">Fruits &amp; Veggies, Undercover · Sample boxes ship {{ ship_date }}</div>
       <a href="mailto:{{ contact_email }}" style="font-size:12.5px; color:var(--cream); opacity:.68; text-decoration:none;">{{ contact_user }}<span>@</span>{{ contact_domain_parts | join: '<span>.</span>' }}</a>
     </div>
   </footer>
 
   <!-- STICKY CTA -->
   <div id="sn-sticky-cta">
-    <button type="button" data-sn-scroll-offer style="cursor:pointer; font-family:'Archivo Black',sans-serif; text-transform:uppercase; letter-spacing:.03em; font-size:1.02rem; color:var(--ink); background:rgba(255,249,222,0.14); -webkit-backdrop-filter:blur(20px) saturate(180%); backdrop-filter:blur(20px) saturate(180%); border:2px solid rgba(33,5,10,0.28); border-radius:999px; padding:14px 34px; box-shadow:0 4px 24px rgba(33,5,10,0.12);">
+    <button type="button" data-sn-scroll-offer style="cursor:pointer; font-family:var(--font-heading); text-transform:uppercase; letter-spacing:.03em; font-size:1.02rem; color:var(--ink); background:rgba(255,249,222,0.14); -webkit-backdrop-filter:blur(20px) saturate(180%); backdrop-filter:blur(20px) saturate(180%); border:2px solid rgba(33,5,10,0.28); border-radius:999px; padding:14px 34px; box-shadow:0 4px 24px rgba(33,5,10,0.12);">
       Claim your offer →
     </button>
   </div>
@@ -450,8 +451,8 @@
 <div data-sn-popup style="position:fixed; inset:0; z-index:80; background:rgba(33,5,10,.6); display:flex; align-items:flex-start; justify-content:center; overflow-y:auto; padding:24px 16px;">
   <div role="dialog" aria-modal="true" aria-label="You're on the Sneakies waitlist" style="background:var(--cream); border:3px solid var(--ink); border-radius:24px; max-width:480px; width:100%; box-shadow:0 18px 0 rgba(33,5,10,.3); margin:auto; overflow:hidden; animation:sn-pop .3s ease both;">
     <div style="background:var(--ink); color:var(--cream); padding:22px 26px 18px; text-align:center; position:relative;">
-      <button type="button" data-sn-popup-close aria-label="Close" style="position:absolute; top:13px; right:13px; cursor:pointer; width:36px; height:36px; border-radius:50%; border:2.5px solid var(--cream); background:transparent; color:var(--cream); font-family:'Archivo Black',sans-serif; font-size:14px; line-height:1;">✕</button>
-      <h2 style="font-family:'Archivo Black',sans-serif; text-transform:uppercase; line-height:.92; font-size:clamp(1.9rem,7vw,2.5rem); margin:0;">Congrats, You're In!</h2>
+      <button type="button" data-sn-popup-close aria-label="Close" style="position:absolute; top:13px; right:13px; cursor:pointer; width:36px; height:36px; border-radius:50%; border:2.5px solid var(--cream); background:transparent; color:var(--cream); font-family:var(--font-heading); font-size:14px; line-height:1;">✕</button>
+      <h2 style="font-family:var(--font-display); text-transform:uppercase; line-height:.92; font-size:clamp(1.9rem,7vw,2.5rem); margin:0;">Congrats, You're In!</h2>
       <p style="font-size:13px; line-height:1.55; margin:8px auto 0; max-width:40ch; opacity:.88;">
         {%- if sold_out -%}
           Thanks for joining the Sneakies waitlist. The free sample boxes are fully claimed, but you're still getting 50% off your first order before launch. Keep an eye on your inbox for your code.
@@ -462,17 +463,17 @@
     </div>
     <div style="padding:20px 24px 24px;">
       <div style="border:2.5px solid var(--ink); border-radius:16px; padding:16px 16px 18px; background:var(--beige);">
-        <h3 style="font-family:'Archivo Black',sans-serif; text-transform:uppercase; font-size:.98rem; line-height:1.05; margin:0;">Know a family that needs a breakfast win?</h3>
+        <h3 style="font-family:var(--font-heading); text-transform:uppercase; font-size:.98rem; line-height:1.05; margin:0;">Know a family that needs a breakfast win?</h3>
         <p style="font-size:13px; line-height:1.5; opacity:.8; margin:7px 0 0;">Share Sneakies and help them get in before launch.</p>
         <div style="display:flex; flex-wrap:wrap; gap:8px; margin-top:12px;">
-          <a href="{{ email_href }}" style="flex:1 1 140px; text-align:center; text-decoration:none; font-family:'Archivo Narrow',sans-serif; font-weight:700; text-transform:uppercase; letter-spacing:.05em; font-size:12.5px; color:var(--ink); background:var(--yellow); border:2.5px solid var(--ink); border-radius:10px; padding:13px 14px; display:flex; align-items:center; justify-content:center;">Send via Email</a>
-          <a href="{{ whatsapp_href }}" target="_blank" rel="noopener" style="flex:1 1 140px; text-align:center; text-decoration:none; font-family:'Archivo Narrow',sans-serif; font-weight:700; text-transform:uppercase; letter-spacing:.05em; font-size:12.5px; color:var(--cream); background:var(--ink); border:2.5px solid var(--ink); border-radius:10px; padding:13px 14px; display:flex; align-items:center; justify-content:center;">Share on WhatsApp</a>
+          <a href="{{ email_href }}" style="flex:1 1 140px; text-align:center; text-decoration:none; font-family:var(--font-heading); font-weight:700; text-transform:uppercase; letter-spacing:.05em; font-size:12.5px; color:var(--ink); background:var(--yellow); border:2.5px solid var(--ink); border-radius:10px; padding:13px 14px; display:flex; align-items:center; justify-content:center;">Send via Email</a>
+          <a href="{{ whatsapp_href }}" target="_blank" rel="noopener" style="flex:1 1 140px; text-align:center; text-decoration:none; font-family:var(--font-heading); font-weight:700; text-transform:uppercase; letter-spacing:.05em; font-size:12.5px; color:var(--cream); background:var(--ink); border:2.5px solid var(--ink); border-radius:10px; padding:13px 14px; display:flex; align-items:center; justify-content:center;">Share on WhatsApp</a>
         </div>
-        <div style="margin-top:8px; font-family:'Archivo',sans-serif; font-size:11px; opacity:.42; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; text-align:center;">{{ share_url }}</div>
+        <div style="margin-top:8px; font-family:var(--font-body); font-size:11px; opacity:.42; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; text-align:center;">{{ share_url }}</div>
       </div>
       <a href="{{ whatsapp_url }}" target="_blank" rel="noopener" class="sn-share-wa" style="display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:12px; text-decoration:none; cursor:pointer; border:2.5px solid var(--ink); border-radius:16px; padding:14px 16px; background:var(--cream); color:var(--ink);">
         <span style="font-size:13.5px; line-height:1.35;"><strong>Join the Sneaky Parents Club</strong><br><span style="font-size:12px; opacity:.7;">First dibs, flavor drops, and behind-the-scenes updates.</span></span>
-        <span style="flex:none; font-family:'Archivo Black',sans-serif; font-size:1.05rem;">→</span>
+        <span style="flex:none; font-family:var(--font-heading); font-size:1.05rem;">→</span>
       </a>
     </div>
   </div>
@@ -570,7 +571,7 @@
       CALLOUTS[i].forEach(function(c){
         var s = document.createElement('span');
         s.textContent = c;
-        s.style.cssText = 'display:inline-block;font-family:Archivo Narrow,sans-serif;font-weight:700;font-style:italic;text-transform:uppercase;letter-spacing:.02em;font-size:13px;padding:7px 14px;border-radius:999px;border:2.5px solid #21050A;white-space:nowrap;';
+        s.style.cssText = 'display:inline-block;font-family:var(--font-heading);font-weight:700;font-style:italic;text-transform:uppercase;letter-spacing:.02em;font-size:13px;padding:7px 14px;border-radius:999px;border:2.5px solid #21050A;white-space:nowrap;';
         coEl.appendChild(s);
       });
       renderPills(i);
@@ -609,7 +610,7 @@
     if(flavorFlipScene) flavorFlipScene.classList.remove('is-flipped');
     coEl.innerHTML='';
     CALLOUTS[idx].forEach(function(c){ var s=document.createElement('span');
-      s.textContent=c; s.style.cssText='display:inline-block;font-family:Archivo Narrow,sans-serif;font-weight:700;font-style:italic;text-transform:uppercase;letter-spacing:.02em;font-size:13px;padding:7px 14px;border-radius:999px;border:2.5px solid #21050A;box-shadow:2px 2px 0 #21050A;white-space:nowrap;background:'+CCOL[idx]+';color:'+CTXT[idx]+';';
+      s.textContent=c; s.style.cssText='display:inline-block;font-family:var(--font-heading);font-weight:700;font-style:italic;text-transform:uppercase;letter-spacing:.02em;font-size:13px;padding:7px 14px;border-radius:999px;border:2.5px solid #21050A;box-shadow:2px 2px 0 #21050A;white-space:nowrap;background:'+CCOL[idx]+';color:'+CTXT[idx]+';';
       coEl.appendChild(s); });
     var p=(idx-1+N)%N, n=(idx+1)%N;
     ghostPrev.src=IMGS[p]; ghostPrev.alt=''; ghostNext.src=IMGS[n]; ghostNext.alt='';
@@ -632,8 +633,8 @@
   // Lock the carousel's card box to one fixed height (the tallest content across
   // every flavour, plus a breathing-room buffer) so switching flavours or flipping
   // never resizes the box or shifts the page. Re-run once webfonts finish loading
-  // (Archivo Black/Narrow render with different metrics than the fallback stack, so
-  // an initial measurement taken before they're ready can undershoot).
+  // (Azo Super Uber/Stenciletta Solid Bold render with different metrics than the
+  // fallback stack, so an initial measurement taken before they're ready can undershoot).
   lockCardHeight();
   if(window.document.fonts && document.fonts.ready){ document.fonts.ready.then(lockCardHeight); }
   timer=setInterval(next,4500);
