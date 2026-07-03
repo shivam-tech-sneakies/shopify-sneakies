@@ -1,11 +1,12 @@
 {%- comment -%}
-  Reusable single/multi-select survey card, shared by the Confirmation step
-  (radio, single-select) and the 50% Off Fallback step (checkbox, multi-select).
-  All interaction (enabling the Submit button, saving the answer, advancing to
-  the next step) is wired up generically in sneakies-claim.liquid's script via
-  the [data-survey] / [data-survey-mode] / [data-survey-name] attributes below,
-  so this snippet stays presentation-only and doesn't need to know what comes
-  after it.
+  Reusable multi-select survey card, shared by the Confirmation step and the
+  50% Off Fallback step (both checkbox mode, so any number of options can be
+  selected independently). All interaction (enabling the Submit button, saving
+  the answer, revealing that panel's own final state on submit) is wired up
+  generically in sneakies-claim.liquid's script via the [data-survey] /
+  [data-survey-mode] / [data-survey-name] attributes below, so this snippet
+  stays presentation-only and doesn't need to know what comes after it.
+  (mode still supports 'radio' too, in case a future instance needs it.)
 
   Params:
   - mode: 'radio' or 'checkbox'
