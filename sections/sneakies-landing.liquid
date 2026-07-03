@@ -77,8 +77,8 @@
      centered with empty space above/below); falls back to a fixed aspect
      ratio once the columns stack on mobile, where "match the text height"
      doesn't apply. */
-  #sn-root .sn-founder-photo{ height:100%; min-height:320px; }
-  @media(max-width:860px){ #sn-root .sn-founder-photo{ height:auto; min-height:0; aspect-ratio:4/3; } }
+  #sn-root .sn-founder-photo{ height:100%; align-self:stretch; min-height:380px; }
+  @media(max-width:860px){ #sn-root .sn-founder-photo{ height:auto; align-self:auto; min-height:0; aspect-ratio:4/3; } }
   #sn-root .sn-founder-copy p{ margin:0 0 14px; }
   #sn-root .sn-founder-copy p:last-child{ margin-bottom:0; }
   #sn-root .sn-ghost{ display:flex; flex-direction:column; align-items:center; gap:6px; }
