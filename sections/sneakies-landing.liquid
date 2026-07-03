@@ -557,6 +557,10 @@
   // was showing before the sweep. A small fixed buffer is added on top for breathing
   // room so the box isn't a bare tight fit around the longest flavour's content.
   var CARD_HEIGHT_BUFFER = 28;
+  // How long each flavour sits on screen before autoplay advances to the next one.
+  // Was 4500ms — bumped by +1.5s so the carousel reads as relaxed/premium rather than
+  // rushed, per timing-only refinement (sequence/easing/flip duration unchanged).
+  var FLAVOR_AUTOPLAY_MS = 6000;
   function computeMaxCardHeight(){
     if(!activeCard || !backCard) return 0;
     var savedName = nameEl.textContent, savedVeg = vegEl.textContent, savedTaste = tasteEl.textContent,
@@ -626,7 +630,7 @@
   }
   function next(){ idx=(idx+1)%N; render(); }
   function prev(){ idx=(idx-1+N)%N; render(); }
-  function reset(){ clearInterval(timer); timer=setInterval(next,4500); }
+  function reset(){ clearInterval(timer); timer=setInterval(next,FLAVOR_AUTOPLAY_MS); }
   root.querySelectorAll('.sn-next').forEach(function(b){ b.addEventListener('click',function(){ reset(); next(); }); });
   root.querySelectorAll('.sn-prev').forEach(function(b){ b.addEventListener('click',function(){ reset(); prev(); }); });
   render();
@@ -637,7 +641,7 @@
   // fallback stack, so an initial measurement taken before they're ready can undershoot).
   lockCardHeight();
   if(window.document.fonts && document.fonts.ready){ document.fonts.ready.then(lockCardHeight); }
-  timer=setInterval(next,4500);
+  timer=setInterval(next,FLAVOR_AUTOPLAY_MS);
 
   // Flavour card image flip: CSS :hover already drives this on devices that support
   // hover. On touch devices (no hover), tap the white image container to flip it;
