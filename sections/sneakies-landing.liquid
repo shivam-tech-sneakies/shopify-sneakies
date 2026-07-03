@@ -348,8 +348,7 @@
                 <div class="sn-back-content" style="border:3px solid var(--ink); border-radius:24px; box-shadow:7px 7px 0 var(--ink); padding:clamp(18px,2.6vw,24px);">
                   <button type="button" class="sn-flip-close" data-sn-flip-close aria-label="Close ingredients, back to flavor">×</button>
                   <h3 style="font-family:'Archivo Black',sans-serif; text-transform:uppercase; line-height:1; font-size:clamp(1.2rem,3.5vw,1.7rem); margin:6px 0 0;">Ingredients</h3>
-                  <div class="sn-ingredients-list" style="margin:clamp(14px,2.2vw,20px) 0 clamp(10px,1.6vw,14px); font-family:'Archivo',sans-serif; font-size:clamp(12.5px,1.7vw,14.5px); line-height:1.6; opacity:.82; text-align:center;"></div>
-                  <div class="sn-ingredients-pills" style="display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin:0 0 clamp(14px,2.2vw,20px);"></div>
+                  <div class="sn-ingredients-pills" style="display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin:clamp(14px,2.2vw,20px) 0 clamp(14px,2.2vw,20px);"></div>
                   <button type="button" class="sn-back-btn" data-sn-flip-close><span aria-hidden="true">←</span> Back to flavor</button>
                 </div>
               </div>
@@ -523,12 +522,11 @@
   var flavorFlipInner = root.querySelector('.sn-flavor-flip-inner');
   var flipTrigger = root.querySelector('.sn-flip-trigger');
   var backCard = root.querySelector('.sn-back-content');
-  var ingredientsEl = root.querySelector('.sn-ingredients-list');
   var pillsEl = root.querySelector('.sn-ingredients-pills');
-  // Renders the hero-ingredient pill row beneath the ingredients paragraph on the
-  // back face. Pills are derived straight from INGREDIENTS[i] (split on the same
-  // comma-separated list already used for the plain-language line) rather than a
-  // second hand-maintained array, so the two can never drift out of sync. Each
+  // Renders the hero-ingredient pill row directly beneath the Ingredients heading
+  // on the back face. Pills are derived straight from INGREDIENTS[i] (split on the
+  // same comma-separated list previously shown as plain text) rather than a
+  // second hand-maintained array, so they can never drift out of sync. Each
   // pill borrows the same LIGHT[] soft-tint accent already used for that flavour's
   // "with carrots"-style veg badge on the front face, so the ingredient tags read
   // as the same printed-label palette instead of a separate website color.
@@ -561,7 +559,7 @@
   function computeMaxCardHeight(){
     if(!activeCard || !backCard) return 0;
     var savedName = nameEl.textContent, savedVeg = vegEl.textContent, savedTaste = tasteEl.textContent,
-        savedCallouts = coEl.innerHTML, savedIngredients = ingredientsEl ? ingredientsEl.textContent : '',
+        savedCallouts = coEl.innerHTML,
         savedPills = pillsEl ? pillsEl.innerHTML : '';
     var max = 0;
     for(var i=0; i<N; i++){
@@ -575,13 +573,11 @@
         s.style.cssText = 'display:inline-block;font-family:Archivo Narrow,sans-serif;font-weight:700;font-style:italic;text-transform:uppercase;letter-spacing:.02em;font-size:13px;padding:7px 14px;border-radius:999px;border:2.5px solid #21050A;white-space:nowrap;';
         coEl.appendChild(s);
       });
-      if(ingredientsEl) ingredientsEl.textContent = INGREDIENTS[i];
       renderPills(i);
       max = Math.max(max, activeCard.scrollHeight, backCard.scrollHeight);
     }
     nameEl.textContent = savedName; vegEl.textContent = savedVeg; tasteEl.textContent = savedTaste;
     coEl.innerHTML = savedCallouts;
-    if(ingredientsEl) ingredientsEl.textContent = savedIngredients;
     if(pillsEl) pillsEl.innerHTML = savedPills;
     return max;
   }
@@ -606,7 +602,6 @@
     vegEl.style.background = LIGHT[idx]; vegEl.style.color = '#21050A';
     activeCard.style.background = cardBg(idx);
     if(backCard) backCard.style.background = cardBg(idx);
-    if(ingredientsEl) ingredientsEl.textContent = INGREDIENTS[idx];
     renderPills(idx);
     if(flipTrigger) flipTrigger.style.display = FLIP_ENABLED[idx] ? 'inline-flex' : 'none';
     // Card content just changed underneath the flip — always land back on the front
