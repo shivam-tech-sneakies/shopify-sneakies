@@ -403,10 +403,19 @@
     try{ sessionStorage.setItem(STORE_KEY, JSON.stringify(state)); }catch(e){}
   }
 
+  // Every fresh page load (refresh, reopening the tab/preview) always starts
+  // over from the Claim page and with the MCQ survey(s) unanswered — this is
+  // a demo build, and the previous behavior (restoring whatever step/survey
+  // state was last reached) meant a refresh could reopen straight onto the
+  // Confirmation/50% Off result instead of the top of the flow. Only the
+  // address form draft is still restored from a prior session, since that's
+  // unrelated to the step-position bug being fixed here.
   var state = loadState();
-  state.step = (state.step && STEPS.indexOf(state.step) > -1) ? state.step : 'claim';
+  state.step = 'claim';
   state.address = state.address || {};
-  state.surveys = state.surveys || {};
+  state.surveys = {};
+  state.surveysDone = {};
+  saveState();
 
   var panels = {};
   STEPS.forEach(function(s){ panels[s] = root.querySelector('[data-step-panel="' + s + '"]'); });
@@ -503,7 +512,8 @@
 
   // ---- Surveys: shared logic for both multi-select instances (Confirmation
   // and 50% Off Fallback) rendered by snippets/sneakies-survey.liquid ----
-  state.surveysDone = state.surveysDone || {};
+  // (state.surveys / state.surveysDone are reset above on every fresh load,
+  // so every instance here always starts unanswered.)
   root.querySelectorAll('[data-survey]').forEach(function(survey){
     var name = survey.getAttribute('data-survey-name');
     var mode = survey.getAttribute('data-survey-mode');
