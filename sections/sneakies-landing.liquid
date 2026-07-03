@@ -59,7 +59,7 @@
      box. No flavour gets its own sizing rule — only text/colour differ per flavour. */
   #sn-root .sn-active-card{ height:100%; box-sizing:border-box; display:flex; flex-direction:column; justify-content:center; align-items:center; }
   #sn-root .sn-flavor-flip-back{ transform:rotateY(180deg); }
-  #sn-root .sn-flip-trigger{ display:none; align-items:center; gap:5px; margin:0 0 8px; align-self:flex-end; background:none; border:none; cursor:pointer; padding:2px; font-family:'Archivo Narrow',cursive,sans-serif; font-style:italic; font-weight:700; font-size:clamp(12.5px,1.8vw,15px); color:var(--ink); text-decoration:underline; text-underline-offset:3px; }
+  #sn-root .sn-flip-trigger{ display:none; align-items:center; gap:4px; margin:0 clamp(6px,1.6vw,14px) -8px 0; align-self:flex-end; background:none; border:none; cursor:pointer; padding:2px; font-family:'Archivo Narrow',cursive,sans-serif; font-style:italic; font-weight:800; font-size:clamp(13px,1.9vw,16px); color:var(--ink); text-decoration:underline; text-decoration-style:wavy; text-decoration-thickness:1.4px; text-underline-offset:4px; transform:rotate(-3deg); position:relative; z-index:2; }
   #sn-root .sn-flip-trigger:hover{ opacity:.72; }
   #sn-root .sn-back-content{ width:100%; height:100%; box-sizing:border-box; display:flex; flex-direction:column; align-items:center; position:relative; }
   #sn-root .sn-flip-close{ position:absolute; top:10px; right:10px; width:32px; height:32px; border-radius:50%; border:2.5px solid var(--ink); background:var(--cream); color:var(--ink); cursor:pointer; font-family:'Archivo Black',sans-serif; font-size:14px; line-height:1; display:flex; align-items:center; justify-content:center; }
@@ -298,7 +298,7 @@
       <h2 style="font-family:'Archivo Black',sans-serif; text-transform:uppercase; line-height:.9; font-size:clamp(1.9rem,5.4vw,3.2rem); margin:0;">Meet the flavors.</h2>
       <p style="font-family:'Archivo Narrow',sans-serif; font-weight:700; text-transform:uppercase; letter-spacing:.09em; font-size:clamp(10.5px,1.1vw,12.5px); opacity:.60; margin:14px auto 0; max-width:54ch; line-height:1.4;">Four nostalgic flavors with new flavor releases each month for subscribers</p>
 
-      <div style="display:flex; flex-direction:column; align-items:center; gap:clamp(14px,2.2vw,20px); margin-top:clamp(22px,3.5vw,36px);">
+      <div style="display:flex; flex-direction:column; align-items:center; gap:clamp(10px,1.6vw,16px); margin-top:clamp(14px,2.4vw,22px);">
 
         <!-- Nav row: prev thumbnail/arrow, active package image, next thumbnail/arrow —
              kept as its own row (separate from the flip-trigger/card below) so
@@ -329,22 +329,22 @@
         <!-- Flip card block: constrained to the same width band as the active package
              image above so it stays visually centered under it — only the nav row
              above was restructured, this part is otherwise untouched. -->
-        <div style="width:100%; max-width:clamp(260px,50vw,440px); display:flex; flex-direction:column; align-items:center; gap:clamp(14px,2.2vw,20px);">
+        <div style="width:100%; max-width:clamp(260px,50vw,440px); display:flex; flex-direction:column; align-items:center; gap:clamp(4px,0.8vw,8px);">
           <button type="button" class="sn-flip-trigger" data-sn-flip-open aria-label="Flip card to see ingredients">Flip to see ingredients <span aria-hidden="true">↷</span></button>
           <div class="sn-flavor-flip-scene">
             <div class="sn-flavor-flip-inner">
               <!-- FRONT — unchanged from the existing implementation -->
               <div class="sn-flip-face sn-flavor-flip-face">
-                <div class="sn-active-card" style="width:100%; border:3px solid var(--ink); border-radius:20px; box-shadow:6px 6px 0 var(--ink); padding:clamp(16px,2.4vw,22px); text-align:center;">
+                <div class="sn-active-card" style="width:100%; border:3px solid var(--ink); border-radius:24px; box-shadow:7px 7px 0 var(--ink); padding:clamp(18px,2.6vw,24px); text-align:center;">
                   <h3 class="sn-name" style="font-family:'Archivo Black',sans-serif; text-transform:uppercase; line-height:1; font-size:clamp(1.2rem,3.5vw,1.7rem); margin:0;"></h3>
-                  <div class="sn-veg" style="display:inline-flex; align-items:center; gap:6px; margin-top:11px; border:2.5px solid var(--ink); border-radius:999px; padding:5px 14px; font-family:'Archivo Narrow',sans-serif; font-weight:700; text-transform:uppercase; letter-spacing:.06em; font-size:12px;"></div>
-                  <div class="sn-callouts" style="display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin-top:15px;"></div>
-                  <p class="sn-taste" style="font-size:clamp(13px,2vw,15px); line-height:1.45; font-weight:600; font-style:italic; margin:14px auto 0; max-width:32ch;"></p>
+                  <div class="sn-veg" style="display:inline-flex; align-items:center; gap:6px; margin-top:14px; border:2.5px solid var(--ink); border-radius:999px; padding:5px 14px; font-family:'Archivo Narrow',sans-serif; font-weight:700; text-transform:uppercase; letter-spacing:.06em; font-size:12px;"></div>
+                  <div class="sn-callouts" style="display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin-top:18px;"></div>
+                  <p class="sn-taste" style="font-size:clamp(13px,2vw,15px); line-height:1.45; font-weight:600; font-style:italic; margin:16px auto 0; max-width:32ch;"></p>
                 </div>
               </div>
               <!-- BACK — ingredients panel, same dimensions/radius/shadow/flavour tint as the front -->
               <div class="sn-flip-face sn-flavor-flip-face sn-flavor-flip-back">
-                <div class="sn-back-content" style="border:3px solid var(--ink); border-radius:20px; box-shadow:6px 6px 0 var(--ink); padding:clamp(16px,2.4vw,22px);">
+                <div class="sn-back-content" style="border:3px solid var(--ink); border-radius:24px; box-shadow:7px 7px 0 var(--ink); padding:clamp(18px,2.6vw,24px);">
                   <button type="button" class="sn-flip-close" data-sn-flip-close aria-label="Close ingredients, back to flavor">×</button>
                   <h3 style="font-family:'Archivo Black',sans-serif; text-transform:uppercase; line-height:1; font-size:clamp(1.2rem,3.5vw,1.7rem); margin:6px 0 0;">Ingredients</h3>
                   <div class="sn-ingredients-list" style="border:2.5px dashed var(--ink); border-radius:16px; padding:clamp(12px,2vw,18px); margin:clamp(14px,2.2vw,20px) 0; font-family:ui-monospace,'SFMono-Regular',Menlo,Consolas,monospace; font-size:clamp(11.5px,1.6vw,13.5px); line-height:1.6; opacity:.82;"></div>
@@ -357,14 +357,14 @@
 
       </div>
 
-      <div style="display:flex; gap:14px; justify-content:center; align-items:center; margin-top:20px;">
+      <div style="display:flex; gap:14px; justify-content:center; align-items:center; margin-top:clamp(10px,1.6vw,14px);">
         <button class="sn-arrow sn-prev" aria-label="Previous flavor" style="width:38px; height:38px; border-radius:50%; cursor:pointer; background:rgba(255,249,222,.92); border:2.5px solid var(--ink); box-shadow:3px 3px 0 var(--ink); font-family:'Archivo Black',sans-serif;">←</button>
         <div class="sn-dots" style="display:flex; gap:9px; align-items:center;"></div>
         <button class="sn-arrow sn-next" aria-label="Next flavor" style="width:38px; height:38px; border-radius:50%; cursor:pointer; background:rgba(255,249,222,.92); border:2.5px solid var(--ink); box-shadow:3px 3px 0 var(--ink); font-family:'Archivo Black',sans-serif;">→</button>
       </div>
 
-      <p style="font-size:12.5px; line-height:1.5; opacity:.68; margin:18px auto 0; max-width:48ch; font-weight:600;">One serving of fruits &amp; veggies in every bag, with no artificial flavors or colors.</p>
-      <div style="margin-top:16px;">
+      <p style="font-size:12.5px; line-height:1.5; opacity:.68; margin:clamp(10px,1.6vw,14px) auto 0; max-width:48ch; font-weight:600;">One serving of fruits &amp; veggies in every bag, with no artificial flavors or colors.</p>
+      <div style="margin-top:clamp(8px,1.2vw,12px);">
         <a href="{{ claim_url }}" class="sn-cta-flavors" style="display:inline-block; text-decoration:none; cursor:pointer; font-family:'Archivo Black',sans-serif; text-transform:uppercase; letter-spacing:.02em; font-size:.98rem; color:var(--cream); background:var(--ink); border:2.5px solid var(--ink); border-radius:12px; padding:13px 24px; box-shadow:4px 4px 0 var(--yellow);">Join the waitlist</a>
       </div>
     </div>
