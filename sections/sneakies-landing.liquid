@@ -13,7 +13,7 @@
 {%- endcomment -%}
 
 {%- style -%}
-  #sn-root{ --ink:#21050A; --cream:#FFFEEE; --beige:#F0E6C2; --yellow:#FBD01A;
+  #sn-root{ --ink:#21050A; --cream:#FFFFF8; --beige:#F0E6C2; --yellow:#FBD01A;
             background:var(--cream); color:var(--ink);
             font-family:'Archivo',system-ui,sans-serif; -webkit-font-smoothing:antialiased; overflow-x:hidden; }
   #sn-root *{ box-sizing:border-box; }
@@ -211,7 +211,7 @@
   </section>
 
   <!-- OFFER + CAPTURE -->
-  <section id="sn-offer" style="position:relative; background:var(--beige); border-top:3px solid var(--ink); padding:clamp(28px,4.5vw,52px) clamp(18px,5vw,40px);">
+  <section id="sn-offer" style="position:relative; background:var(--cream); border-top:3px solid var(--ink); padding:clamp(28px,4.5vw,52px) clamp(18px,5vw,40px);">
     <div style="max-width:620px; margin:0 auto; text-align:center;">
       <h2 style="font-family:'Archivo Black',sans-serif; text-transform:uppercase; line-height:.9; font-size:clamp(1.9rem,5.4vw,3.2rem); margin:0;">
         {%- if sold_out -%}50% Off Giveaway!{%- else -%}Free Sample Box Giveaway!{%- endif -%}
@@ -371,7 +371,7 @@
   </section>
 
   <!-- REVIEWS -->
-  <section style="position:relative; background:var(--beige); border-top:3px solid var(--ink); padding:clamp(40px,6vw,74px) 0;">
+  <section style="position:relative; background:var(--cream); border-top:3px solid var(--ink); padding:clamp(40px,6vw,74px) 0;">
     <div style="max-width:1140px; margin:0 auto; padding:0 clamp(18px,5vw,40px); text-align:center;">
       <h2 style="font-family:'Archivo Black',sans-serif; text-transform:uppercase; line-height:.9; font-size:clamp(1.9rem,5.4vw,3.2rem); margin:0;">What families are saying.</h2>
     </div>
@@ -566,11 +566,11 @@
   // Shared by both faces so the tint is never computed (or can drift) twice.
   function cardBg(i){
     return (window.CSS && CSS.supports && CSS.supports('background', 'color-mix(in srgb, red 55%, blue)'))
-      ? 'color-mix(in srgb, ' + LIGHT[i] + ' 55%, #FFF9DE)'
+      ? 'color-mix(in srgb, ' + LIGHT[i] + ' 55%, #FFFFF8)'
       : LIGHT[i];
   }
   for(var d=0; d<N; d++){ (function(k){ var b=document.createElement('button'); b.type='button'; b.setAttribute('aria-label','Go to '+NAMES[k]);
-    b.style.cssText='width:12px;height:12px;border-radius:50%;cursor:pointer;border:2.5px solid #21050A;background:#FFF9DE;padding:0;transition:transform .18s ease, background .18s ease;';
+    b.style.cssText='width:12px;height:12px;border-radius:50%;cursor:pointer;border:2.5px solid #21050A;background:#FFFFF8;padding:0;transition:transform .18s ease, background .18s ease;';
     b.addEventListener('click',function(){ reset(); idx=k; render(); }); dotsWrap.appendChild(b); })(d); }
   var dots = dotsWrap.querySelectorAll('button');
   function render(){
@@ -595,7 +595,7 @@
     root.querySelector('.sn-ghost.sn-next').setAttribute('aria-label','Next: '+NAMES[n]);
     dots.forEach(function(dot,k){
       var active = k===idx;
-      dot.style.background = active ? LIGHT[k] : '#FFF9DE';
+      dot.style.background = active ? LIGHT[k] : '#FFFFF8';
       dot.style.transform = active ? 'scale(1.3)' : 'none';
       dot.style.boxShadow = active ? '2px 2px 0 #21050A' : 'none';
     });
