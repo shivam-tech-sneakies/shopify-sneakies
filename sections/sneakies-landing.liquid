@@ -60,7 +60,8 @@
      box. No flavour gets its own sizing rule — only text/colour differ per flavour. */
   #sn-root .sn-active-card{ height:100%; box-sizing:border-box; display:flex; flex-direction:column; justify-content:center; align-items:center; }
   #sn-root .sn-flavor-flip-back{ transform:rotateY(180deg); }
-  #sn-root .sn-flip-trigger{ display:none; align-items:center; gap:4px; margin:0 clamp(6px,1.6vw,14px) -8px 0; align-self:flex-end; background:none; border:none; cursor:pointer; padding:2px; font-family:var(--font-heading); font-style:italic; font-weight:800; font-size:clamp(13px,1.9vw,16px); color:var(--ink); text-decoration:underline; text-decoration-style:wavy; text-decoration-thickness:1.4px; text-underline-offset:4px; transform:rotate(-3deg); position:relative; z-index:2; }
+  #sn-root .sn-flip-trigger{ display:none; align-items:center; gap:4px; margin:0 clamp(6px,1.6vw,14px) -8px 0; align-self:flex-end; background:none; border:none; cursor:pointer; padding:2px; font-family:var(--font-heading); font-style:italic; font-weight:800; font-size:clamp(13px,1.9vw,16px); color:var(--ink); transform:rotate(-3deg); position:relative; z-index:2; }
+  #sn-root .sn-flip-trigger-text{ text-decoration:underline; text-decoration-style:wavy; text-decoration-thickness:1.4px; text-underline-offset:4px; }
   #sn-root .sn-flip-trigger:hover{ opacity:.72; }
   #sn-root .sn-back-content{ width:100%; height:100%; box-sizing:border-box; display:flex; flex-direction:column; align-items:center; position:relative; }
   #sn-root .sn-ingredient-pill{ display:inline-flex; align-items:center; border-radius:9999px; border:2.5px solid var(--ink); color:var(--ink); font-family:var(--font-heading); font-weight:700; font-style:italic; text-transform:uppercase; letter-spacing:.02em; font-size:clamp(10.5px,1.5vw,12px); line-height:1.3; padding:6px 13px; white-space:nowrap; }
@@ -332,7 +333,7 @@
              image above so it stays visually centered under it — only the nav row
              above was restructured, this part is otherwise untouched. -->
         <div style="width:100%; max-width:clamp(260px,50vw,440px); display:flex; flex-direction:column; align-items:center; gap:clamp(4px,0.8vw,8px);">
-          <button type="button" class="sn-flip-trigger" data-sn-flip-open aria-label="Flip card to see ingredients">Flip to see ingredients <span aria-hidden="true">↷</span></button>
+          <button type="button" class="sn-flip-trigger" data-sn-flip-open aria-label="Flip card to see ingredients"><span class="sn-flip-trigger-text">Flip to see ingredients</span> <span aria-hidden="true">↷</span></button>
           <div class="sn-flavor-flip-scene">
             <div class="sn-flavor-flip-inner">
               <!-- FRONT — unchanged from the existing implementation -->
