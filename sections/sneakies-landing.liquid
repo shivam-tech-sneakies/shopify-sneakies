@@ -81,13 +81,6 @@
   @media(max-width:860px){ #sn-root .sn-founder-photo{ height:auto; align-self:auto; min-height:0; aspect-ratio:4/3; } }
   #sn-root .sn-founder-copy p{ margin:0 0 14px; }
   #sn-root .sn-founder-copy p:last-child{ margin-bottom:0; }
-  /* Footer wordmark: a quiet brand signature under the existing footer row,
-     not a second hero logo — kept small, centered, with generous breathing
-     room above it. Source PNG is high-resolution (1476x880) and displayed
-     far below native size, so it stays crisp on Retina/high-DPI without
-     needing a srcset. */
-  #sn-root .sn-footer-logo-wrap{ margin-top:clamp(26px,4.5vw,40px); text-align:center; }
-  #sn-root .sn-footer-logo{ height:clamp(20px,2.4vw,26px); width:auto; max-width:80%; opacity:.9; }
   #sn-root .sn-ghost{ display:flex; flex-direction:column; align-items:center; gap:6px; }
   @media(max-width:520px){ #sn-root .sn-ghost{ display:none !important; } }
   #sn-root #rev-strip{ scrollbar-width:thin; scrollbar-color:var(--ink) transparent; }
@@ -436,12 +429,9 @@
   <!-- FOOTER -->
   <footer style="background:var(--ink); color:var(--cream); padding:clamp(28px,4.5vw,42px) clamp(18px,5vw,40px);">
     <div style="max-width:1140px; margin:0 auto; display:flex; flex-wrap:wrap; gap:16px 24px; align-items:center; justify-content:space-between;">
-      <img src="{{ 'sn-logo.png' | asset_url }}" alt="Sneakies" style="height:30px; width:auto; filter:brightness(0) invert(1);">
+      <img src="{{ 'sn-sneakies-footer-new.png' | asset_url }}" alt="Sneakies" class="sn-sneakies-footer-new" style="height:30px; width:auto;">
       <div style="font-family:'Archivo Narrow',sans-serif; font-weight:700; text-transform:uppercase; letter-spacing:.1em; font-size:11.5px; opacity:.82;">Fruits &amp; Veggies, Undercover · Sample boxes ship {{ ship_date }}</div>
       <a href="mailto:{{ contact_email }}" style="font-size:12.5px; color:var(--cream); opacity:.68; text-decoration:none;">{{ contact_user }}<span>@</span>{{ contact_domain_parts | join: '<span>.</span>' }}</a>
-    </div>
-    <div class="sn-footer-logo-wrap">
-      <img src="{{ 'sn-footer-logo.png' | asset_url }}" alt="Sneakies" class="sn-footer-logo" loading="lazy" width="1476" height="880">
     </div>
   </footer>
 
