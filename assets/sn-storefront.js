@@ -36,6 +36,13 @@
   var STOREFRONT_ACCESS_TOKEN = 'f2647ee55f19d9addfa615cad803afd8'; // <-- set once the custom app above exists
   var VARIANT_ID = 'gid://shopify/ProductVariant/47536862068885'; // Sneakies Sample Box
   var DISCOUNT_CODE = 'SNEAKIESFREEBOX';
+  // The product discount above only covers the $19.99 item price — Shopify still
+  // charges a real shipping rate (e.g. $4.90 Economy) unless a shipping discount
+  // is also applied. QA found real checkout wasn't actually $0 despite the Claim
+  // Flow's own copy promising "no payment required" / "$0 today". Fixed by adding
+  // a second, internal-only free-shipping code (never shown to customers) that
+  // stacks with the product discount so the Free Box truly costs $0 all-in.
+  var SHIPPING_DISCOUNT_CODE = 'SNEAKIESFREESHIP';
 
   var COUNTRY_CODES = {
     'United States': 'US',
@@ -115,7 +122,7 @@
 
     var input = {
       lines: [{ merchandiseId: VARIANT_ID, quantity: 1 }],
-      discountCodes: [DISCOUNT_CODE],
+      discountCodes: [DISCOUNT_CODE, SHIPPING_DISCOUNT_CODE],
       buyerIdentity: {
         email: details.email,
         phone: normalizePhone(details.phone, countryCode)
