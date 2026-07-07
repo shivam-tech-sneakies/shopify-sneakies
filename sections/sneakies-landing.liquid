@@ -108,10 +108,23 @@
   @media(prefers-reduced-motion:reduce){ #sn-root *{ animation:none !important; } #sn-sticky-cta.is-visible{ animation:none; } #sn-root .sn-flip-inner{ transition:none; } }
 {%- endstyle -%}
 
-{%- assign spots_claimed = section.settings.spots_claimed | default: 0 -%}
-{%- assign free_boxes = section.settings.free_boxes | default: 500 -%}
-{%- assign sold_out = false -%}
-{%- if spots_claimed >= free_boxes -%}{%- assign sold_out = true -%}{%- endif -%}
+{%- comment -%} Free-box availability is driven entirely by the real "Sneakies
+  Sample Box" product's live Shopify inventory (all_products, read directly
+  in Liquid — no Storefront API/JS needed just for this display). No manual
+  counter or theme setting exists for this anymore; spots_claimed/progress
+  below are pure display values derived from that one live number. {%- endcomment -%}
+{%- assign sn_sample_variant = all_products['sneakies-free-sample-box'].selected_or_first_available_variant -%}
+{%- assign free_boxes = 500 -%}
+{%- assign spots_claimed = free_boxes -%}
+{%- assign sold_out = true -%}
+{%- if sn_sample_variant -%}
+  {%- assign sold_out = true -%}
+  {%- if sn_sample_variant.available -%}{%- assign sold_out = false -%}{%- endif -%}
+  {%- assign sn_remaining = sn_sample_variant.inventory_quantity | default: 0 -%}
+  {%- if sn_remaining < 0 -%}{%- assign sn_remaining = 0 -%}{%- endif -%}
+  {%- if sn_remaining > free_boxes -%}{%- assign sn_remaining = free_boxes -%}{%- endif -%}
+  {%- assign spots_claimed = free_boxes | minus: sn_remaining -%}
+{%- endif -%}
 {%- assign claimed_left = free_boxes | minus: spots_claimed -%}
 {%- if claimed_left < 0 -%}{%- assign claimed_left = 0 -%}{%- endif -%}
 {%- assign progress_pct = 100 -%}
@@ -130,9 +143,9 @@
 {%- assign whatsapp_href = 'https://wa.me/?text=' | append: share_message_enc -%}
 {%- assign email_share_body = 'I thought you might like Sneakies, the pancake & waffle mix with fruits and veggies undercover. ' -%}
 {%- if sold_out -%}
-  {%- assign email_share_body = email_share_body | append: 'The free sample boxes have been fully claimed, but waitlist signups still get 50% off their first order before launch. ' -%}
+  {%- assign email_share_body = email_share_body | append: 'The free sample boxes have been fully claimed, but waitlist signups still get 50% off their first subscription order before launch. ' -%}
 {%- else -%}
-  {%- assign email_share_body = email_share_body | append: 'The first ' | append: free_boxes | append: ' get a free sample box on us, and everyone who joins before launch gets 50% off their first order. ' -%}
+  {%- assign email_share_body = email_share_body | append: 'The first ' | append: free_boxes | append: ' get a free sample box on us, and everyone who joins before launch gets 50% off their first subscription order. ' -%}
 {%- endif -%}
 {%- assign email_share_body = email_share_body | append: 'Join the waitlist here: ' | append: share_url -%}
 {%- assign email_subject_enc = 'Sneakies waitlist: free sample box / launch offer' | url_encode -%}
@@ -179,7 +192,7 @@
 
     <!-- Join the waitlist banner -->
     <div style="display:flex; justify-content:center; margin:clamp(20px,3vw,32px) auto 0;">
-      <a href="{{ claim_url }}" class="sn-btn" style="text-decoration:none; display:inline-flex; align-items:center; justify-content:center; gap:8px; background:var(--yellow); border:2.5px solid var(--ink); border-radius:999px; padding:12px clamp(30px,5vw,46px); box-shadow:3px 3px 0 var(--ink); font-family:var(--font-heading); font-weight:700; text-transform:uppercase; letter-spacing:.10em; font-size:clamp(11px,1.6vw,14px); color:var(--ink); white-space:nowrap;">
+      <a href="#sn-offer" data-sn-scroll-offer class="sn-btn" style="text-decoration:none; display:inline-flex; align-items:center; justify-content:center; gap:8px; background:var(--yellow); border:2.5px solid var(--ink); border-radius:999px; padding:12px clamp(30px,5vw,46px); box-shadow:3px 3px 0 var(--ink); font-family:var(--font-heading); font-weight:700; text-transform:uppercase; letter-spacing:.10em; font-size:clamp(11px,1.6vw,14px); color:var(--ink); white-space:nowrap;">
         ★ Join the waitlist&nbsp;·&nbsp;exclusive launch offer
       </a>
     </div>
@@ -239,7 +252,7 @@
         <div style="border:2.5px solid var(--ink); border-radius:16px; background:var(--cream); box-shadow:4px 4px 0 var(--ink); overflow:hidden; display:flex; flex-direction:column;">
           <div style="height:7px; background:#B6CDEA; border-bottom:2.5px solid var(--ink);"></div>
           <div style="padding:clamp(16px,2.8vw,22px) clamp(14px,2.4vw,20px); flex:1; display:flex; flex-direction:column; align-items:center; gap:7px;">
-            <h3 style="font-family:var(--font-heading) !important; text-transform:uppercase !important; letter-spacing:-0.03em !important; line-height:1; font-size:clamp(1.15rem,2.6vw,1.5rem); margin:0; min-height:2.3em; display:flex; align-items:center; justify-content:center;">50% Off Your First Order</h3>
+            <h3 style="font-family:var(--font-heading) !important; text-transform:uppercase !important; letter-spacing:-0.03em !important; line-height:1; font-size:clamp(1.15rem,2.6vw,1.5rem); margin:0; min-height:2.3em; display:flex; align-items:center; justify-content:center;">50% Off Your First Subscription Order</h3>
             <p style="font-size:13.5px; line-height:1.4; font-weight:600; opacity:.82; margin:0; max-width:26ch;">For everyone who joins the waitlist before launch.</p>
           </div>
         </div>
@@ -248,19 +261,29 @@
       <!-- Waitlist form -->
       {%- form 'customer', id: 'sn-waitlist-form', style: 'margin:16px auto 0; max-width:420px;' -%}
         <input type="hidden" name="contact[tags]" value="waitlist">
+        {%- comment -%} On success, Shopify redirects here instead of re-rendering
+          this page — always the first Claim Flow screen, never a later step. {%- endcomment -%}
+        <input type="hidden" name="return_to" value="{{ claim_url }}">
         <div style="display:flex; flex-wrap:wrap; gap:8px;">
           <input id="sn-fn" type="text" name="contact[first_name]" required autocomplete="given-name" aria-label="First name" placeholder="First name *" style="flex:1 1 110px; min-width:100px; font-family:var(--font-body); font-size:15px; padding:12px 14px; border:2.5px solid var(--ink); border-radius:11px; background:var(--cream); color:var(--ink); outline:none;">
           <input id="sn-em" type="email" name="contact[email]" required autocomplete="email" aria-label="Email" placeholder="you@email.com" style="flex:2 1 160px; min-width:140px; font-family:var(--font-body); font-size:15px; padding:12px 14px; border:2.5px solid var(--ink); border-radius:11px; background:var(--cream); color:var(--ink); outline:none;">
         </div>
         {%- if form.errors -%}
-          <div role="alert" style="color:#CA3779; font-size:12px; font-weight:600; margin-top:6px; text-align:left;">{{ form.errors.messages[form.errors.first] | default: 'Please enter a valid email so we can save your spot.' }}</div>
+          {%- assign sn_email_err = form.errors.messages['email'] -%}
+          <div role="alert" style="color:#CA3779; font-size:12px; font-weight:600; margin-top:6px; text-align:left;">
+            {%- if sn_email_err contains 'taken' -%}
+              Looks like you're already on the list! We'll be in touch soon.
+            {%- else -%}
+              {{ form.errors.messages[form.errors.first] | default: 'Please enter a valid email so we can save your spot.' }}
+            {%- endif -%}
+          </div>
         {%- endif -%}
         <button type="submit" class="sn-submit" style="margin-top:9px; width:100%; cursor:pointer; font-family:var(--font-heading); text-transform:uppercase; letter-spacing:.02em; font-size:clamp(.98rem,2.1vw,1.12rem); color:var(--cream); background:var(--ink); border:2.5px solid var(--ink); border-radius:12px; padding:15px 20px; box-shadow:0 5px 0 var(--yellow);">
           Claim your offer
         </button>
         <div style="margin-top:12px; text-align:left;">
           <p style="font-family:var(--font-heading); font-weight:700; text-transform:uppercase; letter-spacing:.05em; font-size:10.5px; color:var(--ink); opacity:.68; margin:0 0 5px;">
-            {%- if sold_out -%}Fully claimed · join the list for 50% off at launch.{%- else -%}{{ spots_claimed }} of {{ free_boxes }} free sample boxes claimed{%- endif -%}
+            {%- if sold_out -%}Fully claimed · join the list for 50% off your first subscription order.{%- else -%}{{ spots_claimed }} of {{ free_boxes }} free sample boxes claimed{%- endif -%}
           </p>
           <div style="height:9px; border:2.5px solid var(--ink); border-radius:999px; background:rgba(33,5,10,.06); overflow:hidden;">
             <div style="height:100%; width:{{ progress_pct }}%; background:repeating-linear-gradient(45deg,#21050A,#21050A 8px,#3a1416 8px,#3a1416 16px); {% if progress_pct > 0 %}border-right:2.5px solid var(--ink);{% endif %} transition:width .5s ease;"></div>
@@ -368,7 +391,7 @@
 
       <p style="font-size:12.5px; line-height:1.5; opacity:.68; margin:clamp(10px,1.6vw,14px) auto 0; max-width:48ch; font-weight:600;">One serving of fruits &amp; veggies in every bag, with no artificial flavors or colors.</p>
       <div style="margin-top:clamp(8px,1.2vw,12px);">
-        <a href="{{ claim_url }}" class="sn-cta-flavors" style="display:inline-block; text-decoration:none; cursor:pointer; font-family:var(--font-heading); text-transform:uppercase; letter-spacing:.02em; font-size:.98rem; color:var(--cream); background:var(--ink); border:2.5px solid var(--ink); border-radius:12px; padding:13px 24px; box-shadow:4px 4px 0 var(--yellow);">Join the waitlist</a>
+        <a href="#sn-offer" data-sn-scroll-offer class="sn-cta-flavors" style="display:inline-block; text-decoration:none; cursor:pointer; font-family:var(--font-heading); text-transform:uppercase; letter-spacing:.02em; font-size:.98rem; color:var(--cream); background:var(--ink); border:2.5px solid var(--ink); border-radius:12px; padding:13px 24px; box-shadow:4px 4px 0 var(--yellow);">Join the waitlist</a>
       </div>
     </div>
   </section>
@@ -456,7 +479,7 @@
       <h2 style="font-family:var(--font-display) !important; text-transform:uppercase !important; letter-spacing:-0.03em !important; line-height:.92; font-size:clamp(1.9rem,7vw,2.5rem); margin:0;">Congrats, You're In!</h2>
       <p style="font-size:13px; line-height:1.55; margin:8px auto 0; max-width:40ch; opacity:.88;">
         {%- if sold_out -%}
-          Thanks for joining the Sneakies waitlist. The free sample boxes are fully claimed, but you're still getting 50% off your first order before launch. Keep an eye on your inbox for your code.
+          Thanks for joining the Sneakies waitlist. The free sample boxes are fully claimed, but you're still getting 50% off your first subscription order before launch. Keep an eye on your inbox for your code.
         {%- else -%}
           Thanks for joining the Sneakies waitlist. Keep an eye on your inbox. We'll email you to collect your shipping address so you can claim your free sample box.
         {%- endif -%}
@@ -481,6 +504,7 @@
 </div>
 {%- endif -%}
 
+<script src="{{ 'sn-klaviyo.js' | asset_url }}"></script>
 <script>
 (function(){
   var root = document.getElementById('sn-root');
@@ -708,6 +732,33 @@
     });
   });
 
+  // Waitlist form: this is a real Shopify customer-creation submission (full
+  // page POST + redirect via the return_to field above), so there's no
+  // client-side "success" callback to hook into. Instead: (1) stash the
+  // entered name/email + current sold_out state in sessionStorage right
+  // before the browser navigates, so the Claim Flow can prefill the Address
+  // step and branch correctly without asking the user twice; (2) disable the
+  // button once to prevent an accidental duplicate submission while the
+  // native POST is in flight.
+  var waitlistForm = document.getElementById('sn-waitlist-form');
+  if(waitlistForm){
+    waitlistForm.addEventListener('submit', function(){
+      var submitBtn = waitlistForm.querySelector('[type="submit"]');
+      if(submitBtn){ submitBtn.disabled = true; submitBtn.style.opacity = '.7'; }
+      try{
+        var fn = waitlistForm.elements['contact[first_name]'];
+        var em = waitlistForm.elements['contact[email]'];
+        sessionStorage.setItem('sn_prefill', JSON.stringify({
+          first_name: fn ? fn.value : '',
+          email: em ? em.value : '',
+          sold_out: {{ sold_out | json }}
+        }));
+      }catch(e){}
+      // Not preventDefault()'d — the native Shopify form submission must
+      // still proceed normally.
+    });
+  }
+
   // Sticky CTA: shown only while the offer section has scrolled past but the
   // flavors section hasn't reached the viewport yet.
   var stickyEl = document.getElementById('sn-sticky-cta');
@@ -748,9 +799,6 @@
 {
   "name": "Sneakies Landing",
   "settings": [
-    { "type": "header", "content": "Waitlist counters" },
-    { "type": "range", "id": "spots_claimed", "label": "Free sample boxes claimed", "min": 0, "max": 1500, "step": 25, "default": 0 },
-    { "type": "range", "id": "free_boxes", "label": "Free sample boxes available", "min": 100, "max": 1000, "step": 25, "default": 500 },
     { "type": "header", "content": "Content" },
     { "type": "text", "id": "ship_date", "label": "Sample box ship date (footer)", "default": "August 2026" },
     { "type": "text", "id": "contact_email", "label": "Contact email", "default": "hello@eatsneakies.com" },

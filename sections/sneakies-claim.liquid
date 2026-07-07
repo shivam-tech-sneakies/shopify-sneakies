@@ -188,7 +188,10 @@
 {%- endstyle -%}
 
 {%- assign ship_date = section.settings.ship_date | default: 'August 2026' -%}
-{%- assign discount_code = section.settings.discount_code | default: 'SPECIAL500' -%}
+{%- comment -%} Real, live Shopify discount (100% off, scoped to the Sneakies
+  Sample Box product, once per customer) — keep this in sync with
+  assets/sn-storefront.js's DISCOUNT_CODE constant if it's ever changed. {%- endcomment -%}
+{%- assign discount_code = section.settings.discount_code | default: 'SNEAKIESFREEBOX' -%}
 {%- assign sample_size = section.settings.sample_size | default: '4-pack, one of each flavor' -%}
 {%- assign product_name = section.settings.product_name | default: 'Sneakies Free Sample Box' -%}
 {%- assign retail_value = section.settings.retail_value | default: '$19.99' -%}
@@ -297,6 +300,12 @@
           </div>
 
           <div class="sn-claim-field">
+            <label for="sn-claim-phone">Phone (optional)</label>
+            <input type="tel" id="sn-claim-phone" name="phone" class="sn-claim-input" placeholder="(555) 123-4567" autocomplete="tel">
+            <span class="sn-claim-error" data-error-for="phone"></span>
+          </div>
+
+          <div class="sn-claim-field">
             <label for="sn-claim-addr">Street address</label>
             <input type="text" id="sn-claim-addr" name="address1" class="sn-claim-input" placeholder="123 Orchard Way" autocomplete="address-line1" required>
             <span class="sn-claim-error" data-error-for="address1"></span>
@@ -368,8 +377,8 @@
   <div class="sn-claim-step" data-step-panel="fallback">
     <section class="sn-claim-confirm">
       <span class="sn-claim-offer-badge">Launch Offer Unlocked</span>
-      <h1 class="sn-claim-h1 sn-claim-h1--sm sn-claim-h1--center">You&#8217;re on the list for 50% off.</h1>
-      <p class="sn-claim-desc sn-claim-desc--center">We&#8217;ll send your special coupon before Sneakies launches in September.</p>
+      <h1 class="sn-claim-h1 sn-claim-h1--sm sn-claim-h1--center">You&#8217;re on the list for 50% off your first subscription order.</h1>
+      <p class="sn-claim-desc sn-claim-desc--center">We&#8217;ll send your special coupon for your first subscription order before Sneakies launches in September.</p>
 
       <div class="sn-claim-survey-wrap">
         {%- render 'sneakies-survey',
@@ -385,6 +394,8 @@
 
 </div>
 
+<script src="{{ 'sn-klaviyo.js' | asset_url }}"></script>
+<script src="{{ 'sn-storefront.js' | asset_url }}"></script>
 <script>
 (function(){
   var root = document.getElementById('sn-root');
@@ -403,19 +414,87 @@
     try{ sessionStorage.setItem(STORE_KEY, JSON.stringify(state)); }catch(e){}
   }
 
-  // Every fresh page load (refresh, reopening the tab/preview) always starts
-  // over from the Claim page and with the MCQ survey(s) unanswered — this is
-  // a demo build, and the previous behavior (restoring whatever step/survey
-  // state was last reached) meant a refresh could reopen straight onto the
-  // Confirmation/50% Off result instead of the top of the flow. Only the
-  // address form draft is still restored from a prior session, since that's
-  // unrelated to the step-position bug being fixed here.
   var state = loadState();
-  state.step = 'claim';
-  state.address = state.address || {};
-  state.surveys = {};
-  state.surveysDone = {};
+
+  if(state.awaitingCheckoutReturn){
+    // Just returned from Shopify's real checkout after completing the real
+    // Free Box order (the only redirect this flow ever makes) — land
+    // directly on the Confirmation step's finished state instead of the
+    // normal reset-to-Claim-page behavior below. The confirm survey's own
+    // "done" flag, set right before we left for checkout, is preserved so
+    // the existing restore-on-load logic further down re-hides it and shows
+    // the clean success state automatically, with no further redirect.
+    state.step = 'confirmation';
+    state.awaitingCheckoutReturn = false;
+    saveState();
+    // This is the one moment we know for certain the real order exists —
+    // address_collected/sample_order_created should never be set earlier
+    // than this (see the Address Form submit handler below), so that an
+    // abandoned-before-checkout visitor can still land in Klaviyo's
+    // "Free Box - Need Address" state rather than "Claimed".
+    if(window.SneakiesKlaviyo && state.address){
+      window.SneakiesKlaviyo.identify({
+        '$email': state.address.email,
+        '$first_name': state.address.first_name,
+        free_box: true,
+        address_collected: true,
+        sample_order_created: true
+      });
+    }
+  }else{
+    // Every other fresh page load (refresh, reopening the tab/preview) always
+    // starts over from the Claim page and with the MCQ survey(s) unanswered —
+    // this is a demo-era behavior kept intentionally (previously restoring
+    // whatever step/survey state was last reached meant a refresh could
+    // reopen straight onto the Confirmation/50% Off result instead of the
+    // top of the flow). Only the address form draft is still restored from a
+    // prior session, since that's unrelated to the step-position behavior.
+    state.step = 'claim';
+    state.address = state.address || {};
+    state.surveys = {};
+    state.surveysDone = {};
+    state.checkoutUrl = null;
+  }
+
+  // Prefill from a successful homepage waitlist signup — see the
+  // "sn-waitlist-form" submit handler in sneakies-landing.liquid, which
+  // stashes this in sessionStorage right before its native Shopify form POST
+  // navigates here (there's no client-side success callback available for
+  // that kind of submission, so this is the handoff point instead). Only
+  // fills in fields the user hasn't already started editing themselves, so
+  // reloading mid-flow never clobbers their own input. Also carries the
+  // sold_out signal computed on the homepage so this flow's branching below
+  // (Free Box vs 50% Off) matches what the user was actually shown there.
+  var prefillRaw = null;
+  try{
+    prefillRaw = sessionStorage.getItem('sn_prefill');
+    if(prefillRaw){
+      var prefill = JSON.parse(prefillRaw);
+      if(prefill.first_name && !state.address.first_name) state.address.first_name = prefill.first_name;
+      if(prefill.email && !state.address.email) state.address.email = prefill.email;
+      if(typeof prefill.sold_out === 'boolean' && typeof state.soldOut !== 'boolean') state.soldOut = prefill.sold_out;
+    }
+  }catch(e){}
+  // Direct/bookmarked visits to this page (no homepage handoff) have no
+  // sold_out signal to go on — default to the Free Box path, which matches
+  // this flow's original (pre-branching) behavior for anyone arriving this
+  // way, rather than guessing someone out of a free box they may still be
+  // eligible for.
+  if(typeof state.soldOut !== 'boolean') state.soldOut = false;
   saveState();
+
+  // Sync the profile into Klaviyo once per session, right when we know the
+  // signup actually succeeded (arriving here via sn_prefill is only possible
+  // after a successful Shopify customer creation). Uses only Klaviyo's public
+  // API (assets/sn-klaviyo.js) — never blocks the UI if it fails.
+  if(prefillRaw && !state.klaviyoSynced && window.SneakiesKlaviyo){
+    var syncProps = { '$email': state.address.email, '$first_name': state.address.first_name };
+    if(state.soldOut){ syncProps.fifty_off = true; } else { syncProps.free_box = true; }
+    window.SneakiesKlaviyo.identify(syncProps);
+    window.SneakiesKlaviyo.subscribeToLaunchList(state.address.email, state.address.first_name);
+    state.klaviyoSynced = true;
+    saveState();
+  }
 
   var panels = {};
   STEPS.forEach(function(s){ panels[s] = root.querySelector('[data-step-panel="' + s + '"]'); });
@@ -493,6 +572,26 @@
       if(ev.target.name) setError(ev.target.name, '');
     });
 
+    // A single, dynamically-created error line for backend/API failures
+    // (Storefront API unreachable, cart couldn't be built) — separate from
+    // the per-field .sn-claim-error spans above, which are for validation
+    // only.
+    function setSubmitError(message){
+      var el = form.querySelector('[data-address-submit-error]');
+      if(!message){
+        if(el) el.remove();
+        return;
+      }
+      if(!el){
+        el = document.createElement('p');
+        el.setAttribute('data-address-submit-error', '');
+        el.style.cssText = 'color:var(--claim-pink); font-size:12.5px; font-weight:600; margin:10px 0 0; text-align:center;';
+        var btn = form.querySelector('[type="submit"]');
+        if(btn) btn.insertAdjacentElement('afterend', el);
+      }
+      el.textContent = message;
+    }
+
     form.addEventListener('submit', function(ev){
       ev.preventDefault();
       if(!validate()){
@@ -500,13 +599,83 @@
         if(firstInvalid) firstInvalid.focus();
         return;
       }
+      // Prevent an accidental duplicate submission (double-click, double-tap)
+      // once we're actually past validation and moving the user forward.
+      var submitBtn = form.querySelector('[type="submit"]');
+      if(submitBtn) submitBtn.disabled = true;
+      setSubmitError('');
+
       var data = {};
       Array.prototype.forEach.call(form.elements, function(el){
         if(el.name) data[el.name] = el.value;
       });
       state.address = data;
       saveState();
-      showStep('confirmation');
+
+      if(!window.SneakiesStorefront){
+        setSubmitError('Something went wrong. Please refresh and try again.');
+        if(submitBtn) submitBtn.disabled = false;
+        return;
+      }
+
+      // Live inventory is the single source of truth for Free Box vs 50% Off
+      // — no manual counter, no value carried from an earlier page load. If
+      // the check itself can't be reached (e.g. Storefront API not
+      // configured yet), default to the Free Box branch rather than
+      // wrongly telling someone they're sold out.
+      window.SneakiesStorefront.checkAvailability().catch(function(){
+        return { available: true, quantity: null };
+      }).then(function(avail){
+        state.soldOut = !avail.available;
+        saveState();
+
+        if(state.soldOut){
+          // Sold out: no Sample Box order is ever created for this branch —
+          // straight to the existing 50% Off experience.
+          if(window.SneakiesKlaviyo){
+            window.SneakiesKlaviyo.identify({
+              '$email': data.email, '$first_name': data.first_name, '$last_name': data.last_name,
+              fifty_off: true
+            });
+          }
+          showStep('fallback');
+          return;
+        }
+
+        // Free Box branch: build the real Cart now (product line, buyer
+        // identity, shipping address, the Free Box discount) — nothing here
+        // shows a Shopify page; only state.checkoutUrl gets visited, once,
+        // after the Survey step (see the 'confirm' survey handling below).
+        // address_collected / sample_order_created are deliberately NOT set
+        // yet — only once the real order is confirmed complete (see the
+        // awaitingCheckoutReturn block above), so an abandoned cart still
+        // leaves this profile in Klaviyo's "Free Box - Need Address" state.
+        return window.SneakiesStorefront.createFreeBoxCart({
+          email: data.email,
+          firstName: data.first_name,
+          lastName: data.last_name,
+          phone: data.phone,
+          address1: data.address1,
+          address2: data.address2,
+          city: data.city,
+          province: data.state,
+          zip: data.zip,
+          country: data.country
+        }).then(function(cart){
+          state.checkoutUrl = cart.checkoutUrl;
+          saveState();
+          if(window.SneakiesKlaviyo){
+            window.SneakiesKlaviyo.identify({
+              '$email': data.email, '$first_name': data.first_name, '$last_name': data.last_name,
+              free_box: true
+            });
+          }
+          showStep('confirmation');
+        });
+      }).catch(function(){
+        setSubmitError('Something went wrong securing your box. Please try again.');
+        if(submitBtn) submitBtn.disabled = false;
+      });
     });
   }
 
@@ -566,14 +735,39 @@
       saveState();
     }
 
+    // The Free Box branch's real $0 order is finalized on Shopify's own
+    // checkout — the latest possible point to send the customer there,
+    // right after their survey answer (or skip) is recorded. This only
+    // runs from an actual submit/skip click (never from the "already
+    // answered, restore on reload" replay below), so returning from
+    // checkout to this same finished panel never re-triggers a redirect.
+    function goToOrderIfNeeded(){
+      if(name !== 'confirm') return;
+      if(state.checkoutUrl){
+        state.awaitingCheckoutReturn = true;
+        saveState();
+        window.location.href = state.checkoutUrl;
+      }else if(wrap && !wrap.parentNode.querySelector('.sn-claim-checkout-error')){
+        var err = document.createElement('p');
+        err.className = 'sn-claim-checkout-error';
+        err.style.cssText = 'margin:clamp(16px,2vw,20px) 0 0; font-weight:700; text-align:center; color:var(--claim-pink);';
+        err.textContent = 'Something went wrong preparing your order. Please refresh and try again.';
+        wrap.insertAdjacentElement('afterend', err);
+      }
+    }
+
     if(submitBtn){
       submitBtn.addEventListener('click', function(){
         state.surveys[name] = collectAnswer();
         finishSurvey();
+        goToOrderIfNeeded();
       });
     }
     if(skipBtn){
-      skipBtn.addEventListener('click', finishSurvey);
+      skipBtn.addEventListener('click', function(){
+        finishSurvey();
+        goToOrderIfNeeded();
+      });
     }
 
     // Refresh mid-flow: if this survey was already completed before the page
@@ -597,7 +791,7 @@
     { "type": "text", "id": "sample_size", "label": "Sample size", "default": "4-pack, one of each flavor" },
     { "type": "text", "id": "retail_value", "label": "Retail value (shown crossed out)", "default": "$19.99" },
     { "type": "text", "id": "ship_date", "label": "Ship date", "default": "August 2026" },
-    { "type": "text", "id": "discount_code", "label": "Discount code", "default": "SPECIAL500" }
+    { "type": "text", "id": "discount_code", "label": "Discount code", "default": "SNEAKIESFREEBOX" }
   ],
   "presets": [ { "name": "Sneakies Claim Page" } ]
 }
