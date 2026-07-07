@@ -44,6 +44,31 @@
     'Australia': 'AU'
   };
 
+  // Shopify's Storefront API requires buyerIdentity.phone in E.164 format
+  // (e.g. "+15551234567") — a plain local-format number like the Address
+  // Form's own "(555) 123-4567" placeholder suggests fails cartCreate with
+  // "Phone is invalid" and blocks the entire Free Box claim. Normalize
+  // whatever the customer typed into E.164 using their selected country's
+  // calling code before it's ever sent to Shopify.
+  var COUNTRY_CALLING_CODES = { 'US': '1', 'CA': '1', 'GB': '44', 'AU': '61' };
+
+  function normalizePhone(phone, countryCode){
+    if(!phone) return null;
+    var trimmed = String(phone).trim();
+    if(!trimmed) return null;
+    if(trimmed.charAt(0) === '+'){
+      // Already has a country code — just strip formatting characters.
+      return '+' + trimmed.slice(1).replace(/[^\d]/g, '');
+    }
+    var digits = trimmed.replace(/[^\d]/g, '');
+    if(!digits) return null;
+    // Domestic numbers are sometimes typed with a leading trunk 0 (common
+    // outside North America) — that's never part of the E.164 number.
+    digits = digits.replace(/^0+/, '');
+    var callingCode = COUNTRY_CALLING_CODES[countryCode] || '1';
+    return '+' + callingCode + digits;
+  }
+
   function endpoint(){
     return 'https://' + SHOP_DOMAIN + '/api/' + API_VERSION + '/graphql.json';
   }
@@ -93,7 +118,7 @@
       discountCodes: [DISCOUNT_CODE],
       buyerIdentity: {
         email: details.email,
-        phone: details.phone || null
+        phone: normalizePhone(details.phone, countryCode)
       },
       delivery: {
         addresses: [{
