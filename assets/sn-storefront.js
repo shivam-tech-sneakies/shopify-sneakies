@@ -36,6 +36,13 @@
   var STOREFRONT_ACCESS_TOKEN = 'f2647ee55f19d9addfa615cad803afd8'; // <-- set once the custom app above exists
   var VARIANT_ID = 'gid://shopify/ProductVariant/47536862068885'; // Sneakies Sample Box
   var DISCOUNT_CODE = 'SNEAKIESFREEBOX';
+  // The product discount above only covers the $19.99 item price — Shopify still
+  // charges a real shipping rate (e.g. $4.90 Economy) unless a shipping discount
+  // is also applied. QA found real checkout wasn't actually $0 despite the Claim
+  // Flow's own copy promising "no payment required" / "$0 today". Fixed by adding
+  // a second, internal-only free-shipping code (never shown to customers) that
+  // stacks with the product discount so the Free Box truly costs $0 all-in.
+  var SHIPPING_DISCOUNT_CODE = 'SNEAKIESFREESHIP';
 
   var COUNTRY_CODES = {
     'United States': 'US',
@@ -43,6 +50,31 @@
     'United Kingdom': 'GB',
     'Australia': 'AU'
   };
+
+  // Shopify's Storefront API requires buyerIdentity.phone in E.164 format
+  // (e.g. "+15551234567") — a plain local-format number like the Address
+  // Form's own "(555) 123-4567" placeholder suggests fails cartCreate with
+  // "Phone is invalid" and blocks the entire Free Box claim. Normalize
+  // whatever the customer typed into E.164 using their selected country's
+  // calling code before it's ever sent to Shopify.
+  var COUNTRY_CALLING_CODES = { 'US': '1', 'CA': '1', 'GB': '44', 'AU': '61' };
+
+  function normalizePhone(phone, countryCode){
+    if(!phone) return null;
+    var trimmed = String(phone).trim();
+    if(!trimmed) return null;
+    if(trimmed.charAt(0) === '+'){
+      // Already has a country code — just strip formatting characters.
+      return '+' + trimmed.slice(1).replace(/[^\d]/g, '');
+    }
+    var digits = trimmed.replace(/[^\d]/g, '');
+    if(!digits) return null;
+    // Domestic numbers are sometimes typed with a leading trunk 0 (common
+    // outside North America) — that's never part of the E.164 number.
+    digits = digits.replace(/^0+/, '');
+    var callingCode = COUNTRY_CALLING_CODES[countryCode] || '1';
+    return '+' + callingCode + digits;
+  }
 
   function endpoint(){
     return 'https://' + SHOP_DOMAIN + '/api/' + API_VERSION + '/graphql.json';
@@ -90,10 +122,10 @@
 
     var input = {
       lines: [{ merchandiseId: VARIANT_ID, quantity: 1 }],
-      discountCodes: [DISCOUNT_CODE],
+      discountCodes: [DISCOUNT_CODE, SHIPPING_DISCOUNT_CODE],
       buyerIdentity: {
         email: details.email,
-        phone: details.phone || null
+        phone: normalizePhone(details.phone, countryCode)
       },
       delivery: {
         addresses: [{
