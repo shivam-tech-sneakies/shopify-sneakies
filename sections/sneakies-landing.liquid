@@ -102,6 +102,18 @@
   #sn-root .sn-cta-flavors:hover{ transform:translateY(2px); box-shadow:2px 2px 0 var(--yellow); }
   #sn-root .sn-cta-flavors:active{ transform:translateY(4px); box-shadow:0 0 0 var(--yellow); }
   #sn-root .sn-share-wa:hover{ background:var(--beige); }
+  /* TOP ANNOUNCEMENT MARQUEE — full-width, seamless infinite scroll. The track
+     is duplicated (two identical items back-to-back) and animated exactly
+     -50% of its own width, so the moment the first copy scrolls fully out of
+     view the second copy is in the exact same position, producing a
+     flicker-free, seamless loop. Sits above everything else in #sn-root
+     (including the logo/header block), in normal document flow so it pushes
+     the rest of the page down rather than overlapping it. */
+  #sn-root .sn-marquee{ width:100%; overflow:hidden; background:var(--yellow); border-bottom:2px solid var(--ink); position:relative; z-index:5; }
+  #sn-root .sn-marquee-track{ display:inline-flex; width:max-content; white-space:nowrap; animation:sn-marquee-scroll 26s linear infinite; }
+  #sn-root .sn-marquee-item{ display:inline-flex; align-items:center; flex:0 0 auto; padding:9px clamp(14px,2.4vw,28px); font-family:var(--font-heading); font-weight:700; text-transform:uppercase; letter-spacing:.04em; font-size:clamp(10.5px,1.3vw,12.5px); color:var(--ink); white-space:nowrap; }
+  @keyframes sn-marquee-scroll{ from{ transform:translateX(0); } to{ transform:translateX(-50%); } }
+  @media(prefers-reduced-motion:reduce){ #sn-root .sn-marquee-track{ animation:none; } }
   #sn-sticky-cta{ position:fixed; left:0; right:0; bottom:0; z-index:50; display:none; justify-content:center; padding:0 14px 18px; pointer-events:none; }
   #sn-sticky-cta.is-visible{ display:flex; animation:sn-fade .25s ease both; }
   #sn-sticky-cta button{ pointer-events:auto; }
@@ -161,7 +173,22 @@
 {%- assign founder_name = section.settings.founder_name | default: 'Arun Gomatam' -%}
 {%- assign founder_title = section.settings.founder_title | default: 'Dad & Founder of Sneakies' -%}
 
+<!-- Easily-editable announcement banner text — update this single string to change the marquee copy. -->
+{%- assign sn_marquee_text = "FIRST 500 SIGNUPS ✦ FRUITS AND VEGGIES, UNDERCOVER ✦ BE ONE OF THE FIRST 500 TO GET A FREE SNEAKIES SAMPLE BOX ✦ FREE SAMPLE BOXES FOR THE FIRST 500 SIGNUPS ✦ FRUITS AND VEGGIES, UNDERCOVER ✦ " -%}
+
+<!-- Instagram URL — placeholder until the real Sneakies Instagram link is provided; update this single string to go live. -->
+{%- assign instagram_url = '#' -%}
+
 <div id="sn-root">
+
+  <!-- TOP ANNOUNCEMENT MARQUEE -->
+  <div class="sn-marquee" role="note" aria-label="Announcement">
+    <div class="sn-marquee-track">
+      <span class="sn-marquee-item">{{ sn_marquee_text }}</span>
+      <span class="sn-marquee-item" aria-hidden="true">{{ sn_marquee_text }}</span>
+    </div>
+  </div>
+
 
   <!-- HERO ILLUSTRATION BAND -->
   {%- if section.settings.hero_band != blank -%}
@@ -289,7 +316,7 @@
             <div style="height:100%; width:{{ progress_pct }}%; background:repeating-linear-gradient(45deg,#21050A,#21050A 8px,#3a1416 8px,#3a1416 16px); {% if progress_pct > 0 %}border-right:2.5px solid var(--ink);{% endif %} transition:width .5s ease;"></div>
           </div>
         </div>
-        <p style="font-size:11px; line-height:1.5; opacity:.56; margin:8px 0 0;">One per household. Unsubscribe anytime.</p>
+        <p style="font-size:12.5px; line-height:1.5; opacity:.56; margin:8px 0 0;">One per household. Unsubscribe anytime.</p>
       {%- endform -%}
     </div>
   </section>
@@ -298,7 +325,7 @@
   <section style="position:relative; border-top:3px solid var(--ink); padding:clamp(26px,4vw,48px) clamp(18px,5vw,40px);">
     <div style="max-width:1100px; margin:0 auto;">
       <h2 style="font-family:var(--font-display) !important; text-transform:uppercase !important; letter-spacing:-0.03em !important; line-height:.9; font-size:clamp(2.05rem,5.8vw,3.45rem); margin:0; text-align:center;">Our Secret Sauce</h2>
-      <p style="font-family:var(--font-heading); font-weight:700; text-transform:uppercase; letter-spacing:.09em; font-size:clamp(10.5px,1.1vw,12.5px); opacity:.60; margin:14px auto clamp(24px,3.5vw,40px); max-width:54ch; line-height:1.4; text-align:center;">Why families love our single-serve pancake mixes</p>
+      <p style="font-family:var(--font-heading); font-weight:700; text-transform:uppercase; letter-spacing:.09em; font-size:clamp(12px,1.25vw,14px); opacity:.60; margin:14px auto clamp(24px,3.5vw,40px); max-width:54ch; line-height:1.4; text-align:center;">Why families love our single-serve pancake mixes</p>
       <div id="usp-grid" style="gap:clamp(14px,2vw,20px);">
         {%- assign usp_titles = 'Super Convenient|Sneaky Fruits & Veggies|Real Ingredients|Nostalgic Flavors' | split: '|' -%}
         {%- assign usp_cols = '#FBE07A,#BBD06E,#F2ABCB,#B6CDEA' | split: ',' -%}
@@ -322,7 +349,7 @@
   <section id="sn-flavors" style="position:relative; border-top:3px solid var(--ink); padding:clamp(40px,6vw,74px) clamp(18px,5vw,40px); overflow:hidden;">
     <div style="max-width:860px; margin:0 auto; text-align:center;">
       <h2 style="font-family:var(--font-display) !important; text-transform:uppercase !important; letter-spacing:-0.03em !important; line-height:.9; font-size:clamp(2.05rem,5.8vw,3.45rem); margin:0;">Meet the flavors.</h2>
-      <p style="font-family:var(--font-heading); font-weight:700; text-transform:uppercase; letter-spacing:.09em; font-size:clamp(10.5px,1.1vw,12.5px); opacity:.60; margin:14px auto 0; max-width:54ch; line-height:1.4;">Four nostalgic flavors with new flavor releases each month for subscribers</p>
+      <p style="font-family:var(--font-heading); font-weight:700; text-transform:uppercase; letter-spacing:.09em; font-size:clamp(12px,1.25vw,14px); opacity:.60; margin:14px auto 0; max-width:54ch; line-height:1.4;">Four nostalgic flavors with new flavor releases each month for subscribers</p>
 
       <div style="display:flex; flex-direction:column; align-items:center; gap:clamp(10px,1.6vw,16px); margin-top:clamp(14px,2.4vw,22px);">
 
@@ -447,7 +474,7 @@
           {{ founder_story }}
         </div>
         <p style="font-family:var(--font-heading); font-weight:700; font-size:clamp(1.4rem,2.6vw,1.8rem); margin:clamp(18px,2.5vw,24px) 0 0;">{{ founder_name }}</p>
-        <p style="font-family:var(--font-heading); font-weight:700; text-transform:uppercase; letter-spacing:.07em; font-size:11.5px; opacity:.6; margin:4px 0 0;">{{ founder_title }}</p>
+        <p style="font-family:var(--font-heading); font-weight:700; text-transform:uppercase; letter-spacing:.07em; font-size:13px; opacity:.6; margin:4px 0 0;">{{ founder_title }}</p>
       </div>
     </div>
   </section>
@@ -458,6 +485,9 @@
       <img src="{{ 'sn-sneakies-footer-new.png' | asset_url }}" alt="Sneakies" class="sn-sneakies-footer-new" style="height:30px; width:auto;">
       <div style="font-family:var(--font-heading); font-weight:700; text-transform:uppercase; letter-spacing:.1em; font-size:11.5px; opacity:.82;">Fruits &amp; Veggies, Undercover · Sample boxes ship {{ ship_date }}</div>
       <a href="mailto:{{ contact_email }}" style="font-size:12.5px; color:var(--cream); opacity:.68; text-decoration:none;">{{ contact_user }}<span>@</span>{{ contact_domain_parts | join: '<span>.</span>' }}</a>
+      <a href="{{ instagram_url }}" target="_blank" rel="noopener noreferrer" aria-label="Sneakies on Instagram" style="display:inline-flex; align-items:center; opacity:.68; color:var(--cream);">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"></rect><path d="M16 11.37a4 4 0 1 1-7.914 1.174A4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.5" y2="6.5"></line></svg>
+      </a>
     </div>
   </footer>
 
