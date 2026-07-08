@@ -110,8 +110,15 @@
      (including the logo/header block), in normal document flow so it pushes
      the rest of the page down rather than overlapping it. */
   #sn-root .sn-marquee{ width:100%; overflow:hidden; background:var(--yellow); border-bottom:2px solid var(--ink); position:relative; z-index:5; }
-  #sn-root .sn-marquee-track{ display:inline-flex; width:max-content; white-space:nowrap; animation:sn-marquee-scroll 26s linear infinite; }
-  #sn-root .sn-marquee-item{ display:inline-flex; align-items:center; flex:0 0 auto; padding:9px clamp(14px,2.4vw,28px); font-family:var(--font-heading); font-weight:700; text-transform:uppercase; letter-spacing:.04em; font-size:clamp(10.5px,1.3vw,12.5px); color:var(--ink); white-space:nowrap; }
+  /* Track lays out every phrase + separator as flat flex siblings with one
+     uniform `gap`, so the space before/after every separator and between
+     every phrase is identical — including at the halfway loop point, since
+     gap doesn't distinguish "groups". The phrase list is repeated enough
+     times that each half of the track comfortably exceeds any real viewport
+     width, so the -50% loop never reveals empty space at either edge. */
+  #sn-root .sn-marquee-track{ display:inline-flex; align-items:center; gap:clamp(14px,2.4vw,28px); width:max-content; white-space:nowrap; animation:sn-marquee-scroll 34s linear infinite; will-change:transform; }
+  #sn-root .sn-marquee-phrase{ display:inline-flex; align-items:center; flex:0 0 auto; padding:9px 0; font-family:var(--font-heading); font-weight:700; text-transform:uppercase; letter-spacing:.04em; font-size:clamp(10.5px,1.3vw,12.5px); color:var(--ink); white-space:nowrap; }
+  #sn-root .sn-marquee-sep{ display:inline-flex; align-items:center; flex:0 0 auto; font-size:clamp(10.5px,1.3vw,12.5px); color:var(--ink); }
   @keyframes sn-marquee-scroll{ from{ transform:translateX(0); } to{ transform:translateX(-50%); } }
   @media(prefers-reduced-motion:reduce){ #sn-root .sn-marquee-track{ animation:none; } }
   #sn-sticky-cta{ position:fixed; left:0; right:0; bottom:0; z-index:50; display:none; justify-content:center; padding:0 14px 18px; pointer-events:none; }
@@ -173,8 +180,9 @@
 {%- assign founder_name = section.settings.founder_name | default: 'Arun Gomatam' -%}
 {%- assign founder_title = section.settings.founder_title | default: 'Dad & Founder of Sneakies' -%}
 
-<!-- Easily-editable announcement banner text — update this single string to change the marquee copy. -->
-{%- assign sn_marquee_text = "FIRST 500 SIGNUPS ✦ FRUITS AND VEGGIES, UNDERCOVER ✦ BE ONE OF THE FIRST 500 TO GET A FREE SNEAKIES SAMPLE BOX ✦ FREE SAMPLE BOXES FOR THE FIRST 500 SIGNUPS ✦ FRUITS AND VEGGIES, UNDERCOVER ✦ " -%}
+<!-- Easily-editable announcement banner text — update this single pipe-delimited string to change the marquee copy. -->
+{%- assign sn_marquee_text = "FIRST 500 SIGNUPS|FRUITS AND VEGGIES, UNDERCOVER|BE ONE OF THE FIRST 500 TO GET A FREE SNEAKIES SAMPLE BOX|FREE SAMPLE BOXES FOR THE FIRST 500 SIGNUPS|FRUITS AND VEGGIES, UNDERCOVER" -%}
+{%- assign sn_marquee_items = sn_marquee_text | split: '|' -%}
 
 <!-- Instagram URL — placeholder until the real Sneakies Instagram link is provided; update this single string to go live. -->
 {%- assign instagram_url = '#' -%}
@@ -183,9 +191,13 @@
 
   <!-- TOP ANNOUNCEMENT MARQUEE -->
   <div class="sn-marquee" role="note" aria-label="Announcement">
-    <div class="sn-marquee-track">
-      <span class="sn-marquee-item">{{ sn_marquee_text }}</span>
-      <span class="sn-marquee-item" aria-hidden="true">{{ sn_marquee_text }}</span>
+    <div class="sn-marquee-track" aria-hidden="true">
+      {%- for sn_marquee_rep in (1..8) -%}
+        {%- for sn_marquee_item in sn_marquee_items -%}
+          <span class="sn-marquee-phrase">{{ sn_marquee_item }}</span>
+          <span class="sn-marquee-sep">✦</span>
+        {%- endfor -%}
+      {%- endfor -%}
     </div>
   </div>
 
