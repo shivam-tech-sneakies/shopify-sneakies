@@ -1,1 +1,924 @@
-PLACEHOLDER
+{%- comment -%}
+  Sneakies — pre-launch waitlist landing page
+  Matches the "Fruits & Veggies, Undercover" reference design exactly:
+  hero band + logo, hero copy + flavor stack grid, offer/capture form with
+  live progress counter, secret sauce USPs, flavor carousel, review strip,
+  sticky CTA, and a post-submit share popup.
+
+  All copy/colors/spacing are hard-coded to match the reference 1:1; the
+  only merchant-editable knobs are the waitlist counters, ship date, contact
+  email, WhatsApp invite link, and an optional hero image override — kept
+  intentionally small so this section can't accidentally be pushed out of
+  sync with the approved design via the theme editor.
+{%- endcomment -%}
+
+{%- style -%}
+  {%- render 'sn-typography' -%}
+  #sn-root{ --ink:#21050A; --cream:#FFFFF8; --beige:#F0E6C2; --yellow:#FBD01A; --section-tint:#F2ECD2;
+            background:var(--cream); color:var(--ink);
+            font-family:var(--font-body); -webkit-font-smoothing:antialiased; overflow-x:hidden; }
+  #sn-root *{ box-sizing:border-box; }
+  /* Centralized colour-grading pass: a small, uniform vibrance/contrast lift on every
+     image (illustrations, packaging renders, review photos) so artwork reads richer
+     and crisper without touching individual section markup or brand hex values. This
+     is scoped to <img> rather than #sn-root itself so it can't turn #sn-root into a
+     containing block for descendant position:fixed elements (the sticky CTA). */
+  #sn-root img{ max-width:100%; display:block; filter:saturate(1.08) contrast(1.05) brightness(1.02); }
+  #sn-root ::selection{ background:var(--yellow); color:var(--ink); }
+  #sn-root a{ color:inherit; }
+  #sn-root input:focus-visible, #sn-root button:focus-visible, #sn-root a:focus-visible{ outline:3px solid #5F7AAF; outline-offset:2px; }
+  @keyframes sn-pop{ from{ transform:translateY(18px) scale(.97); opacity:0; } to{ transform:none; opacity:1; } }
+  @keyframes sn-fade{ from{ opacity:0; transform:translateY(10px); } to{ opacity:1; transform:none; } }
+  @keyframes sn-bounce{ 0%,100%{ transform:translateY(0) rotate(-1.5deg);} 25%{ transform:translateY(-9px) rotate(1deg);} 50%{ transform:translateY(0) rotate(1.5deg);} 75%{ transform:translateY(-5px) rotate(-.8deg);} }
+  #sn-root #stack-grid{ display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); }
+  @media(max-width:860px){ #sn-root #stack-grid{ grid-template-columns:repeat(2,minmax(0,1fr)); } }
+  #sn-root .sn-stack{ transition:transform .14s ease, box-shadow .14s ease; }
+  #sn-root .sn-stack:hover{ transform:translateY(-4px); box-shadow:7px 9px 0 var(--ink); }
+  /* Flavour card image flip: only the white image container rotates in 3D — the
+     coloured info panel below it lives outside .sn-flip-scene entirely and is
+     untouched by any of this. */
+  #sn-root .sn-flip-scene{ position:relative; overflow:hidden; perspective:1000px; }
+  #sn-root .sn-flip-inner{ position:relative; width:100%; height:100%; transform-style:preserve-3d; -webkit-transform-style:preserve-3d; transition:transform .5s ease-in-out; will-change:transform; }
+  #sn-root .sn-flip-scene:hover .sn-flip-inner,
+  #sn-root .sn-flip-scene.is-flipped .sn-flip-inner{ transform:rotateY(180deg); }
+  #sn-root .sn-flip-face{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; backface-visibility:hidden; -webkit-backface-visibility:hidden; }
+  #sn-root .sn-flip-back{ transform:rotateY(180deg); padding:8%; }
+  /* "Meet the flavors" active-card flip: click-triggered (front card ↔ ingredients),
+     deliberately separate from the hover/tap image flip above so mousing over the
+     card's own text content never accidentally flips it. Reuses the same perspective /
+     preserve-3d / backface-visibility / rotateY(180deg) technique and the shared
+     .sn-flip-face token above; only the trigger (click vs hover) and sizing differ. */
+  #sn-root .sn-flavor-flip-scene{ position:relative; width:100%; perspective:1000px; }
+  #sn-root .sn-flavor-flip-inner{ position:relative; width:100%; transform-style:preserve-3d; -webkit-transform-style:preserve-3d; transition:transform .5s ease-in-out; will-change:transform; }
+  #sn-root .sn-flavor-flip-scene.is-flipped .sn-flavor-flip-inner{ transform:rotateY(180deg); }
+  #sn-root .sn-flip-face.sn-flavor-flip-face{ align-items:stretch; }
+  #sn-root .sn-flip-face.sn-flavor-flip-face > *{ width:100%; }
+  /* One shared card face used by every flavour (including flip-disabled Flavor Lab):
+     fixed height comes from .sn-flavor-flip-inner (locked by JS to the tallest content
+     across all 5 flavours), and content is vertically centred inside it so shorter
+     copy (e.g. Flavor Lab's "Coming Soon") never looks stranded at the top of a taller
+     box. No flavour gets its own sizing rule — only text/colour differ per flavour. */
+  #sn-root .sn-active-card{ height:100%; box-sizing:border-box; display:flex; flex-direction:column; justify-content:center; align-items:center; }
+  #sn-root .sn-flavor-flip-back{ transform:rotateY(180deg); }
+  #sn-root .sn-flip-trigger{ display:none; align-items:center; gap:4px; margin:0 clamp(6px,1.6vw,14px) -8px 0; align-self:flex-end; background:none; border:none; cursor:pointer; padding:2px; font-family:var(--font-heading); font-style:italic; font-weight:800; font-size:clamp(13px,1.9vw,16px); color:var(--ink); transform:rotate(-3deg); position:relative; z-index:2; }
+  #sn-root .sn-flip-trigger-text{ text-decoration:underline; text-decoration-style:wavy; text-decoration-thickness:1.4px; text-underline-offset:4px; }
+  #sn-root .sn-flip-trigger:hover{ opacity:.72; }
+  #sn-root .sn-back-content{ width:100%; height:100%; box-sizing:border-box; display:flex; flex-direction:column; align-items:center; position:relative; }
+  #sn-root .sn-ingredient-pill{ display:inline-flex; align-items:center; border-radius:9999px; border:2.5px solid var(--ink); color:var(--ink); font-family:var(--font-heading); font-weight:700; font-style:italic; text-transform:uppercase; letter-spacing:.02em; font-size:clamp(10.5px,1.5vw,12px); line-height:1.3; padding:6px 13px; white-space:nowrap; }
+  #sn-root .sn-flip-close{ position:absolute; top:10px; right:10px; width:32px; height:32px; border-radius:50%; border:2.5px solid var(--ink); background:var(--cream); color:var(--ink); cursor:pointer; font-family:var(--font-heading); font-size:14px; line-height:1; display:flex; align-items:center; justify-content:center; }
+  #sn-root .sn-back-btn{ margin-top:auto; cursor:pointer; font-family:var(--font-heading); text-transform:uppercase; letter-spacing:.02em; font-size:.82rem; color:var(--ink); background:var(--cream); border:2.5px solid var(--ink); border-radius:999px; padding:10px 18px; }
+  @media(prefers-reduced-motion:reduce){ #sn-root .sn-flavor-flip-inner{ transition:none; } }
+  #sn-root #usp-grid{ display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); }
+  @media(max-width:980px){ #sn-root #usp-grid{ grid-template-columns:repeat(2,minmax(0,1fr)); } }
+  @media(max-width:520px){ #sn-root #usp-grid{ grid-template-columns:1fr; } }
+  #sn-root #tier-grid{ display:grid; grid-template-columns:1fr 1fr; }
+  @media(max-width:620px){ #sn-root #tier-grid{ grid-template-columns:1fr; } }
+  #sn-root #founder-grid{ display:grid; grid-template-columns:1fr 1fr; gap:clamp(28px,4vw,56px); align-items:stretch; }
+  @media(max-width:860px){ #sn-root #founder-grid{ grid-template-columns:1fr; } }
+  /* Photo stretches to match the text column's natural height on desktop
+     (album-style aspect-ratio would otherwise leave it shorter, floating
+     centered with empty space above/below); falls back to a fixed aspect
+     ratio once the columns stack on mobile, where "match the text height"
+     doesn't apply. */
+  #sn-root .sn-founder-photo{ height:100%; align-self:stretch; min-height:380px; }
+  @media(max-width:860px){ #sn-root .sn-founder-photo{ height:auto; align-self:auto; min-height:0; aspect-ratio:4/3; } }
+  #sn-root .sn-founder-copy p{ margin:0 0 14px; }
+  #sn-root .sn-founder-copy p:last-child{ margin-bottom:0; }
+  #sn-root .sn-ghost{ display:flex; flex-direction:column; align-items:center; gap:6px; }
+  @media(max-width:520px){ #sn-root .sn-ghost{ display:none !important; } }
+  #sn-root #rev-strip{ scrollbar-width:thin; scrollbar-color:var(--ink) transparent; }
+  #sn-root #rev-strip::-webkit-scrollbar{ height:9px; }
+  #sn-root #rev-strip::-webkit-scrollbar-thumb{ background:var(--ink); border-radius:99px; }
+  #sn-root .sn-btn{ transition:transform .08s, box-shadow .08s; }
+  #sn-root .sn-btn:hover{ transform:translateY(1px); }
+  #sn-root .sn-btn:active{ transform:translateY(3px); }
+  #sn-root .sn-submit{ transition:transform .08s, box-shadow .08s; }
+  #sn-root .sn-submit:hover{ transform:translateY(2px); box-shadow:0 3px 0 var(--yellow); }
+  #sn-root .sn-submit:active{ transform:translateY(5px); box-shadow:0 0 0 var(--yellow); }
+  #sn-root .sn-arrow{ transition:transform .08s, box-shadow .08s; }
+  #sn-root .sn-arrow:hover{ transform:translateY(1px); box-shadow:2px 2px 0 var(--ink); }
+  #sn-root .sn-arrow:active{ transform:translateY(3px); box-shadow:0 0 0 var(--ink); }
+  #sn-root .sn-cta-flavors{ transition:transform .08s, box-shadow .08s; }
+  #sn-root .sn-cta-flavors:hover{ transform:translateY(2px); box-shadow:2px 2px 0 var(--yellow); }
+  #sn-root .sn-cta-flavors:active{ transform:translateY(4px); box-shadow:0 0 0 var(--yellow); }
+  #sn-root .sn-share-wa:hover{ background:var(--beige); }
+  /* TOP ANNOUNCEMENT MARQUEE — full-width, seamless infinite scroll. The track
+     is duplicated (two identical items back-to-back) and animated exactly
+     -50% of its own width, so the moment the first copy scrolls fully out of
+     view the second copy is in the exact same position, producing a
+     flicker-free, seamless loop. Sits above everything else in #sn-root
+     (including the logo/header block), in normal document flow so it pushes
+     the rest of the page down rather than overlapping it. */
+  #sn-root .sn-marquee{ width:100%; overflow:hidden; background:var(--yellow); border-bottom:2px solid var(--ink); position:relative; z-index:5; }
+  /* Track lays out every phrase + separator as flat flex siblings with one
+     uniform `gap`, so the space before/after every separator and between
+     every phrase is identical — including at the halfway loop point, since
+     gap doesn't distinguish "groups". The phrase list is repeated enough
+     times that each half of the track comfortably exceeds any real viewport
+     width, so the -50% loop never reveals empty space at either edge. */
+  #sn-root .sn-marquee-track{ display:inline-flex; align-items:center; gap:clamp(6px,1vw,10px); width:max-content; white-space:nowrap; animation:sn-marquee-scroll 78s linear infinite; will-change:transform; }
+  #sn-root .sn-marquee-phrase{ display:inline-flex; align-items:center; flex:0 0 auto; padding:9px 0; font-family:var(--font-heading); font-weight:700; text-transform:uppercase; letter-spacing:.04em; font-size:clamp(10.5px,1.3vw,12.5px); color:var(--ink); white-space:nowrap; }
+  #sn-root .sn-marquee-sep{ display:inline-flex; align-items:center; flex:0 0 auto; font-size:clamp(10.5px,1.3vw,12.5px); color:var(--ink); }
+  @keyframes sn-marquee-scroll{ from{ transform:translateX(0); } to{ transform:translateX(-50%); } }
+  @media(prefers-reduced-motion:reduce){ #sn-root .sn-marquee-track{ animation:none; } }
+  /* FOOTER — true three-column layout: logo pinned left, tagline perfectly
+     centered (the flanking 1fr columns stay equal width so the center
+     column never drifts, regardless of logo/right-group width), and the
+     email + Instagram + LinkedIn group pinned right as one compact unit.
+     Colors/typography/height are untouched — this only changes layout. */
+  #sn-root .sn-footer-grid{ display:grid; grid-template-columns:1fr auto 1fr; align-items:center; gap:16px; max-width:1140px; margin:0 auto; }
+  #sn-root .sn-footer-left{ justify-self:start; display:flex; align-items:center; }
+  #sn-root .sn-footer-center{ justify-self:center; text-align:center; white-space:nowrap; }
+  #sn-root .sn-footer-right{ justify-self:end; display:flex; align-items:center; gap:6px; white-space:nowrap; }
+  #sn-root .sn-footer-right .sn-footer-sep{ opacity:.45; }
+  #sn-root .sn-footer-right .sn-footer-linkedin{ margin-left:14px; }
+  @media(max-width:700px){
+    #sn-root .sn-footer-grid{ grid-template-columns:1fr; justify-items:center; gap:12px; }
+    #sn-root .sn-footer-left, #sn-root .sn-footer-center, #sn-root .sn-footer-right{ justify-self:center; }
+  }
+  #sn-sticky-cta{ position:fixed; left:0; right:0; bottom:0; z-index:50; display:none; justify-content:center; padding:0 14px 18px; pointer-events:none; }
+  #sn-sticky-cta.is-visible{ display:flex; animation:sn-fade .25s ease both; }
+  #sn-sticky-cta button{ pointer-events:auto; }
+  @media(prefers-reduced-motion:reduce){ #sn-root *{ animation:none !important; } #sn-sticky-cta.is-visible{ animation:none; } #sn-root .sn-flip-inner{ transition:none; } }
+{%- endstyle -%}
+
+{%- comment -%} Free-box availability is driven entirely by the real "Sneakies
+  Sample Box" product's live Shopify inventory (all_products, read directly
+  in Liquid — no Storefront API/JS needed just for this display). No manual
+  counter or theme setting exists for this anymore; spots_claimed/progress
+  below are pure display values derived from that one live number. {%- endcomment -%}
+{%- assign sn_sample_variant = all_products['sneakies-free-sample-box'].selected_or_first_available_variant -%}
+{%- assign free_boxes = 500 -%}
+{%- assign spots_claimed = free_boxes -%}
+{%- assign sold_out = true -%}
+{%- if sn_sample_variant -%}
+  {%- assign sold_out = true -%}
+  {%- if sn_sample_variant.available -%}{%- assign sold_out = false -%}{%- endif -%}
+  {%- assign sn_remaining = sn_sample_variant.inventory_quantity | default: 0 -%}
+  {%- if sn_remaining < 0 -%}{%- assign sn_remaining = 0 -%}{%- endif -%}
+  {%- if sn_remaining > free_boxes -%}{%- assign sn_remaining = free_boxes -%}{%- endif -%}
+  {%- assign spots_claimed = free_boxes | minus: sn_remaining -%}
+{%- endif -%}
+{%- assign claimed_left = free_boxes | minus: spots_claimed -%}
+{%- if claimed_left < 0 -%}{%- assign claimed_left = 0 -%}{%- endif -%}
+{%- assign progress_pct = 100 -%}
+{%- unless sold_out -%}
+  {%- assign progress_pct = spots_claimed | times: 100.0 | divided_by: free_boxes | round -%}
+{%- endunless -%}
+{%- assign ship_date = section.settings.ship_date | default: 'August 2026' -%}
+{%- assign contact_email = section.settings.contact_email | default: 'hello@eatsneakies.com' -%}
+{%- assign contact_email_parts = contact_email | split: '@' -%}
+{%- assign contact_user = contact_email_parts[0] -%}
+{%- assign contact_domain_parts = contact_email_parts[1] | split: '.' -%}
+{%- assign whatsapp_url = section.settings.whatsapp_invite_url | default: 'https://chat.whatsapp.com/INVITE_PLACEHOLDER' -%}
+{%- assign share_url = section.settings.share_url | default: shop.url -%}
+{%- assign share_message = 'Just joined the Sneakies waitlist 🥞 Real pancakes & waffles with a full serving of fruits & veggies snuck in. First ' | append: free_boxes | append: ' families get a free sample box. Join here: ' | append: share_url -%}
+{%- assign share_message_enc = share_message | url_encode -%}
+{%- assign whatsapp_href = 'https://wa.me/?text=' | append: share_message_enc -%}
+{%- assign email_share_body = 'I thought you might like Sneakies, the pancake & waffle mix with fruits and veggies undercover. ' -%}
+{%- if sold_out -%}
+  {%- assign email_share_body = email_share_body | append: 'The free sample boxes have been fully claimed, but waitlist signups still get 50% off their first subscription order before launch. ' -%}
+{%- else -%}
+  {%- assign email_share_body = email_share_body | append: 'The first ' | append: free_boxes | append: ' get a free sample box on us, and everyone who joins before launch gets 50% off their first subscription order. ' -%}
+{%- endif -%}
+{%- assign email_share_body = email_share_body | append: 'Join the waitlist here: ' | append: share_url -%}
+{%- assign email_subject_enc = 'Sneakies waitlist: free sample box / launch offer' | url_encode -%}
+{%- assign email_body_enc = email_share_body | url_encode -%}
+{%- assign email_href = 'mailto:?subject=' | append: email_subject_enc | append: '&body=' | append: email_body_enc -%}
+{%- comment -%} "Join the Waitlist"-labeled CTAs go straight to the new Claim page
+  preview (see sections/sneakies-claim.liquid); other CTAs like "Claim your offer"
+  and the sticky bar still scroll to the real signup form below. {%- endcomment -%}
+{%- assign claim_url = pages['claim'].url | default: '/pages/claim' -%}
+{%- assign founder_eyebrow = section.settings.founder_eyebrow | default: 'Sneakies by parents, for parents' -%}
+{%- assign founder_heading = section.settings.founder_heading | default: 'From our kitchen to yours' -%}
+{%- assign founder_story = section.settings.founder_story -%}
+{%- assign founder_name = section.settings.founder_name | default: 'Arun Gomatam' -%}
+{%- assign founder_title = section.settings.founder_title | default: 'Dad & Founder of Sneakies' -%}
+
+<!-- Easily-editable announcement banner text — update this single pipe-delimited string to change the marquee copy. -->
+{%- assign sn_marquee_text = "FIRST 500 SIGNUPS|FRUITS AND VEGGIES, UNDERCOVER|BE ONE OF THE FIRST 500 TO GET A FREE SNEAKIES SAMPLE BOX|FREE SAMPLE BOXES FOR THE FIRST 500 SIGNUPS|FRUITS AND VEGGIES, UNDERCOVER" -%}
+{%- assign sn_marquee_items = sn_marquee_text | split: '|' -%}
+
+<!-- Instagram URL — placeholder until the real Sneakies Instagram link is provided; update this single string to go live. -->
+{%- assign instagram_url = '#' -%}
+
+<!-- LinkedIn URL — placeholder until the real Sneakies LinkedIn link is provided; update this single string to go live. -->
+{%- assign linkedin_url = '#' -%}
+
+<div id="sn-root">
+
+  <!-- TOP ANNOUNCEMENT MARQUEE -->
+  <div class="sn-marquee" role="note" aria-label="Announcement">
+    <div class="sn-marquee-track" aria-hidden="true">
+      {%- for sn_marquee_rep in (1..8) -%}
+        {%- for sn_marquee_item in sn_marquee_items -%}
+          <span class="sn-marquee-phrase">{{ sn_marquee_item }}</span>
+          <span class="sn-marquee-sep">✦</span>
+        {%- endfor -%}
+      {%- endfor -%}
+    </div>
+  </div>
+
+
+  <!-- HERO ILLUSTRATION BAND -->
+  {%- if section.settings.hero_band != blank -%}
+    <div style="width:100%; line-height:0;">
+      <img src="{{ section.settings.hero_band | image_url: width: 3200 }}" alt="The Sneakies squad, fruit and veggie characters peeking over a ledge" width="{{ section.settings.hero_band.width }}" height="{{ section.settings.hero_band.height }}" style="width:100%; height:auto; display:block;">
+    </div>
+  {%- else -%}
+    <div style="width:100%; line-height:0;">
+      <img src="{{ 'sn-hero-7.png' | asset_url }}" alt="The Sneakies squad, fruit and veggie characters peeking over a ledge" class="sn-hero-5" width="2384" height="506" style="width:100%; height:auto; display:block;">
+    </div>
+  {%- endif -%}
+
+  <!-- LOGO -->
+  <header style="display:flex; flex-direction:column; align-items:center; gap:10px; padding:0 clamp(18px,5vw,40px) clamp(4px,0.8vw,8px); text-align:center; background:var(--cream); position:relative; z-index:3;">
+    <img src="{{ 'sn-logo.png' | asset_url }}" alt="Sneakies" style="height:clamp(150px,19vw,240px); width:auto; max-width:100%; margin-top:clamp(6px,1.5vw,16px);">
+  </header>
+
+  <!-- HERO -->
+  <section style="padding:clamp(2px,0.4vw,5px) clamp(18px,5vw,40px) clamp(32px,5vw,52px);">
+    <div style="max-width:900px; margin:0 auto; text-align:center;">
+      <h1 style="font-family:var(--font-display) !important; text-transform:uppercase !important; line-height:.88; letter-spacing:-.015em !important; font-size:clamp(2.05rem,6.4vw,4.3rem); margin:0;">
+        Fruits &amp; Veggies,<br>Undercover.
+      </h1>
+      <p style="font-size:clamp(1rem,2vw,1.3rem); line-height:1.45; opacity:.84; max-width:44ch; margin:clamp(10px,1.5vw,16px) auto 0; font-weight:500;">
+        Single-serve pancake &amp; waffle mix with real ingredients, plus a full serving of fruits &amp; vegetables per bag.
+      </p>
+    </div>
+
+    <!-- Join the waitlist banner -->
+    <div style="display:flex; justify-content:center; margin:clamp(20px,3vw,32px) auto 0;">
+      <a href="#sn-offer" data-sn-scroll-offer class="sn-btn" style="text-decoration:none; display:inline-flex; align-items:center; justify-content:center; gap:8px; background:var(--yellow); border:2.5px solid var(--ink); border-radius:999px; padding:12px clamp(30px,5vw,46px); box-shadow:3px 3px 0 var(--ink); font-family:var(--font-heading); font-weight:700; text-transform:uppercase; letter-spacing:.10em; font-size:clamp(11px,1.6vw,14px); color:var(--ink); white-space:nowrap;">
+        ★ Join the waitlist&nbsp;·&nbsp;exclusive launch offer
+      </a>
+    </div>
+
+    <!-- Four pancake stacks -->
+    <div id="stack-grid" style="gap:clamp(10px,1.6vw,18px); max-width:1060px; margin:clamp(16px,2.5vw,26px) auto 0;">
+      {%- assign fnames = 'Banana Bonanza,Apple Pie Agents,Berry Bandits,Buttermilk Blast' | split: ',' -%}
+      {%- assign fvegs  = 'with carrots,with spinach,with beets,with cauliflower' | split: ',' -%}
+      {%- assign fcols  = '#FBE07A,#BBD06E,#F2ABCB,#B6CDEA' | split: ',' -%}
+      {%- assign fimgs  = 'sn-stack-banana.jpg,sn-stack-apple.jpg,sn-stack-berry.jpg,sn-stack-buttermilk.jpg' | split: ',' -%}
+      {%- assign fpkgs  = 'bananabonanzawithcarrots.png,applepieagentswithspinach.png,berrybanditswithbeets.png,buttermilkblastwithcauliflower.png' | split: ',' -%}
+      {%- for i in (0..3) -%}
+        <div class="sn-stack" style="border:2.5px solid var(--ink); border-radius:20px; background:#fff; box-shadow:5px 5px 0 var(--ink); overflow:hidden; display:flex; flex-direction:column;">
+          <div style="height:8px; background:{{ fcols[i] }}; border-bottom:2.5px solid var(--ink);"></div>
+          <div class="sn-flip-scene" style="flex:1; min-height:clamp(210px,27vw,320px); padding:10px 12px 2px;">
+            <div class="sn-flip-inner">
+              <div class="sn-flip-face sn-flip-front">
+                <img src="{{ fimgs[i] | asset_url }}" alt="{{ fnames[i] }} pancake stack" loading="lazy" style="width:100%; height:100%; object-fit:contain;">
+              </div>
+              <div class="sn-flip-face sn-flip-back">
+                <img src="{{ fpkgs[i] | asset_url }}" alt="{{ fnames[i] }} packaging" loading="lazy" style="width:100%; height:100%; object-fit:contain;">
+              </div>
+            </div>
+          </div>
+          <div style="padding:8px 14px 14px; text-align:center; background:{{ fcols[i] }}; border-top:2.5px solid var(--ink);">
+            <h3 style="font-family:var(--font-heading) !important; text-transform:uppercase !important; letter-spacing:-0.03em !important; line-height:1.05; font-size:.98rem; margin:0; min-height:2.05em; display:flex; align-items:center; justify-content:center;">{{ fnames[i] }}</h3>
+            <p style="font-family:var(--font-heading); font-weight:700; font-size:11px; text-transform:uppercase; letter-spacing:.06em; color:var(--ink); background:var(--cream); border:2px solid var(--ink); border-radius:999px; padding:4px 13px; box-shadow:2px 2px 0 var(--ink); margin:8px 0 0; display:inline-block;">{{ fvegs[i] }}</p>
+          </div>
+        </div>
+      {%- endfor -%}
+    </div>
+  </section>
+
+  <!-- OFFER + CAPTURE -->
+  <section id="sn-offer" style="position:relative; background:var(--section-tint); border-top:3px solid var(--ink); padding:clamp(28px,4.5vw,52px) clamp(18px,5vw,40px);">
+    <div style="max-width:620px; margin:0 auto; text-align:center;">
+      <h2 style="font-family:var(--font-display) !important; text-transform:uppercase !important; letter-spacing:-0.03em !important; line-height:.9; font-size:clamp(2.05rem,5.8vw,3.45rem); margin:0;">
+        {%- if sold_out -%}50% Off Giveaway!{%- else -%}Free Sample Box Giveaway!{%- endif -%}
+      </h2>
+
+      <!-- Two offer boxes -->
+      <div id="tier-grid" style="gap:clamp(10px,1.6vw,14px); margin:clamp(16px,2.4vw,22px) 0 0;">
+        <!-- Box 1: Free sample box -->
+        <div style="border:2.5px solid var(--ink); border-radius:16px; background:var(--cream); box-shadow:4px 4px 0 var(--ink); overflow:hidden; display:flex; flex-direction:column;">
+          <div style="height:7px; background:var(--yellow); border-bottom:2.5px solid var(--ink);"></div>
+          <div style="padding:clamp(16px,2.8vw,22px) clamp(14px,2.4vw,20px); flex:1; display:flex; flex-direction:column; align-items:center; gap:7px;">
+            {%- if sold_out -%}
+              <span style="font-family:var(--font-heading); font-weight:700; text-transform:uppercase; letter-spacing:.05em; font-size:11px; color:var(--cream); background:#CA3779; border:2.5px solid var(--ink); border-radius:999px; padding:4px 12px; box-shadow:2px 2px 0 var(--ink);">Fully Claimed</span>
+              <h3 style="font-family:var(--font-heading) !important; text-transform:uppercase !important; letter-spacing:-0.03em !important; line-height:1; font-size:clamp(1.15rem,2.6vw,1.5rem); margin:0; color:var(--ink); opacity:.42; text-decoration:line-through; text-decoration-thickness:clamp(3px,0.6vw,4px); text-decoration-color:var(--ink); min-height:2.3em; display:flex; align-items:center; justify-content:center;">Free Sample Box</h3>
+            {%- else -%}
+              <h3 style="font-family:var(--font-heading) !important; text-transform:uppercase !important; letter-spacing:-0.03em !important; line-height:1; font-size:clamp(1.15rem,2.6vw,1.5rem); margin:0; min-height:2.3em; display:flex; align-items:center; justify-content:center;">Free Sample Box</h3>
+            {%- endif -%}
+            <p style="font-size:13.5px; line-height:1.4; font-weight:600; opacity:.82; margin:0; max-width:26ch;">For the first {{ free_boxes }} to join the waitlist.</p>
+          </div>
+        </div>
+        <!-- Box 2: 50% off -->
+        <div style="border:2.5px solid var(--ink); border-radius:16px; background:var(--cream); box-shadow:4px 4px 0 var(--ink); overflow:hidden; display:flex; flex-direction:column;">
+          <div style="height:7px; background:#B6CDEA; border-bottom:2.5px solid var(--ink);"></div>
+          <div style="padding:clamp(16px,2.8vw,22px) clamp(14px,2.4vw,20px); flex:1; display:flex; flex-direction:column; align-items:center; gap:7px;">
+            <h3 style="font-family:var(--font-heading) !important; text-transform:uppercase !important; letter-spacing:-0.03em !important; line-height:1; font-size:clamp(1.15rem,2.6vw,1.5rem); margin:0; min-height:2.3em; display:flex; align-items:center; justify-content:center;">50% Off Your First Subscription Order</h3>
+            <p style="font-size:13.5px; line-height:1.4; font-weight:600; opacity:.82; margin:0; max-width:26ch;">For everyone who joins the waitlist before launch.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Waitlist form -->
+      {%- form 'customer', id: 'sn-waitlist-form', style: 'margin:16px auto 0; max-width:420px;' -%}
+        <input type="hidden" name="contact[tags]" value="waitlist">
+        {%- comment -%} On success, Shopify redirects here instead of re-rendering
+          this page — always the first Claim Flow screen, never a later step. {%- endcomment -%}
+        <input type="hidden" name="return_to" value="{{ claim_url }}">
+        <div style="display:flex; flex-wrap:wrap; gap:8px;">
+          <input id="sn-fn" type="text" name="contact[first_name]" required autocomplete="given-name" aria-label="First name" placeholder="First name *" style="flex:1 1 110px; min-width:100px; font-family:var(--font-body); font-size:15px; padding:12px 14px; border:2.5px solid var(--ink); border-radius:11px; background:var(--cream); color:var(--ink); outline:none;">
+          <input id="sn-em" type="email" name="contact[email]" required autocomplete="email" aria-label="Email" placeholder="you@email.com" style="flex:2 1 160px; min-width:140px; font-family:var(--font-body); font-size:15px; padding:12px 14px; border:2.5px solid var(--ink); border-radius:11px; background:var(--cream); color:var(--ink); outline:none;">
+        </div>
+        {%- if form.errors -%}
+          {%- assign sn_email_err = form.errors.messages['email'] -%}
+          <div role="alert" style="color:#CA3779; font-size:12px; font-weight:600; margin-top:6px; text-align:left;">
+            {%- if sn_email_err contains 'taken' -%}
+              Looks like you're already on the list! We'll be in touch soon.
+            {%- else -%}
+              {{ form.errors.messages[form.errors.first] | default: 'Please enter a valid email so we can save your spot.' }}
+            {%- endif -%}
+          </div>
+        {%- endif -%}
+        <button type="submit" class="sn-submit" style="margin-top:9px; width:100%; cursor:pointer; font-family:var(--font-heading); text-transform:uppercase; letter-spacing:.02em; font-size:clamp(.98rem,2.1vw,1.12rem); color:var(--cream); background:var(--ink); border:2.5px solid var(--ink); border-radius:12px; padding:15px 20px; box-shadow:0 5px 0 var(--yellow);">
+          Claim your offer
+        </button>
+        <div style="margin-top:12px; text-align:left;">
+          <p style="font-family:var(--font-heading); font-weight:700; text-transform:uppercase; letter-spacing:.05em; font-size:10.5px; color:var(--ink); opacity:.68; margin:0 0 5px;">
+            {%- if sold_out -%}Fully claimed · join the list for 50% off your first subscription order.{%- else -%}{{ spots_claimed }} of {{ free_boxes }} free sample boxes claimed{%- endif -%}
+          </p>
+          <div style="height:9px; border:2.5px solid var(--ink); border-radius:999px; background:rgba(33,5,10,.06); overflow:hidden;">
+            <div style="height:100%; width:{{ progress_pct }}%; background:repeating-linear-gradient(45deg,#21050A,#21050A 8px,#3a1416 8px,#3a1416 16px); {% if progress_pct > 0 %}border-right:2.5px solid var(--ink);{% endif %} transition:width .5s ease;"></div>
+          </div>
+        </div>
+        <p style="font-size:12.5px; line-height:1.5; opacity:.56; margin:8px 0 0;">One per household.</p>
+      {%- endform -%}
+    </div>
+  </section>
+
+  <!-- OUR SECRET SAUCE -->
+  <section style="position:relative; border-top:3px solid var(--ink); padding:clamp(26px,4vw,48px) clamp(18px,5vw,40px);">
+    <div style="max-width:1100px; margin:0 auto;">
+      <h2 style="font-family:var(--font-display) !important; text-transform:uppercase !important; letter-spacing:-0.03em !important; line-height:.9; font-size:clamp(2.05rem,5.8vw,3.45rem); margin:0; text-align:center;">Our Secret Sauce</h2>
+      <p style="font-family:var(--font-heading); font-weight:700; text-transform:uppercase; letter-spacing:.09em; font-size:clamp(12px,1.25vw,14px); opacity:.60; margin:14px auto clamp(24px,3.5vw,40px); max-width:54ch; line-height:1.4; text-align:center;">Why families love our single-serve pancake mixes</p>
+      <div id="usp-grid" style="gap:clamp(14px,2vw,20px);">
+        {%- assign usp_titles = 'Super Convenient|Sneaky Fruits & Veggies|Real Ingredients|Nostalgic Flavors' | split: '|' -%}
+        {%- assign usp_cols = '#FBE07A,#BBD06E,#F2ABCB,#B6CDEA' | split: ',' -%}
+        {%- assign usp_body = 'Single-serve packets that each make 4-5 pancakes or waffles in 5 minutes. No measuring and no stale box sitting in your pantry.|A full serving of real fruits and veggies, snuck into every bag. Perfect for picky eaters and adults alike.|A complete breakfast: whole wheat flour, real buttermilk, real fruits and veggies, sweetened with coconut sugar. No artificial flavors or colors.|Rotate between Banana, Berry, Apple Pie Agents, and Buttermilk pancakes for breakfast! With new flavor drops each month for subscribers.' | split: '|' -%}
+        {%- for i in (0..3) -%}
+        <div style="border:2.5px solid var(--ink); border-radius:20px; overflow:hidden; background:var(--cream); box-shadow:6px 6px 0 var(--ink); display:flex; flex-direction:column;">
+          <div style="height:11px; background:{{ usp_cols[i] }}; border-bottom:2.5px solid var(--ink);"></div>
+          <div style="padding:22px 20px 26px; display:flex; flex-direction:column; gap:16px; align-items:center; text-align:center; flex:1;">
+            <div style="width:100%; min-height:76px; display:flex; align-items:center; justify-content:center; background:{{ usp_cols[i] }}; border:2.5px solid var(--ink); border-radius:14px; padding:10px 16px; box-shadow:3px 3px 0 var(--ink);">
+              <span style="font-family:var(--font-heading); text-transform:uppercase; font-size:clamp(1rem,1.8vw,1.2rem); line-height:1.08; text-wrap:balance;">{{ usp_titles[i] }}</span>
+            </div>
+            <p style="font-size:14px; line-height:1.55; opacity:.84; margin:0; font-weight:500;">{{ usp_body[i] }}</p>
+          </div>
+        </div>
+        {%- endfor -%}
+      </div>
+    </div>
+  </section>
+
+  <!-- MEET THE FLAVORS (carousel) -->
+  <section id="sn-flavors" style="position:relative; border-top:3px solid var(--ink); padding:clamp(40px,6vw,74px) clamp(18px,5vw,40px); overflow:hidden;">
+    <div style="max-width:860px; margin:0 auto; text-align:center;">
+      <h2 style="font-family:var(--font-display) !important; text-transform:uppercase !important; letter-spacing:-0.03em !important; line-height:.9; font-size:clamp(2.05rem,5.8vw,3.45rem); margin:0;">Meet the flavors.</h2>
+      <p style="font-family:var(--font-heading); font-weight:700; text-transform:uppercase; letter-spacing:.09em; font-size:clamp(12px,1.25vw,14px); opacity:.60; margin:14px auto 0; max-width:54ch; line-height:1.4;">Four nostalgic flavors with new flavor releases each month for subscribers</p>
+
+      <div style="display:flex; flex-direction:column; align-items:center; gap:clamp(10px,1.6vw,16px); margin-top:clamp(14px,2.4vw,22px);">
+
+        <!-- Nav row: prev thumbnail/arrow, active package image, next thumbnail/arrow —
+             kept as its own row (separate from the flip-trigger/card below) so
+             align-items:center centers the ghost nav groups against the active
+             package image itself, not the taller card block underneath it. -->
+        <div style="display:flex; align-items:center; justify-content:center; gap:clamp(8px,1.6vw,16px); width:100%;">
+          <button class="sn-ghost sn-prev" aria-label="Previous flavor" style="flex:none; width:clamp(66px,10vw,108px); cursor:pointer; background:none; border:none; padding:0;">
+            <div style="position:relative; width:100%; padding:8%;">
+              <img class="sn-ghost-img sn-ghost-prev" src="" alt="" style="width:100%; height:auto; object-fit:contain; opacity:.4; transition:opacity .2s;">
+              <div style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:40px; height:40px; border-radius:50%; background:rgba(255,249,222,.94); border:2.5px solid var(--ink); display:flex; align-items:center; justify-content:center; box-shadow:2px 2px 0 var(--ink);"><span style="font-family:var(--font-heading); font-size:1.1rem;">←</span></div>
+            </div>
+            <span class="sn-ghost-label-prev" style="font-family:var(--font-heading); font-weight:700; text-transform:uppercase; letter-spacing:.07em; font-size:clamp(8px,1.1vw,10.5px); opacity:.5; display:block; margin-top:5px;"></span>
+          </button>
+
+          <div style="flex:1; min-width:0; max-width:clamp(260px,50vw,440px); line-height:0; width:100%; height:clamp(360px,52vw,500px); padding:clamp(14px,3vw,32px); display:flex; align-items:center; justify-content:center; animation:sn-bounce 2.8s ease-in-out infinite;">
+            <img class="sn-center-img" src="" alt="" style="max-width:100%; max-height:100%; width:auto; height:auto; object-fit:contain;">
+          </div>
+
+          <button class="sn-ghost sn-next" aria-label="Next flavor" style="flex:none; width:clamp(66px,10vw,108px); cursor:pointer; background:none; border:none; padding:0;">
+            <div style="position:relative; width:100%; padding:8%;">
+              <img class="sn-ghost-img sn-ghost-next" src="" alt="" style="width:100%; height:auto; object-fit:contain; opacity:.4; transition:opacity .2s;">
+              <div style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:40px; height:40px; border-radius:50%; background:rgba(255,249,222,.94); border:2.5px solid var(--ink); display:flex; align-items:center; justify-content:center; box-shadow:2px 2px 0 var(--ink);"><span style="font-family:var(--font-heading); font-size:1.1rem;">→</span></div>
+            </div>
+            <span class="sn-ghost-label-next" style="font-family:var(--font-heading); font-weight:700; text-transform:uppercase; letter-spacing:.07em; font-size:clamp(8px,1.1vw,10.5px); opacity:.5; display:block; margin-top:5px;"></span>
+          </button>
+        </div>
+
+        <!-- Flip card block: constrained to the same width band as the active package
+             image above so it stays visually centered under it — only the nav row
+             above was restructured, this part is otherwise untouched. -->
+        <div style="width:100%; max-width:clamp(260px,50vw,440px); display:flex; flex-direction:column; align-items:center; gap:clamp(4px,0.8vw,8px);">
+          <button type="button" class="sn-flip-trigger" data-sn-flip-open aria-label="Flip card to see ingredients"><span class="sn-flip-trigger-text">Flip to see ingredients</span> <span aria-hidden="true">⇷</span></button>
+          <div class="sn-flavor-flip-scene">
+            <div class="sn-flavor-flip-inner">
+              <!-- FRONT — unchanged from the existing implementation -->
+              <div class="sn-flip-face sn-flavor-flip-face">
+                <div class="sn-active-card" style="width:100%; border:3px solid var(--ink); border-radius:24px; box-shadow:7px 7px 0 var(--ink); padding:clamp(18px,2.6vw,24px); text-align:center;">
+                  <h3 class="sn-name" style="font-family:var(--font-heading) !important; text-transform:uppercase !important; letter-spacing:-0.03em !important; line-height:1; font-size:clamp(1.2rem,3.5vw,1.7rem); margin:0;"></h3>
+                  <div class="sn-veg" style="display:inline-flex; align-items:center; gap:6px; margin-top:14px; border:2.5px solid var(--ink); border-radius:999px; padding:5px 14px; font-family:var(--font-heading); font-weight:700; text-transform:uppercase; letter-spacing:.06em; font-size:12px;"></div>
+                  <div class="sn-callouts" style="display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin-top:18px;"></div>
+                  <p class="sn-taste" style="font-size:clamp(13px,2vw,15px); line-height:1.45; font-weight:600; font-style:italic; margin:16px auto 0; max-width:32ch;"></p>
+                </div>
+              </div>
+              <!-- BACK — ingredients panel, same dimensions/radius/shadow/flavour tint as the front -->
+              <div class="sn-flip-face sn-flavor-flip-face sn-flavor-flip-back">
+                <div class="sn-back-content" style="border:3px solid var(--ink); border-radius:24px; box-shadow:7px 7px 0 var(--ink); padding:clamp(18px,2.6vw,24px);">
+                  <button type="button" class="sn-flip-close" data-sn-flip-close aria-label="Close ingredients, back to flavor">×</button>
+                  <h3 style="font-family:var(--font-heading) !important; text-transform:uppercase !important; letter-spacing:-0.03em !important; line-height:1; font-size:clamp(1.3rem,3.8vw,1.85rem); margin:6px 0 0;">Ingredients</h3>
+                  <div class="sn-ingredients-pills" style="display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin:clamp(14px,2.2vw,20px) 0 clamp(14px,2.2vw,20px);"></div>
+                  <button type="button" class="sn-back-btn" data-sn-flip-close><span aria-hidden="true">←</span> Back to flavor</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <div style="display:flex; gap:14px; justify-content:center; align-items:center; margin-top:clamp(10px,1.6vw,14px);">
+        <button class="sn-arrow sn-prev" aria-label="Previous flavor" style="width:38px; height:38px; border-radius:50%; cursor:pointer; background:rgba(255,249,222,.92); border:2.5px solid var(--ink); box-shadow:3px 3px 0 var(--ink); font-family:var(--font-heading);">←</button>
+        <div class="sn-dots" style="display:flex; gap:9px; align-items:center;"></div>
+        <button class="sn-arrow sn-next" aria-label="Next flavor" style="width:38px; height:38px; border-radius:50%; cursor:pointer; background:rgba(255,249,222,.92); border:2.5px solid var(--ink); box-shadow:3px 3px 0 var(--ink); font-family:var(--font-heading);">→</button>
+      </div>
+
+      <p style="font-size:12.5px; line-height:1.5; opacity:.68; margin:clamp(10px,1.6vw,14px) auto 0; max-width:48ch; font-weight:600;">One serving of fruits &amp; veggies in every bag, with no artificial flavors or colors.</p>
+      <div style="margin-top:clamp(8px,1.2vw,12px);">
+        <a href="#sn-offer" data-sn-scroll-offer class="sn-cta-flavors" style="display:inline-block; text-decoration:none; cursor:pointer; font-family:var(--font-heading); text-transform:uppercase; letter-spacing:.02em; font-size:.98rem; color:var(--cream); background:var(--ink); border:2.5px solid var(--ink); border-radius:12px; padding:13px 24px; box-shadow:4px 4px 0 var(--yellow);">Join the waitlist</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- REVIEWS -->
+  <section style="position:relative; background:var(--section-tint); border-top:3px solid var(--ink); padding:clamp(40px,6vw,74px) 0;">
+    <div style="max-width:1140px; margin:0 auto; padding:0 clamp(18px,5vw,40px); text-align:center;">
+      <h2 style="font-family:var(--font-display) !important; text-transform:uppercase !important; letter-spacing:-0.03em !important; line-height:.9; font-size:clamp(2.05rem,5.8vw,3.45rem); margin:0;">What families are saying.</h2>
+    </div>
+    <div id="rev-strip" style="display:flex; gap:14px; overflow-x:auto; scroll-snap-type:x mandatory; padding:clamp(20px,2.8vw,28px) clamp(18px,5vw,40px) 10px;">
+      {%- assign rphotos = 'sn-review-1.jpg,sn-review-2.jpg,sn-review-3.jpg,sn-review-4.jpg,sn-review-5.jpg,sn-review-6.jpg,sn-review-7.jpg' | split: ',' -%}
+      {%- assign rq = 'We made sneakies the other day and they were delicious! The apple pie flavor was cozy and reminded us of oatmeal~Kirthi G.|We loved giving this to our daughter for a pancake breakfast, she ate them all and I was thrilled they had vegetables~Ty K.|My two-year old loves these pancakes! What is great about them is I feel great giving them to him because I know they are packed with nutritious ingredients. No more guilt for saying yes to pancakes for dinner because these pancakes are full of veggies!~Catherina W.|Absolutely delicious. My one year old son loves them. I love them. My wife loves them. There is nothing better than making a pack of Sneakies on a Sunday morning.~Michael J.|Honestly impressed. I am pretty skeptical of "better-for-you" pancakes, but these actually taste great and do not feel like a compromise at all. Super easy to make, good texture, and I do not feel gross after eating them. This is officially in my regular breakfast rotation.~Richard L.|Amazing tasting, nutritious pancakes with great ingredients. We loved all the flavors but Apple Pie Agents was a house favorite.~Raul P.' | split: '|' -%}
+      {%- assign rphoto_count = rphotos.size -%}
+      <!-- photo -->
+      <div style="flex:none; width:240px; scroll-snap-align:start; border:2.5px solid var(--ink); border-radius:18px; overflow:hidden; background:var(--cream); box-shadow:5px 5px 0 var(--ink);">
+        <img src="{{ rphotos[0] | asset_url }}" alt="Apple Pie Agents Sneakies pancakes with fresh apple slices" loading="lazy" style="width:100%; height:100%; object-fit:cover;">
+      </div>
+      {%- for i in (0..5) -%}
+        {%- assign parts = rq[i] | split: '~' -%}
+        <div style="flex:none; width:290px; scroll-snap-align:start; border:2.5px solid var(--ink); border-radius:18px; background:var(--cream); box-shadow:5px 5px 0 var(--ink); padding:20px 18px; display:flex; flex-direction:column;">
+          <div style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
+            <div style="color:var(--yellow); -webkit-text-stroke:1px var(--ink); font-size:1rem; letter-spacing:2px;">★★★★★</div>
+            <span style="font-family:var(--font-heading); font-weight:700; text-transform:uppercase; letter-spacing:.05em; font-size:10px; color:var(--ink); background:#BBD06E; border:1.5px solid var(--ink); border-radius:99px; padding:3px 9px; white-space:nowrap; box-shadow:1px 1px 0 var(--ink);">Verified Buyer</span>
+          </div>
+          <p style="font-size:14.5px; line-height:1.5; font-weight:600; margin:10px 0 0;">“{{ parts[0] }}”</p>
+          <div style="margin-top:auto; padding-top:14px;">
+            <p style="font-family:var(--font-heading); text-transform:uppercase; font-size:12px; margin:0;">{{ parts[1] }}</p>
+          </div>
+        </div>
+        {%- assign pidx = i | plus: 1 | modulo: rphoto_count -%}
+        <div style="flex:none; width:240px; scroll-snap-align:start; border:2.5px solid var(--ink); border-radius:18px; overflow:hidden; background:var(--cream); box-shadow:5px 5px 0 var(--ink);">
+          <img src="{{ rphotos[pidx] | asset_url }}" alt="Sneakies pancakes, real families enjoying breakfast" loading="lazy" style="width:100%; height:100%; object-fit:cover;">
+        </div>
+      {%- endfor -%}
+    </div>
+  </section>
+
+  <!-- FOUNDER STORY -->
+  <section style="position:relative; border-top:3px solid var(--ink); padding:clamp(40px,6vw,74px) clamp(18px,5vw,40px);">
+    <div id="founder-grid" style="max-width:1140px; margin:0 auto;">
+      <div class="sn-founder-photo" style="border:2.5px solid var(--ink); border-radius:20px; overflow:hidden; box-shadow:6px 6px 0 var(--ink); background:var(--beige);">
+        {%- if section.settings.founder_image != blank -%}
+          <img src="{{ section.settings.founder_image | image_url: width: 1200 }}" alt="{{ section.settings.founder_image.alt | default: founder_name }}" width="{{ section.settings.founder_image.width }}" height="{{ section.settings.founder_image.height }}" loading="lazy" style="width:100%; height:100%; object-fit:cover;">
+        {%- else -%}
+          <img src="{{ 'sn-founder-image.png' | asset_url }}" alt="{{ founder_name }}, {{ founder_title }}" loading="lazy" style="width:100%; height:100%; object-fit:cover;">
+        {%- endif -%}
+      </div>
+
+      <div>
+        <p style="font-family:var(--font-heading); font-weight:700; text-transform:uppercase; letter-spacing:.09em; font-size:clamp(10.5px,1.1vw,12.5px); opacity:.60; margin:0; line-height:1.4;">{{ founder_eyebrow }}</p>
+        <h2 style="font-family:var(--font-display) !important; text-transform:uppercase !important; letter-spacing:-0.03em !important; line-height:.95; font-size:clamp(1.75rem,3.9vw,2.7rem); margin:12px 0 0;">{{ founder_heading }}</h2>
+        <div class="sn-founder-copy" style="font-size:clamp(14.5px,1.6vw,16.5px); line-height:1.6; font-weight:500; opacity:.86; margin-top:clamp(14px,2vw,18px);">
+          {{ founder_story }}
+        </div>
+        <p style="font-family:var(--font-heading); font-weight:700; font-size:clamp(1.4rem,2.6vw,1.8rem); margin:clamp(18px,2.5vw,24px) 0 0;">{{ founder_name }}</p>
+        <p style="font-family:var(--font-heading); font-weight:700; text-transform:uppercase; letter-spacing:.07em; font-size:13px; opacity:.6; margin:4px 0 0;">{{ founder_title }}</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer style="background:var(--ink); color:var(--cream); padding:clamp(28px,4.5vw,42px) clamp(18px,5vw,40px);">
+    <div class="sn-footer-grid">
+      <div class="sn-footer-left">
+        <img src="{{ 'sn-sneakies-footer-new.png' | asset_url }}" alt="Sneakies" class="sn-sneakies-footer-new" style="height:30px; width:auto;">
+      </div>
+      <div class="sn-footer-center" style="font-family:var(--font-heading); font-weight:700; text-transform:uppercase; letter-spacing:.1em; font-size:11.5px; opacity:.82;">Fruits &amp; Veggies, Undercover · Sample boxes ship {{ ship_date }}</div>
+      <div class="sn-footer-right">
+        <a href="mailto:{{ contact_email }}" style="font-size:12.5px; color:var(--cream); opacity:.68; text-decoration:none;">{{ contact_user }}<span>@</span>{{ contact_domain_parts | join: '<span>.</span>' }}</a>
+        <span class="sn-footer-sep" style="color:var(--cream); font-size:12.5px;">|</span>
+        <a href="{{ instagram_url }}" target="_blank" rel="noopener noreferrer" aria-label="Sneakies on Instagram" style="display:inline-flex; align-items:center; opacity:.68; color:var(--cream);">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"></rect><path d="M16 11.37a4 4 0 1 1-7.914 1.174A4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.5" y2="6.5"></line></svg>
+        </a>
+        <a href="{{ linkedin_url }}" target="_blank" rel="noopener noreferrer" aria-label="Sneakies on LinkedIn" class="sn-footer-linkedin" style="display:inline-flex; align-items:center; opacity:.68; color:var(--cream);">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path><rect x="2" y="9" width="4" height="12"></rect><circle cx="4" cy="4" r="2"></circle></svg>
+        </a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- STICKY CTA -->
+  <div id="sn-sticky-cta">
+    <button type="button" data-sn-scroll-offer style="cursor:pointer; font-family:var(--font-heading); text-transform:uppercase; letter-spacing:.03em; font-size:1.02rem; color:var(--ink); background:rgba(255,249,222,0.14); -webkit-backdrop-filter:blur(20px) saturate(180%); backdrop-filter:blur(20px) saturate(180%); border:2px solid rgba(33,5,10,0.28); border-radius:999px; padding:14px 34px; box-shadow:0 4px 24px rgba(33,5,10,0.12);">
+      Claim your offer →
+    </button>
+  </div>
+
+</div>
+
+<!-- POST-SUBMIT POPUP -->
+{%- if form.posted_successfully? -%}
+<div data-sn-popup style="position:fixed; inset:0; z-index:80; background:rgba(33,5,10,.6); display:flex; align-items:flex-start; justify-content:center; overflow-y:auto; padding:24px 16px;">
+  <div role="dialog" aria-modal="true" aria-label="You're on the Sneakies waitlist" style="background:var(--cream); border:3px solid var(--ink); border-radius:24px; max-width:480px; width:100%; box-shadow:0 18px 0 rgba(33,5,10,.3); margin:auto; overflow:hidden; animation:sn-pop .3s ease both;">
+    <div style="background:var(--ink); color:var(--cream); padding:22px 26px 18px; text-align:center; position:relative;">
+      <button type="button" data-sn-popup-close aria-label="Close" style="position:absolute; top:13px; right:13px; cursor:pointer; width:36px; height:36px; border-radius:50%; border:2.5px solid var(--cream); background:transparent; color:var(--cream); font-family:var(--font-heading); font-size:14px; line-height:1;">✕</button>
+      <h2 style="font-family:var(--font-display) !important; text-transform:uppercase !important; letter-spacing:-0.03em !important; line-height:.92; font-size:clamp(2.05rem,7.5vw,2.7rem); margin:0;">Congrats, You're In!</h2>
+      <p style="font-size:13px; line-height:1.55; margin:8px auto 0; max-width:40ch; opacity:.88;">
+        {%- if sold_out -%}
+          Thanks for joining the Sneakies waitlist. The free sample boxes are fully claimed, but you're still getting 50% off your first subscription order before launch. Keep an eye on your inbox for your code.
+        {%- else -%}
+          Thanks for joining the Sneakies waitlist. Keep an eye on your inbox. We'll email you to collect your shipping address so you can claim your free sample box.
+        {%- endif -%}
+      </p>
+    </div>
+    <div style="padding:20px 24px 24px;">
+      <div style="border:2.5px solid var(--ink); border-radius:16px; padding:16px 16px 18px; background:var(--beige);">
+        <h3 style="font-family:var(--font-heading) !important; text-transform:uppercase !important; letter-spacing:-0.03em !important; font-size:.98rem; line-height:1.05; margin:0;">Know a family that needs a breakfast win?</h3>
+        <p style="font-size:13px; line-height:1.5; opacity:.8; margin:7px 0 0;">Share Sneakies and help them get in before launch.</p>
+        <div style="display:flex; flex-wrap:wrap; gap:8px; margin-top:12px;">
+          <a href="{{ email_href }}" style="flex:1 1 140px; text-align:center; text-decoration:none; font-family:var(--font-heading); font-weight:700; text-transform:uppercase; letter-spacing:.05em; font-size:12.5px; color:var(--ink); background:var(--yellow); border:2.5px solid var(--ink); border-radius:10px; padding:13px 14px; display:flex; align-items:center; justify-content:center;">Send via Email</a>
+          <a href="{{ whatsapp_href }}" target="_blank" rel="noopener" style="flex:1 1 140px; text-align:center; text-decoration:none; font-family:var(--font-heading); font-weight:700; text-transform:uppercase; letter-spacing:.05em; font-size:12.5px; color:var(--cream); background:var(--ink); border:2.5px solid var(--ink); border-radius:10px; padding:13px 14px; display:flex; align-items:center; justify-content:center;">Share on WhatsApp</a>
+        </div>
+        <div style="margin-top:8px; font-family:var(--font-body); font-size:11px; opacity:.42; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; text-align:center;">{{ share_url }}</div>
+      </div>
+      <a href="{{ whatsapp_url }}" target="_blank" rel="noopener" class="sn-share-wa" style="display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:12px; text-decoration:none; cursor:pointer; border:2.5px solid var(--ink); border-radius:16px; padding:14px 16px; background:var(--cream); color:var(--ink);">
+        <span style="font-size:13.5px; line-height:1.35;"><strong>Join the Sneaky Parents Club</strong><br><span style="font-size:12px; opacity:.7;">First dibs, flavor drops, and behind-the-scenes updates.</span></span>
+        <span style="flex:none; font-family:var(--font-heading); font-size:1.05rem;">→</span>
+      </a>
+    </div>
+  </div>
+</div>
+{%- endif -%}
+
+<script src="{{ 'sn-klaviyo.js' | asset_url }}"></script>
+<script>
+(function(){
+  var root = document.getElementById('sn-root');
+  if(!root) return;
+  var NAMES = ['Banana Bonanza','Apple Pie Agents','Berry Bandits','Buttermilk Blast','Flavor Lab'];
+  var VEG   = ['with carrots','with spinach','with beets','with cauliflower','help us decide'];
+  var TASTE = ['Tastes like banana bread fresh off the griddle.','Tastes like warm apple pie on a fall day.','Tastes like a berry-picking Saturday.','Tastes like the diner classic, only fluffier.','Vote each month on our next flavor'];
+  var CALLOUTS = [['10g protein','½ banana','5 baby carrots'],['10g protein','½ apple','5 spinach leaves'],['10g protein','9 strawberries','17 raspberries'],['13g protein','¼ banana','3 cauliflower florets'],[]];
+  var CCOL = ['#D42B3B','#FDD223','#5F78B2','#76B638','#CED37B'];
+  var CTXT = ['#FFF9DE','#21050A','#FFF9DE','#FFF9DE','#21050A'];
+  var LIGHT = ['#FBE07A','#BBD06E','#F2ABCB','#B6CDEA','#CED37B'];
+  // Ingredients-panel data for the active-card flip, one per index of NAMES above.
+  // Flip is intentionally disabled for Flavor Lab (index 4) — no ingredient list exists
+  // yet for a rotating vote-driven flavor, so it keeps its current, non-flippable card.
+  var FLIP_ENABLED = [true, true, true, true, false];
+  var INGREDIENTS = [
+    'Whole Wheat Flour, Buttermilk, Bananas, Coconut Sugar, Carrots, Baking Powder, Natural Flavors, Sea Salt',
+    'Whole Wheat Flour, Apples, Buttermilk, Coconut Sugar, Baking Powder, Natural Flavors, Cinnamon, Sea Salt, Spinach, Allspice',
+    'Whole Wheat Flour, Buttermilk, Strawberries, Coconut Sugar, Raspberries, Baking Powder, Beets, Natural Flavors, Sea Salt',
+    'Whole Wheat Flour, Buttermilk, Coconut Sugar, Bananas, Baking Powder, Cauliflower, Natural Flavors, Sea Salt',
+    ''
+  ];
+  // Transparent packaging renders, one per index of NAMES/VEG/TASTE/CALLOUTS above:
+  // 0 Banana Bonanza, 1 Apple Pie Agents, 2 Berry Bandits, 3 Buttermilk Blast, 4 Flavor Lab.
+  var IMGS = [
+    {{ 'bananabonanzawithcarrots.png' | asset_url | json }},
+    {{ 'applepieagentswithspinach.png' | asset_url | json }},
+    {{ 'berrybanditswithbeets.png' | asset_url | json }},
+    {{ 'buttermilkblastwithcauliflower.png' | asset_url | json }},
+    {{ 'flavorlab.png' | asset_url | json }}
+  ];
+  var idx = 0, N = NAMES.length, timer, postFlipTimer;
+  var centerImg = root.querySelector('.sn-center-img');
+  var activeCard = root.querySelector('.sn-active-card');
+  var nameEl = root.querySelector('.sn-name'), vegEl = root.querySelector('.sn-veg');
+  var coEl = root.querySelector('.sn-callouts'), tasteEl = root.querySelector('.sn-taste');
+  var ghostPrev = root.querySelector('.sn-ghost-prev'), ghostNext = root.querySelector('.sn-ghost-next');
+  var lblPrev = root.querySelector('.sn-ghost-label-prev'), lblNext = root.querySelector('.sn-ghost-label-next');
+  var dotsWrap = root.querySelector('.sn-dots');
+  var flavorFlipScene = root.querySelector('.sn-flavor-flip-scene');
+  var flavorFlipInner = root.querySelector('.sn-flavor-flip-inner');
+  var flipTrigger = root.querySelector('.sn-flip-trigger');
+  var backCard = root.querySelector('.sn-back-content');
+  var pillsEl = root.querySelector('.sn-ingredients-pills');
+  // Renders the hero-ingredient pill row directly beneath the Ingredients heading
+  // on the back face. Pills are derived straight from INGREDIENTS[i] (split on the
+  // same comma-separated list previously shown as plain text) rather than a
+  // second hand-maintained array, so they can never drift out of sync. Each
+  // pill borrows the same LIGHT[] soft-tint accent already used for that flavour's
+  // "with carrots"-style veg badge on the front face, so the ingredient tags read
+  // as the same printed-label palette instead of a separate website color.
+  function renderPills(i){
+    if(!pillsEl) return;
+    pillsEl.innerHTML = '';
+    var items = INGREDIENTS[i] ? INGREDIENTS[i].split(',') : [];
+    items.forEach(function(raw){
+      var t = raw.trim();
+      if(!t) return;
+      var s = document.createElement('span');
+      s.className = 'sn-ingredient-pill';
+      s.style.background = LIGHT[i];
+      s.textContent = t;
+      pillsEl.appendChild(s);
+    });
+  }
+  // Both flip faces are position:absolute (so neither ever influences the parent's
+  // box during layout or mid-animation), which means .sn-flavor-flip-inner has no
+  // in-flow content to derive a height from on its own — it needs an explicit height.
+  // That height must be ONE fixed value shared by every flavour (not remeasured per
+  // flavour), otherwise the carousel viewport itself resizes and shifts the page
+  // every time next()/prev() swaps content. So: briefly render each flavour's real
+  // copy into the live front/back faces, record the tallest result across all of
+  // them (each face's card is a normal in-flow block, so scrollHeight is reliable
+  // regardless of the absolutely-positioned ancestor), then restore whatever content
+  // was showing before the sweep. A small fixed buffer is added on top for breathing
+  // room so the box isn't a bare tight fit around the longest flavour's content.
+  var CARD_HEIGHT_BUFFER = 28;
+  // How long each flavour sits on screen before autoplay advances to the next one.
+  // Was 4500ms — bumped by +1.5s so the carousel reads as relaxed/premium rather than
+  // rushed, per timing-only refinement (sequence/easing/flip duration unchanged).
+  var FLAVOR_AUTOPLAY_MS = 6000;
+  // Extra viewing window granted after a manual "Flip to see ingredients" click:
+  // the carousel pauses its normal autoplay and waits this long before
+  // advancing, so the visitor always gets ~5s to actually read the ingredients
+  // they asked to see, instead of autoplay potentially cutting the flip short.
+  // Existing autoplay timer/logic below is otherwise unchanged.
+  var POST_FLIP_VIEW_MS = 5000;
+  function computeMaxCardHeight(){
+    if(!activeCard || !backCard) return 0;
+    var savedName = nameEl.textContent, savedVeg = vegEl.textContent, savedTaste = tasteEl.textContent,
+        savedCallouts = coEl.innerHTML,
+        savedPills = pillsEl ? pillsEl.innerHTML : '';
+    var max = 0;
+    for(var i=0; i<N; i++){
+      nameEl.textContent = NAMES[i];
+      vegEl.textContent = VEG[i];
+      tasteEl.textContent = TASTE[i];
+      coEl.innerHTML = '';
+      CALLOUTS[i].forEach(function(c){
+        var s = document.createElement('span');
+        s.textContent = c;
+        s.style.cssText = 'display:inline-block;font-family:var(--font-heading);font-weight:700;font-style:italic;text-transform:uppercase;letter-spacing:.02em;font-size:13px;padding:7px 14px;border-radius:999px;border:2.5px solid #21050A;white-space:nowrap;';
+        coEl.appendChild(s);
+      });
+      renderPills(i);
+      max = Math.max(max, activeCard.scrollHeight, backCard.scrollHeight);
+    }
+    nameEl.textContent = savedName; vegEl.textContent = savedVeg; tasteEl.textContent = savedTaste;
+    coEl.innerHTML = savedCallouts;
+    if(pillsEl) pillsEl.innerHTML = savedPills;
+    return max;
+  }
+  function lockCardHeight(){
+    if(!flavorFlipInner) return;
+    var h = computeMaxCardHeight();
+    if(h) flavorFlipInner.style.height = (h + CARD_HEIGHT_BUFFER) + 'px';
+  }
+  // Shared by both faces so the tint is never computed (or can drift) twice.
+  function cardBg(i){
+    return (window.CSS && CSS.supports && CSS.supports('background', 'color-mix(in srgb, red 55%, blue)'))
+      ? 'color-mix(in srgb, ' + LIGHT[i] + ' 55%, #FFFFF8)'
+      : LIGHT[i];
+  }
+  for(var d=0; d<N; d++){ (function(k){ var b=document.createElement('button'); b.type='button'; b.setAttribute('aria-label','Go to '+NAMES[k]);
+    b.style.cssText='width:12px;height:12px;border-radius:50%;cursor:pointer;border:2.5px solid #21050A;background:#FFFFF8;padding:0;transition:transform .18s ease, background .18s ease;';
+    b.addEventListener('click',function(){ reset(); idx=k; render(); }); dotsWrap.appendChild(b); })(d); }
+  var dots = dotsWrap.querySelectorAll('button');
+  function render(){
+    centerImg.src = IMGS[idx]; centerImg.alt = NAMES[idx] + ' packaging';
+    nameEl.textContent = NAMES[idx]; vegEl.textContent = VEG[idx]; tasteEl.textContent = TASTE[idx];
+    vegEl.style.background = LIGHT[idx]; vegEl.style.color = '#21050A';
+    activeCard.style.background = cardBg(idx);
+    if(backCard) backCard.style.background = cardBg(idx);
+    renderPills(idx);
+    if(flipTrigger) flipTrigger.style.display = FLIP_ENABLED[idx] ? 'inline-flex' : 'none';
+    // Card content just changed underneath the flip — always land back on the front
+    // face so a stale ingredients panel from the previous flavor is never shown.
+    if(flavorFlipScene) flavorFlipScene.classList.remove('is-flipped');
+    coEl.innerHTML='';
+    CALLOUTS[idx].forEach(function(c){ var s=document.createElement('span');
+      s.textContent=c; s.style.cssText='display:inline-block;font-family:var(--font-heading);font-weight:700;font-style:italic;text-transform:uppercase;letter-spacing:.02em;font-size:13px;padding:7px 14px;border-radius:999px;border:2.5px solid #21050A;box-shadow:2px 2px 0 #21050A;white-space:nowrap;background:'+CCOL[idx]+';color:'+CTXT[idx]+';';
+      coEl.appendChild(s); });
+    var p=(idx-1+N)%N, n=(idx+1)%N;
+    ghostPrev.src=IMGS[p]; ghostPrev.alt=''; ghostNext.src=IMGS[n]; ghostNext.alt='';
+    lblPrev.textContent=NAMES[p]; lblNext.textContent=NAMES[n];
+    root.querySelector('.sn-ghost.sn-prev').setAttribute('aria-label','Previous: '+NAMES[p]);
+    root.querySelector('.sn-ghost.sn-next').setAttribute('aria-label','Next: '+NAMES[n]);
+    dots.forEach(function(dot,k){
+      var active = k===idx;
+      dot.style.background = active ? LIGHT[k] : '#FFFFF8';
+      dot.style.transform = active ? 'scale(1.3)' : 'none';
+      dot.style.boxShadow = active ? '2px 2px 0 #21050A' : 'none';
+    });
+  }
+  function next(){ idx=(idx+1)%N; render(); }
+  function prev(){ idx=(idx-1+N)%N; render(); }
+  // Cancels any pending post-flip window in addition to the normal autoplay
+  // interval, so every manual interaction (arrows, dots, or a flip close)
+  // always fully supersedes an in-progress post-flip wait — never both a
+  // scheduled post-flip advance and a fresh autoplay interval running at once.
+  function reset(){ clearTimeout(postFlipTimer); postFlipTimer=null; clearInterval(timer); timer=setInterval(next,FLAVOR_AUTOPLAY_MS); }
+  root.querySelectorAll('.sn-next').forEach(function(b){ b.addEventListener('click',function(){ reset(); next(); }); });
+  root.querySelectorAll('.sn-prev').forEach(function(b){ b.addEventListener('click',function(){ reset(); prev(); }); });
+  render();
+  // Lock the carousel's card box to one fixed height (the tallest content across
+  // every flavour, plus a breathing-room buffer) so switching flavours or flipping
+  // never resizes the box or shifts the page. Re-run once webfonts finish loading
+  // (Azo Super Uber/Stenciletta Solid Bold render with different metrics than the
+  // fallback stack, so an initial measurement taken before they're ready can undershoot).
+  lockCardHeight();
+  if(window.document.fonts && document.fonts.ready){ document.fonts.ready.then(lockCardHeight); }
+  timer=setInterval(next,FLAVOR_AUTOPLAY_MS);
+
+  // Flavour card image flip: CSS :hover already drives this on devices that support
+  // hover. On touch devices (no hover), tap the white image container to flip it;
+  // tap it again, tap another card, or tap anywhere else to flip it back.
+  var flipScenes = root.querySelectorAll('.sn-flip-scene');
+  if(flipScenes.length && !(window.matchMedia && window.matchMedia('(hover: hover)').matches)){
+    flipScenes.forEach(function(scene){
+      scene.addEventListener('click', function(ev){
+        ev.stopPropagation();
+        var wasFlipped = scene.classList.contains('is-flipped');
+        flipScenes.forEach(function(s){ s.classList.remove('is-flipped'); });
+        if(!wasFlipped) scene.classList.add('is-flipped');
+      });
+    });
+    document.addEventListener('click', function(){
+      flipScenes.forEach(function(s){ s.classList.remove('is-flipped'); });
+    });
+  }
+
+  // "Meet the flavors" active-card flip: a single delegated listener handles the
+  // open trigger and both close controls (× and "Back to flavor") via data
+  // attributes, rather than binding three separate listeners. Carousel navigation
+  // (next/prev/dots/autoplay) is untouched by this — it only ever toggles a class.
+  if(flavorFlipScene){
+    root.addEventListener('click', function(ev){
+      if(ev.target.closest('[data-sn-flip-open]')){
+        if(FLIP_ENABLED[idx]){
+          flavorFlipScene.classList.add('is-flipped');
+          // Post-flip viewing window (see POST_FLIP_VIEW_MS above): pause the
+          // normal autoplay interval and, once this fresh 5s countdown
+          // completes, advance to the next flavor and resume normal autoplay.
+          // Any previous pending window is cancelled first so only one is ever
+          // active, and re-clicking the flip restarts the countdown from zero.
+          clearInterval(timer);
+          clearTimeout(postFlipTimer);
+          postFlipTimer = setTimeout(function(){
+            next();
+            reset();
+          }, POST_FLIP_VIEW_MS);
+        }
+      } else if(ev.target.closest('[data-sn-flip-close]')){
+        flavorFlipScene.classList.remove('is-flipped');
+        // Closing early cancels the pending post-flip advance and resumes
+        // normal autoplay right away instead of leaving a stale timer armed.
+        reset();
+      }
+    });
+    // Card content re-wraps at different viewport widths (clamp()-driven font
+    // sizes), so the fixed height must be re-measured (across every flavor again)
+    // on resize, not just on flavor change — desktop/tablet/mobile each get their
+    // own correct fixed height, still shared across all 5 flavors at that width.
+    var flipResizeT;
+    window.addEventListener('resize', function(){
+      clearTimeout(flipResizeT);
+      flipResizeT = setTimeout(lockCardHeight, 150);
+    });
+  }
+
+  // Auto-scroll reviews
+  var strip=document.getElementById('rev-strip');
+  if(strip && !(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches)){
+    strip.style.scrollSnapType='none'; var paused=false;
+    strip.addEventListener('mouseenter',function(){paused=true;}); strip.addEventListener('mouseleave',function(){paused=false;});
+    strip.addEventListener('pointerdown',function(){paused=true;}); window.addEventListener('pointerup',function(){paused=false;});
+    function step(){ if(!paused){ var max=strip.scrollWidth-strip.clientWidth; if(max>4){ strip.scrollLeft+=0.7; if(strip.scrollLeft>=max-1) strip.scrollLeft=0; } } requestAnimationFrame(step); }
+    requestAnimationFrame(step);
+  }
+
+  // Smooth-scroll to the offer/capture section from any "Join the waitlist" CTA
+  document.querySelectorAll('[data-sn-scroll-offer]').forEach(function(el){
+    el.addEventListener('click', function(ev){
+      var target = document.getElementById('sn-offer');
+      if(!target) return;
+      ev.preventDefault();
+      var y = target.getBoundingClientRect().top + window.scrollY - 14;
+      window.scrollTo({ top:y, behavior:'smooth' });
+      var fn = document.getElementById('sn-fn');
+      if(fn) setTimeout(function(){ fn.focus({ preventScroll:true }); }, 400);
+    });
+  });
+
+  // Waitlist form: this is a real Shopify customer-creation submission (full
+  // page POST + redirect via the return_to field above), so there's no
+  // client-side "success" callback to hook into. Instead: (1) stash the
+  // entered name/email + current sold_out state in sessionStorage right
+  // before the browser navigates, so the Claim Flow can prefill the Address
+  // step and branch correctly without asking the user twice; (2) disable the
+  // button once to prevent an accidental duplicate submission while the
+  // native POST is in flight.
+  var waitlistForm = document.getElementById('sn-waitlist-form');
+  if(waitlistForm){
+    waitlistForm.addEventListener('submit', function(){
+      // 2026-07-09 (Task C production audit): disabling the submit button
+      // SYNCHRONOUSLY inside this handler was found live to silently cancel
+      // the browser's native form POST entirely — the button visibly
+      // disabled itself, sessionStorage still got written, but no /contact
+      // request was ever sent and the customer was never created. Confirmed
+      // reproducible: only deferring the disable to the next tick (so the
+      // browser's default submit action is already underway first) lets the
+      // real POST go through. This was a genuine implementation bug, not a
+      // UI/business-logic change — every waitlist signup on the live site
+      // was at risk of silently failing this way.
+      var submitBtn = waitlistForm.querySelector('[type="submit"]');
+      if(submitBtn){
+        setTimeout(function(){ submitBtn.disabled = true; submitBtn.style.opacity = '.7'; }, 0);
+      }
+      try{
+        var fn = waitlistForm.elements['contact[first_name]'];
+        var em = waitlistForm.elements['contact[email]'];
+        sessionStorage.setItem('sn_prefill', JSON.stringify({
+          first_name: fn ? fn.value : '',
+          email: em ? em.value : '',
+          sold_out: {{ sold_out | json }}
+        }));
+      }catch(e){}
+      // Not preventDefault()'d — the native Shopify form submission must
+      // still proceed normally.
+    });
+  }
+
+  // Sticky CTA: shown only while the offer section has scrolled past but the
+  // flavors section hasn't reached the viewport yet.
+  var stickyEl = document.getElementById('sn-sticky-cta');
+  if(stickyEl){
+    var offerEl = document.getElementById('sn-offer');
+    var flavorsEl = document.getElementById('sn-flavors');
+    var onScroll = function(){
+      if(!offerEl || !flavorsEl) return;
+      var vh = window.innerHeight || document.documentElement.clientHeight;
+      var offerBottom = offerEl.getBoundingClientRect().bottom;
+      var flavorsTop = flavorsEl.getBoundingClientRect().top;
+      var show = offerBottom < 80 && flavorsTop > vh;
+      stickyEl.classList.toggle('is-visible', show);
+    };
+    window.addEventListener('scroll', onScroll, { passive:true });
+    onScroll();
+    stickyEl.querySelector('[data-sn-scroll-offer]').addEventListener('click', function(){
+      var target = document.getElementById('sn-offer');
+      if(!target) return;
+      var y = target.getBoundingClientRect().top + window.scrollY - 14;
+      window.scrollTo({ top:y, behavior:'smooth' });
+    });
+  }
+
+  // Post-submit popup close controls
+  var popup = document.querySelector('[data-sn-popup]');
+  if(popup){
+    var closePopup = function(){ popup.remove(); };
+    var closeBtn = popup.querySelector('[data-sn-popup-close]');
+    if(closeBtn) closeBtn.addEventListener('click', closePopup);
+    popup.addEventListener('click', function(ev){ if(ev.target === popup) closePopup(); });
+    document.addEventListener('keydown', function(ev){ if(ev.key === 'Escape') closePopup(); }, { once:true });
+  }
+})();
+</script>
+
+{% schema %}
+{
+  "name": "Sneakies Landing",
+  "settings": [
+    { "type": "header", "content": "Content" },
+    { "type": "text", "id": "ship_date", "label": "Sample box ship date (footer)", "default": "August 2026" },
+    { "type": "text", "id": "contact_email", "label": "Contact email", "default": "hello@eatsneakies.com" },
+    { "type": "url", "id": "whatsapp_invite_url", "label": "\"Sneaky Parents Club\" WhatsApp invite link" },
+    { "type": "url", "id": "share_url", "label": "Waitlist share link (defaults to store URL)" },
+    { "type": "image_picker", "id": "hero_band", "label": "Hero band image (optional override)" },
+    { "type": "header", "content": "Founder story" },
+    { "type": "image_picker", "id": "founder_image", "label": "Founder photo" },
+    { "type": "text", "id": "founder_eyebrow", "label": "Eyebrow", "default": "Sneakies by parents, for parents" },
+    { "type": "text", "id": "founder_heading", "label": "Heading", "default": "From our kitchen to yours" },
+    { "type": "richtext", "id": "founder_story", "label": "Story", "default": "<p>&#8220;When my daughter was little, she was a serious picky eater. Mealtimes could be hard, so like a lot of parents, we found little ways to sneak veggies into the foods she already loved.</p><p>Sunday pancakes were our family ritual. One morning, I mixed beets into her favorite berry pancakes. She loved them, asked for more, and that stack became the first version of Sneakies.</p><p>We still make Sneakies with the same rule I had in my own kitchen: real ingredients, fruits and veggies undercover, and nothing I wouldn’t feel good feeding my own family.”</p>" },
+    { "type": "text", "id": "founder_name", "label": "Founder name", "default": "Arun Gomatam" },
+    { "type": "text", "id": "founder_title", "label": "Founder designation", "default": "Dad & Founder of Sneakies" }
+  ],
+  "presets": [ { "name": "Sneakies Landing" } ]
+}
+{% endschema %}
