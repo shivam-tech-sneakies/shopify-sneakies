@@ -433,9 +433,7 @@
     // abandoned-before-checkout visitor can still land in Klaviyo's
     // "Free Box - Need Address" state rather than "Claimed".
     if(window.SneakiesKlaviyo && state.address){
-      window.SneakiesKlaviyo.identify({
-        '$email': state.address.email,
-        '$first_name': state.address.first_name,
+      window.SneakiesKlaviyo.updateProperties(state.address.email, { firstName: state.address.first_name }, {
         free_box: true,
         address_collected: true,
         sample_order_created: true
@@ -488,10 +486,9 @@
   // after a successful Shopify customer creation). Uses only Klaviyo's public
   // API (assets/sn-klaviyo.js) — never blocks the UI if it fails.
   if(prefillRaw && !state.klaviyoSynced && window.SneakiesKlaviyo){
-    var syncProps = { '$email': state.address.email, '$first_name': state.address.first_name };
+    var syncProps = {};
     if(state.soldOut){ syncProps.fifty_off = true; } else { syncProps.free_box = true; }
-    window.SneakiesKlaviyo.identify(syncProps);
-    window.SneakiesKlaviyo.subscribeToLaunchList(state.address.email, state.address.first_name);
+    window.SneakiesKlaviyo.updateProperties(state.address.email, { firstName: state.address.first_name }, syncProps);
     state.klaviyoSynced = true;
     saveState();
   }
@@ -633,8 +630,7 @@
           // Sold out: no Sample Box order is ever created for this branch —
           // straight to the existing 50% Off experience.
           if(window.SneakiesKlaviyo){
-            window.SneakiesKlaviyo.identify({
-              '$email': data.email, '$first_name': data.first_name, '$last_name': data.last_name,
+            window.SneakiesKlaviyo.updateProperties(data.email, { firstName: data.first_name, lastName: data.last_name }, {
               fifty_off: true
             });
           }
@@ -665,8 +661,7 @@
           state.checkoutUrl = cart.checkoutUrl;
           saveState();
           if(window.SneakiesKlaviyo){
-            window.SneakiesKlaviyo.identify({
-              '$email': data.email, '$first_name': data.first_name, '$last_name': data.last_name,
+            window.SneakiesKlaviyo.updateProperties(data.email, { firstName: data.first_name, lastName: data.last_name }, {
               free_box: true
             });
           }
