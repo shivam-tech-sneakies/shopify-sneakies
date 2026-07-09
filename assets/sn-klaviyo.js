@@ -51,6 +51,33 @@
   // endpoint. Confirmed via live testing to actually persist both the
   // base profile fields AND an arbitrary custom `properties` object,
   // unlike identify()/track() on this account's public key.
+  //
+  // Live QA (2026-07-09) observed one intermittent 503 from this endpoint
+  // that succeeded immediately on manual retry — a transient gateway blip,
+  // not a persistent failure. Since production traffic has no human to
+  // retry by hand, this does one silent retry after a short delay on any
+  // non-2xx/network failure before giving up. Still fully fire-and-forget:
+  // never throws, never blocks the UI either way.
+  function sendSubscription(body, isRetry){
+    try{
+      fetch('https://a.klaviyo.com/client/subscriptions/?company_id=' + COMPANY_ID, {
+        method: 'POST',
+        keepalive: true,
+        headers: {
+          'Content-Type': 'application/json',
+          'revision': REVISION
+        },
+        body: JSON.stringify(body)
+      }).then(function(res){
+        if(!res.ok && !isRetry){
+          setTimeout(function(){ sendSubscription(body, true); }, 1200);
+        }
+      }).catch(function(){
+        if(!isRetry){ setTimeout(function(){ sendSubscription(body, true); }, 1200); }
+      });
+    }catch(e){ /* fail silently */ }
+  }
+
   function postProfile(attributes){
     if(!attributes || !attributes.email) return;
     var body = {
@@ -64,17 +91,7 @@
         }
       }
     };
-    try{
-      fetch('https://a.klaviyo.com/client/subscriptions/?company_id=' + COMPANY_ID, {
-        method: 'POST',
-        keepalive: true,
-        headers: {
-          'Content-Type': 'application/json',
-          'revision': REVISION
-        },
-        body: JSON.stringify(body)
-      }).catch(function(){ /* fail silently — never block the claim flow */ });
-    }catch(e){ /* fail silently */ }
+    sendSubscription(body, false);
   }
 
   // Adds/updates a profile as a member of the Sneakies Launch List. Also
