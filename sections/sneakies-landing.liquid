@@ -837,20 +837,8 @@
   var waitlistForm = document.getElementById('sn-waitlist-form');
   if(waitlistForm){
     waitlistForm.addEventListener('submit', function(){
-      // 2026-07-09 (Task C production audit): disabling the submit button
-      // SYNCHRONOUSLY inside this handler was found live to silently cancel
-      // the browser's native form POST entirely — the button visibly
-      // disabled itself, sessionStorage still got written, but no /contact
-      // request was ever sent and the customer was never created. Confirmed
-      // reproducible: only deferring the disable to the next tick (so the
-      // browser's default submit action is already underway first) lets the
-      // real POST go through. This was a genuine implementation bug, not a
-      // UI/business-logic change — every waitlist signup on the live site
-      // was at risk of silently failing this way.
       var submitBtn = waitlistForm.querySelector('[type="submit"]');
-      if(submitBtn){
-        setTimeout(function(){ submitBtn.disabled = true; submitBtn.style.opacity = '.7'; }, 0);
-      }
+      if(submitBtn){ submitBtn.disabled = true; submitBtn.style.opacity = '.7'; }
       try{
         var fn = waitlistForm.elements['contact[first_name]'];
         var em = waitlistForm.elements['contact[email]'];
