@@ -106,15 +106,29 @@
 
   // Writes custom claim-flow properties (free_box, fifty_off,
   // address_collected, sample_order_created, etc.) reliably. Every call
-  // also explicitly sets existing_customer/existing_contact to false and
-  // internal_test to its detected value, unless the caller overrides
-  // them — every profile reaching this function came through the new
-  // (non-"existing customer") signup path, so writing an explicit false
-  // (instead of leaving the property unset) is what keeps profiles out of
-  // segments that use "not set" as part of their existing-customer logic.
+  // now explicitly sets the FULL set of claim-flow state properties to
+  // false by default (free_box, fifty_off, address_collected,
+  // sample_order_created, existing_customer, existing_contact) and
+  // internal_test to its detected value, unless the caller overrides them.
+  // 2026-07-09 (Task C production audit): previously only
+  // existing_customer/existing_contact defaulted to false, so
+  // address_collected/sample_order_created/free_box/fifty_off were left
+  // "not set" on every write that didn't explicitly touch them — segments
+  // that key off "equals false" (not "not set") never matched. Every
+  // profile reaching this function came through this funnel, so writing an
+  // explicit false for every state property (instead of leaving it unset)
+  // is required for accurate segment membership.
   function updateProperties(email, extra, properties){
     if(!email || !properties) return;
-    var merged = { existing_customer: false, existing_contact: false, internal_test: isInternalTestEmail(email) };
+    var merged = {
+      free_box: false,
+      fifty_off: false,
+      address_collected: false,
+      sample_order_created: false,
+      existing_customer: false,
+      existing_contact: false,
+      internal_test: isInternalTestEmail(email)
+    };
     for(var key in properties){ if(Object.prototype.hasOwnProperty.call(properties, key)) merged[key] = properties[key]; }
     var attributes = { email: email, properties: merged };
     if(extra && extra.firstName) attributes.first_name = extra.firstName;
