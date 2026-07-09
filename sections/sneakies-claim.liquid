@@ -423,9 +423,9 @@
     // customer on Shopify's own /thank-you page and never returns to this
     // tab/session, so in production this branch is not reachable today).
     // The actual, reliable free_box/address_collected/sample_order_created
-    // write now happens at cart-creation time in the Address Form submit
-    // handler below, since that's the last point this flow can guarantee it
-    // still controls execution. This block is left in place, unchanged in
+    // write now happens right before the checkout redirect in
+    // goToOrderIfNeeded() below (the last point this flow can guarantee it
+    // still controls execution). This block is left in place, unchanged in
     // behavior, purely as a no-cost fallback if that ever stops being true.
     state.step = 'confirmation';
     state.awaitingCheckoutReturn = false;
