@@ -417,21 +417,19 @@
   var state = loadState();
 
   if(state.awaitingCheckoutReturn){
-    // Just returned from Shopify's real checkout after completing the real
-    // Free Box order (the only redirect this flow ever makes) — land
-    // directly on the Confirmation step's finished state instead of the
-    // normal reset-to-Claim-page behavior below. The confirm survey's own
-    // "done" flag, set right before we left for checkout, is preserved so
-    // the existing restore-on-load logic further down re-hides it and shows
-    // the clean success state automatically, with no further redirect.
+    // Dormant safety net, kept in case a future checkout configuration ever
+    // does redirect back here (2026-07-09 live QA finding: Shopify's real
+    // cart checkoutUrl has no return_to — completing a $0 order lands the
+    // customer on Shopify's own /thank-you page and never returns to this
+    // tab/session, so in production this branch is not reachable today).
+    // The actual, reliable free_box/address_collected/sample_order_created
+    // write now happens at cart-creation time in the Address Form submit
+    // handler below, since that's the last point this flow can guarantee it
+    // still controls execution. This block is left in place, unchanged in
+    // behavior, purely as a no-cost fallback if that ever stops being true.
     state.step = 'confirmation';
     state.awaitingCheckoutReturn = false;
     saveState();
-    // This is the one moment we know for certain the real order exists —
-    // address_collected/sample_order_created should never be set earlier
-    // than this (see the Address Form submit handler below), so that an
-    // abandoned-before-checkout visitor can still land in Klaviyo's
-    // "Free Box - Need Address" state rather than "Claimed".
     if(window.SneakiesKlaviyo && state.address){
       window.SneakiesKlaviyo.updateProperties(state.address.email, { firstName: state.address.first_name }, {
         free_box: true,
@@ -642,10 +640,19 @@
         // identity, shipping address, the Free Box discount) — nothing here
         // shows a Shopify page; only state.checkoutUrl gets visited, once,
         // after the Survey step (see the 'confirm' survey handling below).
-        // address_collected / sample_order_created are deliberately NOT set
-        // yet — only once the real order is confirmed complete (see the
-        // awaitingCheckoutReturn block above), so an abandoned cart still
-        // leaves this profile in Klaviyo's "Free Box - Need Address" state.
+        //
+        // address_collected / sample_order_created write here, at cart
+        // creation, rather than waiting for a checkout return (2026-07-09
+        // live QA finding: Shopify's cart checkoutUrl has no return_to —
+        // real checkout never redirects back to this page, so the
+        // awaitingCheckoutReturn block above is unreachable in production
+        // and was silently leaving these two properties unset for every
+        // real customer). A successfully created cart means the address was
+        // validated AND is already attached to a real Storefront cart with
+        // the Free Box discount applied, which is the most reliable signal
+        // available without adding a backend order-webhook. Only genuinely
+        // abandoned cart *creation* (network/API failure, caught below)
+        // leaves these properties unset.
         return window.SneakiesStorefront.createFreeBoxCart({
           email: data.email,
           firstName: data.first_name,
@@ -662,7 +669,9 @@
           saveState();
           if(window.SneakiesKlaviyo){
             window.SneakiesKlaviyo.updateProperties(data.email, { firstName: data.first_name, lastName: data.last_name }, {
-              free_box: true
+              free_box: true,
+              address_collected: true,
+              sample_order_created: true
             });
           }
           showStep('confirmation');
