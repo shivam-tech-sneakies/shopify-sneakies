@@ -1,1 +1,950 @@
-PLACEHOLDER_WILL_NOT_BE_USED
+{%- comment -%}
+  Sneakies — Claim flow (4 steps, client-side).
+  Reached from any "Join the Waitlist" CTA on the homepage (sneakies-landing.liquid).
+  Reuses the same design tokens, typography, and button interaction states
+  established there (#sn-root ink/cream/beige/yellow palette, the shared
+  --font-display/--font-heading/--font-body type system, .sn-submit button
+  hover/active states) so this reads as a natural continuation of the site
+  rather than a separate landing page.
+
+  Architecture: all 4 steps (Claim / Address form / Confirmation / 50% off
+  fallback) live in this one section as sibling panels ([data-step-panel]),
+  toggled by a small vanilla-JS state machine at the bottom of the file —
+  there's no page reload between steps, matching the "one continuous
+  experience" requirement. Current step + address form values + survey
+  answers are persisted to sessionStorage (see STORE_KEY below) so a refresh
+  doesn't lose progress. No backend/order logic runs here — this is a
+  dev-only preview of the funnel design, reachable step-by-step via the
+  actual CTAs or directly via the preview nav pills at the top.
+
+  Reusable pieces: snippets/sneakies-order-summary.liquid (full variant on
+  the Claim step, condensed variant on the Address step) and
+  snippets/sneakies-survey.liquid (radio mode on Confirmation, checkbox mode
+  on the Fallback step) — both are rendered twice each rather than having
+  their markup duplicated inline.
+{%- endcomment -%}
+
+{%- style -%}
+  {%- render 'sn-typography' -%}
+  .sn-claim{
+    --ink:#21050A; --cream:#FFFFF8; --beige:#F0E6C2; --yellow:#FBD01A;
+    --claim-green:#76B638; --claim-green-bg:#BBD06E; --claim-blue-bg:#B6CDEA; --claim-pink:#CA3779;
+    background:var(--cream); color:var(--ink);
+    font-family:var(--font-body); -webkit-font-smoothing:antialiased;
+    overflow-x:hidden; min-height:100vh;
+  }
+  .sn-claim *{ box-sizing:border-box; }
+  .sn-claim img{ max-width:100%; display:block; filter:saturate(1.08) contrast(1.05) brightness(1.02); }
+  .sn-claim a{ color:inherit; }
+  .sn-claim ::selection{ background:var(--yellow); color:var(--ink); }
+  .sn-claim input:focus-visible, .sn-claim select:focus-visible, .sn-claim button:focus-visible, .sn-claim a:focus-visible{ outline:3px solid #5F7AAF; outline-offset:2px; }
+
+  /* Reused primary-button interaction states — matches .sn-submit on the homepage
+     exactly so every CTA in this flow feels/behaves like the rest of the site. */
+  .sn-claim .sn-submit{ transition:transform .08s, box-shadow .08s; text-decoration:none; display:inline-flex; align-items:center; justify-content:center; gap:8px; cursor:pointer; }
+  .sn-claim .sn-submit:hover{ transform:translateY(2px); box-shadow:0 3px 0 var(--yellow); }
+  .sn-claim .sn-submit:active{ transform:translateY(5px); box-shadow:0 0 0 var(--yellow); }
+
+  /* Step panels: only one visible at a time, swapped by the script below. */
+  .sn-claim-step{ display:none; }
+  .sn-claim-step.is-active{ display:block; }
+
+  /* Dev preview nav — every pill is a real button now (all 4 steps exist), so
+     clicking any of them jumps straight there for design review. */
+  .sn-claim-devnav{ border-bottom:2px dashed rgba(33,5,10,.25); background:var(--beige); }
+  .sn-claim-devnav-inner{ max-width:1180px; margin:0 auto; padding:14px clamp(18px,5vw,40px); display:flex; flex-wrap:wrap; align-items:center; gap:12px 18px; }
+  .sn-claim-devnav-label{ font-family:var(--font-heading); font-weight:700; text-transform:uppercase; letter-spacing:.1em; font-size:11.5px; opacity:.55; white-space:nowrap; }
+  .sn-claim-devnav-pills{ display:flex; flex-wrap:wrap; gap:8px; }
+  .sn-claim-pill{ font-family:var(--font-heading); font-weight:700; text-transform:uppercase; letter-spacing:.04em; font-size:12.5px; padding:8px 16px; border-radius:999px; border:2px solid var(--ink); background:var(--cream); white-space:nowrap; cursor:pointer; }
+  .sn-claim-pill--active{ background:var(--ink); color:var(--cream); }
+
+  /* Back to homepage — lives inside the Claim step only (matches reference:
+     later steps don't show it). */
+  .sn-claim-back-wrap{ max-width:1180px; margin:0 auto; padding:16px clamp(18px,5vw,40px) 0; }
+  .sn-claim-back{ display:inline-flex; align-items:center; gap:6px; text-decoration:none; font-family:var(--font-heading); font-weight:700; text-transform:uppercase; letter-spacing:.06em; font-size:12px; color:var(--ink); opacity:.72; transition:opacity .15s ease; }
+  .sn-claim-back:hover{ opacity:1; }
+
+  /* Header (shared across all 4 steps) */
+  .sn-claim-header{ display:flex; flex-direction:column; align-items:center; gap:6px; text-align:center; padding:clamp(18px,3vw,30px) clamp(18px,5vw,40px) clamp(8px,1.6vw,16px); }
+  .sn-claim-logo{ height:clamp(44px,6vw,60px); width:auto; }
+  .sn-claim-tagline{ margin:0; font-family:var(--font-heading); font-weight:700; text-transform:uppercase; letter-spacing:.14em; font-size:11px; opacity:.55; }
+
+  /* Hero (Claim step) */
+  .sn-claim-hero{ padding:clamp(10px,2vw,20px) clamp(18px,5vw,40px) clamp(36px,5vw,56px); }
+  .sn-claim-hero-grid{ max-width:1180px; margin:0 auto; display:grid; grid-template-columns:1.15fr 1fr; gap:clamp(28px,5vw,60px); align-items:start; }
+  @media(max-width:860px){ .sn-claim-hero-grid{ grid-template-columns:1fr; } }
+
+  .sn-claim-badge{ display:inline-flex; align-items:center; gap:8px; font-family:var(--font-heading); font-weight:700; text-transform:uppercase; letter-spacing:.06em; font-size:12px; color:var(--ink); background:var(--claim-green-bg); border:2px solid var(--ink); border-radius:999px; padding:7px 16px; }
+  .sn-claim-h1{ font-family:var(--font-display) !important; font-weight:900; line-height:1.06; letter-spacing:-.01em !important; text-transform:uppercase !important; font-size:clamp(1.9rem,4.4vw,3rem); margin:clamp(14px,2vw,20px) 0 0; }
+  .sn-claim-h1--sm{ font-size:clamp(1.5rem,3.4vw,2.2rem); }
+  .sn-claim-h1--center{ text-align:center; }
+  .sn-claim-h1 mark{ background:var(--yellow); color:var(--ink); box-decoration-break:clone; -webkit-box-decoration-break:clone; padding:0 4px; }
+  .sn-claim-desc{ font-size:clamp(15px,1.6vw,18px); line-height:1.5; opacity:.78; font-weight:500; max-width:46ch; margin:clamp(12px,1.6vw,18px) 0 0; }
+  .sn-claim-desc--center{ text-align:center; margin-left:auto; margin-right:auto; }
+
+  .sn-claim-cta-wrap{ position:relative; display:block; margin:clamp(24px,3.4vw,34px) 0 0; }
+  .sn-claim-cta-wrap .sn-claim-cta{ width:100%; }
+  .sn-claim-annotation{ position:absolute; right:10px; bottom:100%; margin-bottom:2px; font-family:var(--font-heading); font-style:italic; font-weight:700; font-size:14px; color:var(--claim-pink); transform:rotate(-4deg); white-space:nowrap; pointer-events:none; }
+  .sn-claim-cta{ font-family:var(--font-heading); text-transform:none; letter-spacing:0; font-size:clamp(1rem,1.6vw,1.15rem); color:var(--cream); background:var(--ink); border:2.5px solid var(--ink); border-radius:18px; padding:18px 30px; box-shadow:0 6px 0 var(--yellow); }
+  .sn-claim-cta--full{ width:100%; margin-top:6px; }
+  .sn-claim-helper{ font-family:var(--font-body); font-weight:700; text-transform:uppercase; letter-spacing:.06em; font-size:11px; opacity:.6; margin:clamp(14px,2vw,18px) 0 0; }
+  .sn-claim-helper--center{ text-align:center; }
+
+  .sn-claim-hero-right{ display:flex; justify-content:center; }
+
+  /* Order summary card (rendered via snippets/sneakies-order-summary.liquid,
+     full variant on Claim, condensed variant on Address form). */
+  .sn-claim-card{ width:100%; max-width:420px; background:var(--cream); border:3px solid var(--ink); border-radius:20px; box-shadow:6px 6px 0 var(--ink); padding:clamp(20px,2.6vw,28px); }
+  .sn-claim-card-top{ display:flex; align-items:flex-start; justify-content:space-between; gap:12px; }
+  .sn-claim-card-label{ margin:0; font-family:var(--font-heading); font-weight:700; text-transform:uppercase; letter-spacing:.08em; font-size:11px; opacity:.55; }
+  .sn-claim-card-title{ margin:4px 0 0; font-family:var(--font-heading) !important; font-weight:900; font-size:clamp(1.15rem,2vw,1.4rem); line-height:1.15; letter-spacing:-0.03em !important; text-transform:none !important; }
+  .sn-claim-badge-pack{ flex:none; font-family:var(--font-heading); font-weight:700; text-transform:uppercase; letter-spacing:.04em; font-size:12px; color:var(--ink); background:var(--claim-blue-bg); border:2px solid var(--ink); border-radius:999px; padding:6px 14px; white-space:nowrap; }
+  .sn-claim-card-row{ display:flex; align-items:center; justify-content:space-between; gap:12px; padding:14px 0; border-bottom:1.5px dashed rgba(33,5,10,.28); font-size:14.5px; }
+  .sn-claim-card-row:first-of-type{ margin-top:18px; }
+  .sn-claim-card-row span{ opacity:.62; font-weight:600; }
+  .sn-claim-card-row strong{ font-weight:800; text-align:right; }
+  .sn-claim-strike{ opacity:.5; font-weight:600; margin-right:6px; }
+  .sn-claim-free{ color:var(--claim-green); }
+  .sn-claim-code{ font-family:var(--font-heading); font-weight:700; font-size:13px; background:var(--beige); border:1.5px dashed var(--ink); border-radius:8px; padding:4px 10px; letter-spacing:.03em; }
+  .sn-claim-card-divider{ height:2px; margin:6px 0 16px; background:repeating-linear-gradient(to right, rgba(33,5,10,.35) 0 8px, transparent 8px 14px); }
+  .sn-claim-card-total{ display:flex; align-items:flex-end; justify-content:space-between; gap:12px; }
+  .sn-claim-card-total-label{ margin:0; font-weight:800; font-size:15px; }
+  .sn-claim-card-total-sub{ margin:2px 0 0; font-weight:700; font-size:12.5px; color:var(--claim-green); }
+  .sn-claim-card-total-amount{ margin:0; font-family:var(--font-heading); font-size:clamp(1.6rem,3vw,2.1rem); }
+
+  /* Inside your box (Claim step) */
+  .sn-claim-box{ padding:0 clamp(18px,5vw,40px) clamp(40px,6vw,64px); }
+  .sn-claim-box-inner{ max-width:1180px; margin:0 auto; position:relative; border:2.5px dashed rgba(33,5,10,.35); border-radius:24px; padding:clamp(30px,4vw,44px) clamp(18px,4vw,32px) clamp(28px,4vw,36px); text-align:center; }
+  .sn-claim-box-badge{ position:absolute; top:0; left:clamp(20px,4vw,40px); transform:translateY(-50%); font-family:var(--font-heading); font-weight:700; text-transform:uppercase; letter-spacing:.06em; font-size:12px; color:var(--ink); background:var(--yellow); border:2px solid var(--ink); border-radius:999px; padding:7px 18px; white-space:nowrap; }
+  .sn-claim-box-heading{ margin:clamp(16px,2vw,22px) 0 0; font-family:var(--font-heading) !important; text-transform:uppercase !important; letter-spacing:-0.03em !important; line-height:1; font-size:clamp(1.3rem,3vw,1.9rem); }
+  .sn-claim-box-grid{ display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:clamp(10px,1.6vw,18px); margin-top:clamp(20px,3vw,30px); }
+  @media(max-width:700px){ .sn-claim-box-grid{ grid-template-columns:repeat(2,minmax(0,1fr)); } }
+  .sn-claim-box-item{ border:2.5px solid var(--ink); border-radius:16px; overflow:hidden; box-shadow:4px 4px 0 var(--ink); background:#fff; aspect-ratio:3/4; }
+  .sn-claim-box-item img{ width:100%; height:100%; object-fit:contain; }
+
+  /* Address form (Address step) */
+  .sn-claim-address{ padding:clamp(24px,4vw,44px) clamp(18px,5vw,40px) clamp(56px,7vw,84px); }
+  .sn-claim-address-intro{ max-width:1400px; margin:0 auto; text-align:center; }
+  .sn-claim-address-grid{ max-width:1400px; margin:clamp(32px,4.4vw,48px) auto 0; display:grid; grid-template-columns:1fr 360px; gap:clamp(28px,3.6vw,44px); align-items:start; }
+  @media(max-width:960px){ .sn-claim-address-grid{ grid-template-columns:1fr; } }
+  /* The form widens/breathes more here than the base .sn-claim-card default —
+     scoped so the Claim step's card (which also uses .sn-claim-card) is untouched. */
+  /* .sn-claim-card (shared with the Claim step's card) hard-caps max-width:420px —
+     override just that for the form so it actually fills its 1fr grid track
+     instead of staying pinned narrow while the gap to the summary balloons. */
+  .sn-claim-address-grid .sn-claim-form{ max-width:none; width:100%; padding:clamp(26px,3.2vw,38px); }
+  .sn-claim-form{ display:flex; flex-direction:column; gap:clamp(20px,2.6vw,26px); }
+  .sn-claim-field-row{ display:grid; grid-template-columns:1fr 1fr; gap:clamp(16px,2.2vw,24px); }
+  .sn-claim-field-row--4{ grid-template-columns:1fr 1fr 1fr 1fr; }
+  @media(max-width:620px){ .sn-claim-field-row, .sn-claim-field-row--4{ grid-template-columns:1fr 1fr; } }
+  .sn-claim-field{ display:flex; flex-direction:column; gap:8px; }
+  .sn-claim-field label{ font-family:var(--font-body); font-weight:700; text-transform:uppercase; letter-spacing:.06em; font-size:11px; opacity:.62; }
+  .sn-claim-input{ font-family:var(--font-body); font-size:15px; padding:16px; border:2px solid rgba(33,5,10,.3); border-radius:12px; background:var(--cream); color:var(--ink); outline:none; width:100%; transition:border-color .15s ease; }
+  .sn-claim-input::placeholder{ color:rgba(33,5,10,.35); }
+  .sn-claim-input:focus{ border-color:var(--ink); }
+  .sn-claim-input.has-error{ border-color:var(--claim-pink); }
+  .sn-claim-error{ display:none; color:var(--claim-pink); font-size:11.5px; font-weight:600; }
+  .sn-claim-error.is-visible{ display:block; }
+  .sn-claim-address-grid .sn-claim-cta--full{ margin-top:14px; }
+  .sn-claim-address-summary{ position:sticky; top:20px; }
+  /* Condensed order-summary card is scoped narrower/tighter here rather than
+     duplicating .sn-claim-card — the Claim step's full-size card is untouched. */
+  .sn-claim-address-summary .sn-claim-card{ max-width:360px; padding:clamp(20px,2.4vw,26px); }
+  .sn-claim-address-summary .sn-claim-card-row{ padding:13px 0; }
+
+  /* Confirmation + 50% off fallback (share the same centered layout) */
+  .sn-claim-confirm{ max-width:640px; margin:0 auto; padding:clamp(30px,5vw,56px) clamp(18px,5vw,40px) clamp(48px,6vw,72px); text-align:center; }
+  .sn-claim-confirm-icon{ width:64px; height:64px; margin:0 auto; border-radius:50%; background:var(--claim-green-bg); border:2.5px solid var(--ink); display:flex; align-items:center; justify-content:center; font-size:1.7rem; font-weight:900; color:var(--ink); }
+  .sn-claim-offer-badge{ display:inline-block; font-family:var(--font-heading); font-weight:700; text-transform:uppercase; letter-spacing:.05em; font-size:11.5px; color:var(--ink); background:var(--beige); border:2px solid var(--ink); border-radius:999px; padding:7px 18px; }
+  .sn-claim-survey-wrap{ margin-top:clamp(28px,4vw,40px); text-align:left; }
+  /* Once a survey is submitted/skipped, its panel reveals that step's own
+     dedicated final state (per-panel — see finishSurvey() below) instead of
+     leaving the question on screen. */
+  .sn-claim-survey-wrap.is-done{ display:none; }
+  .sn-claim-final-thanks{ margin:clamp(16px,2vw,20px) 0 0; font-weight:700; text-align:center; color:var(--claim-green); }
+
+  /* Survey card (rendered via snippets/sneakies-survey.liquid; both the
+     Confirmation and 50% Off Fallback steps use checkbox/multi-select mode). */
+  .sn-claim-survey{ border:3px solid var(--ink); border-radius:20px; box-shadow:6px 6px 0 var(--ink); background:var(--cream); padding:clamp(22px,3vw,30px); }
+  .sn-claim-survey-heading{ margin:0; font-family:var(--font-heading) !important; font-weight:900; font-size:clamp(1.15rem,2vw,1.4rem); letter-spacing:-0.03em !important; text-transform:none !important; }
+  .sn-claim-survey-subtitle{ margin:4px 0 0; font-size:13.5px; opacity:.6; font-weight:600; }
+  .sn-claim-survey-options{ display:flex; flex-direction:column; gap:10px; margin-top:clamp(16px,2.2vw,20px); }
+  .sn-claim-survey-option{ display:flex; align-items:center; gap:12px; border:2px solid rgba(33,5,10,.22); border-radius:13px; padding:14px 16px; cursor:pointer; font-size:15px; font-weight:600; transition:border-color .15s ease, background .15s ease; }
+  .sn-claim-survey-option:hover{ border-color:rgba(33,5,10,.55); }
+  .sn-claim-survey-option:has(.sn-claim-survey-input:checked){ border-color:var(--ink); background:var(--claim-green-bg); }
+  /* Custom checkbox/radio: same ink-fill + yellow-check treatment for both
+     modes, so the two survey instances read as one consistent component. */
+  .sn-claim-survey-input{ appearance:none; -webkit-appearance:none; width:22px; height:22px; flex:none; cursor:pointer; margin:0; border:2px solid rgba(33,5,10,.35); background:var(--cream); background-repeat:no-repeat; background-position:center; background-size:13px 13px; transition:background-color .15s ease, border-color .15s ease; }
+  .sn-claim-survey-input[type="checkbox"]{ border-radius:6px; }
+  .sn-claim-survey-input[type="radio"]{ border-radius:50%; }
+  .sn-claim-survey-input:checked{ background-color:var(--ink); border-color:var(--ink); background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23FBD01A' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='3.5 8.5 6.5 11.5 12.5 4.5'/%3E%3C/svg%3E"); }
+  .sn-claim-survey-actions{ display:flex; align-items:center; gap:18px; margin-top:clamp(18px,2.4vw,22px); flex-wrap:wrap; }
+  .sn-claim-survey-submit{ padding:15px 26px; }
+  .sn-claim-survey-submit:disabled{ opacity:1; cursor:not-allowed; box-shadow:none; background:var(--beige); color:rgba(33,5,10,.55); border-color:rgba(33,5,10,.25); transform:none; }
+  .sn-claim-survey-skip{ background:none; border:none; cursor:pointer; font-family:var(--font-heading); font-weight:700; text-decoration:underline; text-underline-offset:3px; font-size:13.5px; color:var(--ink); opacity:.75; }
+  .sn-claim-survey-skip:hover{ opacity:1; }
+
+  @media(prefers-reduced-motion:reduce){ .sn-claim *{ transition:none !important; } }
+{%- endstyle -%}
+
+{%- comment -%} Full US state list (50 states + DC, no territories) per the Claim
+  Form Validation Specification — value is the standard 2-letter code (what
+  Shopify's Storefront API expects as provinceCode), label is the full state
+  name (the only thing shown to the customer). {%- endcomment -%}
+{%- assign us_states = "AL|Alabama,AK|Alaska,AZ|Arizona,AR|Arkansas,CA|California,CO|Colorado,CT|Connecticut,DE|Delaware,DC|District of Columbia,FL|Florida,GA|Georgia,HI|Hawaii,ID|Idaho,IL|Illinois,IN|Indiana,IA|Iowa,KS|Kansas,KY|Kentucky,LA|Louisiana,ME|Maine,MD|Maryland,MA|Massachusetts,MI|Michigan,MN|Minnesota,MS|Mississippi,MO|Missouri,MT|Montana,NE|Nebraska,NV|Nevada,NH|New Hampshire,NJ|New Jersey,NM|New Mexico,NY|New York,NC|North Carolina,ND|North Dakota,OH|Ohio,OK|Oklahoma,OR|Oregon,PA|Pennsylvania,RI|Rhode Island,SC|South Carolina,SD|South Dakota,TN|Tennessee,TX|Texas,UT|Utah,VT|Vermont,VA|Virginia,WA|Washington,WV|West Virginia,WI|Wisconsin,WY|Wyoming" | split: "," -%}
+{%- assign ship_date = section.settings.ship_date | default: 'August 2026' -%}
+{%- comment -%} Real, live Shopify discount (100% off, scoped to the Sneakies
+  Sample Box product, once per customer) — keep this in sync with
+  assets/sn-storefront.js's DISCOUNT_CODE constant if it's ever changed. {%- endcomment -%}
+{%- assign discount_code = section.settings.discount_code | default: 'SNEAKIESFREEBOX' -%}
+{%- assign sample_size = section.settings.sample_size | default: '4-pack, one of each flavor' -%}
+{%- assign product_name = section.settings.product_name | default: 'Sneakies Free Sample Box' -%}
+{%- assign retail_value = section.settings.retail_value | default: '$19.99' -%}
+
+<div id="sn-root" class="sn-claim">
+
+  <!-- PREVIEW NAV (dev only) — jumps directly to any step for design review -->
+  <nav class="sn-claim-devnav" aria-label="Development preview steps">
+    <div class="sn-claim-devnav-inner">
+      <span class="sn-claim-devnav-label">Preview · Dev Only</span>
+      <div class="sn-claim-devnav-pills" role="group" aria-label="Claim flow steps">
+        <button type="button" class="sn-claim-pill" data-goto-step="claim">Claim page</button>
+        <button type="button" class="sn-claim-pill" data-goto-step="address">Address form</button>
+        <button type="button" class="sn-claim-pill" data-goto-step="confirmation">Confirmation</button>
+        <button type="button" class="sn-claim-pill" data-goto-step="fallback">50% off fallback</button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- HEADER (shared across all 4 steps) -->
+  <header class="sn-claim-header">
+    <a href="{{ routes.root_url }}" aria-label="Sneakies home">
+      <img src="{{ 'sn-logo.png' | asset_url }}" alt="Sneakies" class="sn-claim-logo">
+    </a>
+    <p class="sn-claim-tagline">Fruits &amp; Veggies, Undercover</p>
+  </header>
+
+  <!-- STEP 1: CLAIM PAGE -->
+  <div class="sn-claim-step is-active" data-step-panel="claim">
+
+    <div class="sn-claim-back-wrap">
+      <a href="{{ routes.root_url }}" class="sn-claim-back">
+        <span aria-hidden="true">←</span> Back to homepage
+      </a>
+    </div>
+
+    <section class="sn-claim-hero">
+      <div class="sn-claim-hero-grid">
+
+        <!-- Left: confirmation copy + CTA -->
+        <div class="sn-claim-hero-left">
+          <span class="sn-claim-badge"><span aria-hidden="true">●</span> Waitlist Confirmed</span>
+          <h1 class="sn-claim-h1">You&#8217;re in. Your <mark>free sample box</mark> is ready.</h1>
+          <p class="sn-claim-desc">Your box is on us. Add your shipping details next so we know where to send it.</p>
+
+          <div class="sn-claim-cta-wrap">
+            <span class="sn-claim-annotation" aria-hidden="true">no payment needed!</span>
+            <button type="button" class="sn-submit sn-claim-cta" data-goto-step="address">Continue to checkout <span aria-hidden="true">→</span></button>
+          </div>
+
+          <p class="sn-claim-helper">No payment required · One per household · Ships in {{ ship_date }}</p>
+        </div>
+
+        <!-- Right: claim summary card -->
+        <div class="sn-claim-hero-right">
+          {%- render 'sneakies-order-summary', variant: 'full', product_name: product_name, sample_size: sample_size, retail_value: retail_value, ship_date: ship_date, discount_code: discount_code -%}
+        </div>
+
+      </div>
+    </section>
+
+    <section class="sn-claim-box">
+      <div class="sn-claim-box-inner">
+        <span class="sn-claim-box-badge">Inside your box</span>
+        <h2 class="sn-claim-box-heading">Try one of each of our flagship flavors.</h2>
+        <div class="sn-claim-box-grid">
+          {%- assign flavor_names = 'Apple Pie Agents,Banana Bonanza,Berry Bandits,Buttermilk Blast' | split: ',' -%}
+          {%- assign flavor_imgs = 'applepieagentswithspinach.png,bananabonanzawithcarrots.png,berrybanditswithbeets.png,buttermilkblastwithcauliflower.png' | split: ',' -%}
+          {%- for i in (0..3) -%}
+            <div class="sn-claim-box-item">
+              <img src="{{ flavor_imgs[i] | asset_url }}" alt="{{ flavor_names[i] }} packaging" loading="lazy">
+            </div>
+          {%- endfor -%}
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- STEP 2: ADDRESS FORM -->
+  <div class="sn-claim-step" data-step-panel="address">
+    <section class="sn-claim-address">
+      <div class="sn-claim-address-intro">
+        <h1 class="sn-claim-h1 sn-claim-h1--sm sn-claim-h1--center">Where should we send your box?</h1>
+        <p class="sn-claim-desc sn-claim-desc--center">Add your shipping details so we can send your Sneakies sample box in {{ ship_date }}.</p>
+      </div>
+
+      <div class="sn-claim-address-grid">
+        <form class="sn-claim-card sn-claim-form" data-address-form novalidate>
+          <div class="sn-claim-field-row">
+            <div class="sn-claim-field">
+              <label for="sn-claim-fn">First name</label>
+              <input type="text" id="sn-claim-fn" name="first_name" class="sn-claim-input" placeholder="Jamie" autocomplete="given-name" maxlength="50" aria-describedby="sn-claim-fn-error" required>
+              <span class="sn-claim-error" id="sn-claim-fn-error" data-error-for="first_name"></span>
+            </div>
+            <div class="sn-claim-field">
+              <label for="sn-claim-ln">Last name</label>
+              <input type="text" id="sn-claim-ln" name="last_name" class="sn-claim-input" placeholder="Rivera" autocomplete="family-name" maxlength="50" aria-describedby="sn-claim-ln-error" required>
+              <span class="sn-claim-error" id="sn-claim-ln-error" data-error-for="last_name"></span>
+            </div>
+          </div>
+
+          <div class="sn-claim-field">
+            <label for="sn-claim-email">Email</label>
+            <input type="email" id="sn-claim-email" name="email" class="sn-claim-input" placeholder="jamie@email.com" autocomplete="email" maxlength="254" aria-describedby="sn-claim-email-error" required>
+            <span class="sn-claim-error" id="sn-claim-email-error" data-error-for="email"></span>
+          </div>
+
+          <div class="sn-claim-field">
+            <label for="sn-claim-phone">Phone (optional)</label>
+            <input type="tel" id="sn-claim-phone" name="phone" class="sn-claim-input" placeholder="(555) 123-4567" autocomplete="tel" aria-describedby="sn-claim-phone-error">
+            <span class="sn-claim-error" id="sn-claim-phone-error" data-error-for="phone"></span>
+          </div>
+
+          <div class="sn-claim-field">
+            <label for="sn-claim-addr">Street address</label>
+            <input type="text" id="sn-claim-addr" name="address1" class="sn-claim-input" placeholder="123 Orchard Way" autocomplete="address-line1" maxlength="100" aria-describedby="sn-claim-addr-error" required>
+            <span class="sn-claim-error" id="sn-claim-addr-error" data-error-for="address1"></span>
+          </div>
+
+          <div class="sn-claim-field">
+            <label for="sn-claim-addr2">Apartment, suite, etc. (optional)</label>
+            <input type="text" id="sn-claim-addr2" name="address2" class="sn-claim-input" placeholder="Apt 4B" autocomplete="address-line2" maxlength="50" aria-describedby="sn-claim-addr2-error">
+            <span class="sn-claim-error" id="sn-claim-addr2-error" data-error-for="address2"></span>
+          </div>
+
+          <div class="sn-claim-field-row sn-claim-field-row--4">
+            <div class="sn-claim-field">
+              <label for="sn-claim-city">City</label>
+              <input type="text" id="sn-claim-city" name="city" class="sn-claim-input" placeholder="Portland" autocomplete="address-level2" maxlength="60" aria-describedby="sn-claim-city-error" required>
+              <span class="sn-claim-error" id="sn-claim-city-error" data-error-for="city"></span>
+            </div>
+            <div class="sn-claim-field">
+              <label for="sn-claim-state">State</label>
+              <select id="sn-claim-state" name="state" class="sn-claim-input" autocomplete="address-level1" aria-describedby="sn-claim-state-error" required>
+                <option value="" selected disabled>Select a state</option>
+                {%- for entry in us_states -%}
+                  {%- assign pair = entry | split: "|" -%}
+                  <option value="{{ pair[0] }}">{{ pair[1] }}</option>
+                {%- endfor -%}
+              </select>
+              <span class="sn-claim-error" id="sn-claim-state-error" data-error-for="state"></span>
+            </div>
+            <div class="sn-claim-field">
+              <label for="sn-claim-zip">Zip code</label>
+              <input type="text" id="sn-claim-zip" name="zip" class="sn-claim-input" placeholder="97201" autocomplete="postal-code" inputmode="numeric" maxlength="10" aria-describedby="sn-claim-zip-error" required>
+              <span class="sn-claim-error" id="sn-claim-zip-error" data-error-for="zip"></span>
+            </div>
+            <div class="sn-claim-field">
+              <label for="sn-claim-country">Country</label>
+              <input type="text" id="sn-claim-country" name="country" class="sn-claim-input" value="United States" readonly aria-readonly="true">
+            </div>
+          </div>
+
+          <button type="submit" class="sn-submit sn-claim-cta sn-claim-cta--full">Complete free order</button>
+          <p class="sn-claim-helper sn-claim-helper--center">No payment required. We only need your address to ship the box.</p>
+        </form>
+
+        <div class="sn-claim-address-summary">
+          {%- render 'sneakies-order-summary', variant: 'condensed', product_name: product_name, ship_date: ship_date, discount_code: discount_code -%}
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- STEP 3: CONFIRMATION -->
+  <div class="sn-claim-step" data-step-panel="confirmation">
+    <section class="sn-claim-confirm">
+      <div class="sn-claim-confirm-icon" aria-hidden="true">✓</div>
+      <h1 class="sn-claim-h1 sn-claim-h1--sm sn-claim-h1--center">Your free box is claimed.</h1>
+      <p class="sn-claim-desc sn-claim-desc--center">We&#8217;ve got your shipping details. Your Sneakies sample box will ship in {{ ship_date }}.</p>
+
+      <div class="sn-claim-survey-wrap">
+        {%- render 'sneakies-survey',
+          mode: 'checkbox',
+          name: 'confirm',
+          heading: 'What are you most excited about?',
+          subtitle: 'Select all that apply — optional, but it helps us make Sneakies better.',
+          options: 'Getting more fruits and veggies into breakfast|Trying the different Sneakies flavors|Easier weekday breakfast|Finding something my kids will actually eat|Discovering a better/healthier pancake mix'
+        -%}
+      </div>
+    </section>
+  </div>
+
+  <!-- STEP 4: 50% OFF FALLBACK -->
+  <div class="sn-claim-step" data-step-panel="fallback">
+    <section class="sn-claim-confirm">
+      <span class="sn-claim-offer-badge">Launch Offer Unlocked</span>
+      <h1 class="sn-claim-h1 sn-claim-h1--sm sn-claim-h1--center">You&#8217;re on the list for 50% off your first subscription order.</h1>
+      <p class="sn-claim-desc sn-claim-desc--center">We&#8217;ll send your special coupon for your first subscription order before Sneakies launches in September.</p>
+
+      <div class="sn-claim-survey-wrap">
+        {%- render 'sneakies-survey',
+          mode: 'checkbox',
+          name: 'fallback',
+          heading: 'What are you most excited about?',
+          subtitle: 'Select all that apply.',
+          options: 'Getting more fruits and veggies into breakfast|Trying the different Sneakies flavors|Easier weekday breakfast|Finding something my kids will actually eat|Discovering a better/healthier pancake mix'
+        -%}
+      </div>
+    </section>
+  </div>
+
+</div>
+
+<script src="{{ 'sn-klaviyo.js' | asset_url }}"></script>
+<script src="{{ 'sn-storefront.js' | asset_url }}"></script>
+<script>
+(function(){
+  var root = document.getElementById('sn-root');
+  if(!root || !root.classList.contains('sn-claim')) return;
+
+  var STEPS = ['claim', 'address', 'confirmation', 'fallback'];
+  var STORE_KEY = 'sn_claim_state';
+
+  function loadState(){
+    try{
+      var raw = sessionStorage.getItem(STORE_KEY);
+      return raw ? JSON.parse(raw) : {};
+    }catch(e){ return {}; }
+  }
+  function saveState(){
+    try{ sessionStorage.setItem(STORE_KEY, JSON.stringify(state)); }catch(e){}
+  }
+
+  var state = loadState();
+
+  if(state.awaitingCheckoutReturn){
+    // Dormant safety net, kept in case a future checkout configuration ever
+    // does redirect back here (2026-07-09 live QA finding: Shopify's real
+    // cart checkoutUrl has no return_to — completing a $0 order lands the
+    // customer on Shopify's own /thank-you page and never returns to this
+    // tab/session, so in production this branch is not reachable today).
+    // The actual, reliable free_box/address_collected/sample_order_created
+    // write now happens right before the checkout redirect in
+    // goToOrderIfNeeded() below (the last point this flow can guarantee it
+    // still controls execution). This block is left in place, unchanged in
+    // behavior, purely as a no-cost fallback if that ever stops being true.
+    state.step = 'confirmation';
+    state.awaitingCheckoutReturn = false;
+    saveState();
+    if(window.SneakiesKlaviyo && state.address){
+      window.SneakiesKlaviyo.updateProperties(state.address.email, { firstName: state.address.first_name }, {
+        free_box: true,
+        address_collected: true,
+        sample_order_created: true
+      });
+    }
+  }else{
+    // Every other fresh page load (refresh, reopening the tab/preview) always
+    // starts over from the Claim page and with the MCQ survey(s) unanswered —
+    // this is a demo-era behavior kept intentionally (previously restoring
+    // whatever step/survey state was last reached meant a refresh could
+    // reopen straight onto the Confirmation/50% Off result instead of the
+    // top of the flow). Only the address form draft is still restored from a
+    // prior session, since that's unrelated to the step-position behavior.
+    state.step = 'claim';
+    state.address = state.address || {};
+    state.surveys = {};
+    state.surveysDone = {};
+    state.checkoutUrl = null;
+  }
+
+  // Prefill from a successful homepage waitlist signup — see the
+  // "sn-waitlist-form" submit handler in sneakies-landing.liquid, which
+  // stashes this in sessionStorage right before its native Shopify form POST
+  // navigates here (there's no client-side success callback available for
+  // that kind of submission, so this is the handoff point instead). Only
+  // fills in fields the user hasn't already started editing themselves, so
+  // reloading mid-flow never clobbers their own input. Also carries the
+  // sold_out signal computed on the homepage so this flow's branching below
+  // (Free Box vs 50% Off) matches what the user was actually shown there.
+  var prefillRaw = null;
+  try{
+    prefillRaw = sessionStorage.getItem('sn_prefill');
+    if(prefillRaw){
+      var prefill = JSON.parse(prefillRaw);
+      if(prefill.first_name && !state.address.first_name) state.address.first_name = prefill.first_name;
+      if(prefill.email && !state.address.email) state.address.email = prefill.email;
+      if(typeof prefill.sold_out === 'boolean' && typeof state.soldOut !== 'boolean') state.soldOut = prefill.sold_out;
+    }
+  }catch(e){}
+  // Direct/bookmarked visits to this page (no homepage handoff) have no
+  // sold_out signal to go on — default to the Free Box path, which matches
+  // this flow's original (pre-branching) behavior for anyone arriving this
+  // way, rather than guessing someone out of a free box they may still be
+  // eligible for.
+  if(typeof state.soldOut !== 'boolean') state.soldOut = false;
+  saveState();
+
+  // Sync the profile into Klaviyo once per session, right when we know the
+  // signup actually succeeded (arriving here via sn_prefill is only possible
+  // after a successful Shopify customer creation). Uses only Klaviyo's public
+  // API (assets/sn-klaviyo.js) — never blocks the UI if it fails.
+  if(prefillRaw && !state.klaviyoSynced && window.SneakiesKlaviyo){
+    var syncProps = {};
+    if(state.soldOut){ syncProps.fifty_off = true; } else { syncProps.free_box = true; }
+    window.SneakiesKlaviyo.updateProperties(state.address.email, { firstName: state.address.first_name }, syncProps);
+    state.klaviyoSynced = true;
+    saveState();
+  }
+
+  var panels = {};
+  STEPS.forEach(function(s){ panels[s] = root.querySelector('[data-step-panel="' + s + '"]'); });
+  var pills = root.querySelectorAll('[data-goto-step]');
+
+  function showStep(step, opts){
+    if(STEPS.indexOf(step) === -1) return;
+    STEPS.forEach(function(s){
+      if(panels[s]) panels[s].classList.toggle('is-active', s === step);
+    });
+    pills.forEach(function(p){
+      var active = p.getAttribute('data-goto-step') === step;
+      p.classList.toggle('sn-claim-pill--active', active);
+      if(active){ p.setAttribute('aria-current', 'step'); } else { p.removeAttribute('aria-current'); }
+    });
+    state.step = step;
+    saveState();
+    if(!opts || !opts.silent){
+      root.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }
+
+  // Every step-jump control (dev nav pills, the Claim CTA, anything else
+  // tagged [data-goto-step]) shares one delegated listener.
+  root.addEventListener('click', function(ev){
+    var trigger = ev.target.closest('[data-goto-step]');
+    if(trigger){ showStep(trigger.getAttribute('data-goto-step')); }
+  });
+
+  // ---- Address form: inline validation + save + advance ----
+  var form = root.querySelector('[data-address-form]');
+  if(form){
+    var REQUIRED_FIELDS = ['first_name', 'last_name', 'email', 'address1', 'city', 'state', 'zip'];
+    var ALL_FIELD_NAMES = ['first_name', 'last_name', 'email', 'phone', 'address1', 'address2', 'city', 'state', 'zip'];
+    var isSubmitting = false;
+
+    Object.keys(state.address).forEach(function(key){
+      var el = form.elements[key];
+      if(el) el.value = state.address[key];
+    });
+
+    function setError(name, message){
+      var input = form.elements[name];
+      var errorEl = form.querySelector('[data-error-for="' + name + '"]');
+      if(input){
+        input.classList.toggle('has-error', !!message);
+        if(message){ input.setAttribute('aria-invalid', 'true'); } else { input.removeAttribute('aria-invalid'); }
+      }
+      if(errorEl){
+        errorEl.textContent = message || '';
+        errorEl.classList.toggle('is-visible', !!message);
+      }
+    }
+
+    // ---- Field-level rules (Sneakies Claim Form Validation Specification) ----
+    var NAME_RE = /^[A-Za-z\s'-]+$/;
+    var CITY_RE = /^[A-Za-z0-9\s'.-]+$/;
+    var EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    var ZIP_RE = /^\d{5}(-\d{4})?$/;
+
+    // Reduces a phone entry down to its normalized digits, dropping a leading
+    // US country-code "1" if present, so "323-232-3232", "(323) 232-3232",
+    // and "+1 323 232 3232" all resolve the same way for validation/storage.
+    function normalizedPhoneDigits(raw){
+      var digits = (raw || '').replace(/[^\d]/g, '');
+      if(digits.length === 11 && digits.charAt(0) === '1') digits = digits.slice(1);
+      return digits;
+    }
+
+    // ---- Duplicate-claim protection (spec section 3) ----
+    // No server-side claims database exists in this theme-only architecture,
+    // so this enforces the spec's "prevent more than one free sample claim"
+    // rule as a per-browser safeguard via localStorage (persists across
+    // sessions on the same device), checked BEFORE any Shopify cart/order is
+    // created. This is in addition to — not a replacement for — Shopify's
+    // own real, server-side duplicate-email rejection on the homepage
+    // waitlist signup (the "this email is already on the list" case handled
+    // in sneakies-landing.liquid), which already gates real repeat traffic
+    // before a customer ever reaches this Address step.
+    var CLAIMED_EMAILS_KEY = 'sn_claimed_emails';
+    var CLAIMED_ADDRESSES_KEY = 'sn_claimed_addresses';
+    function readList(key){
+      try{ var raw = localStorage.getItem(key); var list = raw ? JSON.parse(raw) : []; return Array.isArray(list) ? list : []; }catch(e){ return []; }
+    }
+    function writeList(key, list){ try{ localStorage.setItem(key, JSON.stringify(list)); }catch(e){} }
+    function hasClaimed(key, value){ return readList(key).indexOf(value) > -1; }
+    function recordClaim(key, value){
+      var list = readList(key);
+      if(list.indexOf(value) === -1){ list.push(value); writeList(key, list); }
+    }
+    function normalizedAddressKey(address1, zip){ return (address1 || '').trim().toLowerCase() + '|' + (zip || '').trim().toLowerCase(); }
+
+    function validate(){
+      var isValid = true;
+      ALL_FIELD_NAMES.forEach(function(name){ setError(name, ''); });
+
+      // First / last name: 1–50 chars, letters/spaces/apostrophes/hyphens only.
+      [['first_name', 'Please enter your first name.'], ['last_name', 'Please enter your last name.']].forEach(function(pair){
+        var name = pair[0], msg = pair[1];
+        var value = (form.elements[name].value || '').trim();
+        if(!value || value.length > 50 || !NAME_RE.test(value)){ setError(name, msg); isValid = false; }
+      });
+
+      // Email: required, standard format, max 254 chars, lowercase-normalized
+      // for both the format check and the duplicate check.
+      var email = (form.elements.email.value || '').trim().toLowerCase();
+      if(!email || email.length > 254 || !EMAIL_RE.test(email)){
+        setError('email', 'Please enter a valid email address.');
+        isValid = false;
+      } else if(hasClaimed(CLAIMED_EMAILS_KEY, email)){
+        setError('email', 'This email address has already been used to claim an offer.');
+        isValid = false;
+      }
+
+      // Phone: optional; if entered, must resolve to a full 10-digit US number.
+      var phoneRaw = (form.elements.phone.value || '').trim();
+      if(phoneRaw && normalizedPhoneDigits(phoneRaw).length !== 10){
+        setError('phone', 'Please enter a valid 10-digit phone number.');
+        isValid = false;
+      }
+
+      // Street address: 5–100 chars, must contain actual letters/numbers
+      // (rejects punctuation-only or blank-like entries).
+      var address1 = (form.elements.address1.value || '').trim();
+      if(!address1 || address1.length < 5 || address1.length > 100 || !/[A-Za-z0-9]/.test(address1)){
+        setError('address1', 'Please enter your street address.');
+        isValid = false;
+      }
+
+      // Apartment/suite: optional, only a max-length rule per the spec.
+      var address2 = (form.elements.address2.value || '').trim();
+      if(address2.length > 50){
+        setError('address2', 'Please keep this under 50 characters.');
+        isValid = false;
+      }
+
+      // City: 2–60 chars, letters/numbers/spaces/apostrophes/periods/hyphens,
+      // but must contain at least one letter — numbers-only or
+      // punctuation-only entries (allowed characters, disallowed content)
+      // are rejected per the spec.
+      var city = (form.elements.city.value || '').trim();
+      if(!city || city.length < 2 || city.length > 60 || !CITY_RE.test(city) || !/[A-Za-z]/.test(city)){
+        setError('city', 'Please enter your city.');
+        isValid = false;
+      }
+
+      // State: required dropdown — the blank placeholder never counts as valid.
+      var stateVal = form.elements.state.value || '';
+      if(!stateVal){
+        setError('state', 'Please select your state.');
+        isValid = false;
+      }
+
+      // Zip: 5-digit or ZIP+4 only.
+      var zip = (form.elements.zip.value || '').trim();
+      if(!zip || !ZIP_RE.test(zip)){
+        setError('zip', 'Please enter a valid 5-digit or ZIP+4 code.');
+        isValid = false;
+      }
+
+      // Household check: normalized shipping address (spec section 3), only
+      // evaluated once address1/zip individually pass their own checks above
+      // so it never masks a more specific field-level error.
+      if(isValid && address1 && zip){
+        if(hasClaimed(CLAIMED_ADDRESSES_KEY, normalizedAddressKey(address1, zip))){
+          setError('address1', 'It looks like this offer has already been claimed using these details.');
+          isValid = false;
+        }
+      }
+
+      return isValid;
+    }
+
+    form.addEventListener('input', function(ev){
+      if(ev.target.name) setError(ev.target.name, '');
+    });
+    form.addEventListener('change', function(ev){
+      if(ev.target.name) setError(ev.target.name, '');
+    });
+
+    // A single, dynamically-created error line for backend/API failures
+    // (Storefront API unreachable, cart couldn't be built) — separate from
+    // the per-field .sn-claim-error spans above, which are for validation
+    // only.
+    function setSubmitError(message){
+      var el = form.querySelector('[data-address-submit-error]');
+      if(!message){
+        if(el) el.remove();
+        return;
+      }
+      if(!el){
+        el = document.createElement('p');
+        el.setAttribute('data-address-submit-error', '');
+        el.setAttribute('role', 'alert');
+        el.style.cssText = 'color:var(--claim-pink); font-size:12.5px; font-weight:600; margin:10px 0 0; text-align:center;';
+        var btn = form.querySelector('[type="submit"]');
+        if(btn) btn.insertAdjacentElement('afterend', el);
+      }
+      el.textContent = message;
+    }
+
+    form.addEventListener('submit', function(ev){
+      ev.preventDefault();
+      // Belt-and-suspenders guard against a double-fire on top of the
+      // disabled-button lock below (e.g. Enter key + click landing in the
+      // same tick) — never allow two submissions to race each other.
+      if(isSubmitting) return;
+      if(!validate()){
+        var firstInvalid = form.querySelector('.has-error');
+        if(firstInvalid) firstInvalid.focus();
+        return;
+      }
+      // Prevent an accidental duplicate submission (double-click, double-tap)
+      // once we're actually past validation and moving the user forward. No
+      // Shopify order/cart is created until this point — validation failures
+      // above never reach the Storefront API.
+      isSubmitting = true;
+      var submitBtn = form.querySelector('[type="submit"]');
+      if(submitBtn) submitBtn.disabled = true;
+      setSubmitError('');
+
+      // Whitespace-trim every field before it's stored/sent; email is also
+      // lowercased before storage, per the spec.
+      var data = {};
+      Array.prototype.forEach.call(form.elements, function(el){
+        if(!el.name) return;
+        data[el.name] = (typeof el.value === 'string') ? el.value.trim() : el.value;
+      });
+      data.email = (data.email || '').toLowerCase();
+      if(data.phone){
+        var normalizedDigits = normalizedPhoneDigits(data.phone);
+        if(normalizedDigits) data.phone = normalizedDigits;
+      }
+      state.address = data;
+      saveState();
+
+      if(!window.SneakiesStorefront){
+        setSubmitError('Something went wrong. Please refresh and try again.');
+        isSubmitting = false;
+        if(submitBtn) submitBtn.disabled = false;
+        return;
+      }
+
+      // Live inventory is the single source of truth for Free Box vs 50% Off
+      // — no manual counter, no value carried from an earlier page load. If
+      // the check itself can't be reached (e.g. Storefront API not
+      // configured yet), default to the Free Box branch rather than
+      // wrongly telling someone they're sold out.
+      window.SneakiesStorefront.checkAvailability().catch(function(){
+        return { available: true, quantity: null };
+      }).then(function(avail){
+        state.soldOut = !avail.available;
+        saveState();
+
+        if(state.soldOut){
+          // Sold out: no Sample Box order is ever created for this branch —
+          // straight to the existing 50% Off experience.
+          if(window.SneakiesKlaviyo){
+            window.SneakiesKlaviyo.updateProperties(data.email, { firstName: data.first_name, lastName: data.last_name }, {
+              fifty_off: true
+            });
+          }
+          showStep('fallback');
+          return;
+        }
+
+        // Free Box branch: build the real Cart now (product line, buyer
+        // identity, shipping address, the Free Box discount) — nothing here
+        // shows a Shopify page; only state.checkoutUrl gets visited, once,
+        // after the Survey step (see the 'confirm' survey handling below).
+        //
+        // 2026-07-09 (Task C production audit): a cart being created is
+        // NOT the same thing as a real order existing — address_collected
+        // and sample_order_created must stay false here ("Free Box - Need
+        // Address" segment state) and only flip true right before the
+        // guaranteed-to-succeed $0 redirect to checkout, in
+        // goToOrderIfNeeded() below (the latest point this flow controls
+        // execution — see that function's comment for why it can't be tied
+        // to true order completion). Only genuinely abandoned cart
+        // *creation* (network/API failure, caught below) leaves the
+        // customer parked in Need Address.
+        return window.SneakiesStorefront.createFreeBoxCart({
+          email: data.email,
+          firstName: data.first_name,
+          lastName: data.last_name,
+          phone: data.phone,
+          address1: data.address1,
+          address2: data.address2,
+          city: data.city,
+          province: data.state,
+          zip: data.zip,
+          country: data.country
+        }).then(function(cart){
+          // Record this claim (spec section 3) only once the free-sample
+          // cart genuinely exists — a failed/abandoned attempt never counts
+          // as "claimed".
+          recordClaim(CLAIMED_EMAILS_KEY, data.email);
+          recordClaim(CLAIMED_ADDRESSES_KEY, normalizedAddressKey(data.address1, data.zip));
+          state.checkoutUrl = cart.checkoutUrl;
+          saveState();
+          if(window.SneakiesKlaviyo){
+            window.SneakiesKlaviyo.updateProperties(data.email, { firstName: data.first_name, lastName: data.last_name }, {
+              free_box: true
+            });
+          }
+          showStep('confirmation');
+        });
+      }).catch(function(){
+        setSubmitError('Something went wrong securing your box. Please try again.');
+        isSubmitting = false;
+        if(submitBtn) submitBtn.disabled = false;
+      });
+    });
+  }
+
+  // ---- Surveys: shared logic for both multi-select instances (Confirmation
+  // and 50% Off Fallback) rendered by snippets/sneakies-survey.liquid ----
+  // (state.surveys / state.surveysDone are reset above on every fresh load,
+  // so every instance here always starts unanswered.)
+  root.querySelectorAll('[data-survey]').forEach(function(survey){
+    var name = survey.getAttribute('data-survey-name');
+    var mode = survey.getAttribute('data-survey-mode');
+    var submitBtn = survey.querySelector('[data-survey-submit]');
+    var skipBtn = survey.querySelector('[data-survey-skip]');
+    var inputs = survey.querySelectorAll('.sn-claim-survey-input');
+    var wrap = survey.closest('.sn-claim-survey-wrap');
+
+    var saved = state.surveys[name];
+    if(saved){
+      inputs.forEach(function(input){
+        input.checked = Array.isArray(saved) ? saved.indexOf(input.value) > -1 : saved === input.value;
+      });
+    }
+
+    function refreshSubmitState(){
+      var anyChecked = Array.prototype.some.call(inputs, function(input){ return input.checked; });
+      if(submitBtn) submitBtn.disabled = !anyChecked;
+    }
+    refreshSubmitState();
+    survey.addEventListener('change', refreshSubmitState);
+
+    function collectAnswer(){
+      if(mode === 'checkbox'){
+        return Array.prototype.filter.call(inputs, function(input){ return input.checked; })
+          .map(function(input){ return input.value; });
+      }
+      var checked = survey.querySelector('.sn-claim-survey-input:checked');
+      return checked ? checked.value : null;
+    }
+
+    // Each survey is scoped to its own panel: submitting (or skipping) it
+    // never navigates to the other panel — it simply reveals that panel's
+    // own dedicated final state (Confirmation stays "your free box is
+    // claimed"; Fallback stays "you're on the list for 50% off" and adds a
+    // short thank-you line). This keeps the Confirmation and 50% Off Fallback
+    // flows fully separate, each with its own routing/result, as required.
+    function finishSurvey(){
+      inputs.forEach(function(input){ input.disabled = true; });
+      if(submitBtn) submitBtn.disabled = true;
+      if(skipBtn) skipBtn.disabled = true;
+      if(wrap) wrap.classList.add('is-done');
+      if(name === 'fallback' && wrap && !wrap.parentNode.querySelector('.sn-claim-final-thanks')){
+        var thanks = document.createElement('p');
+        thanks.className = 'sn-claim-final-thanks';
+        thanks.textContent = 'Thanks, that helps us make Sneakies better.';
+        wrap.insertAdjacentElement('afterend', thanks);
+      }
+      state.surveysDone[name] = true;
+      saveState();
+    }
+
+    // The Free Box branch's real $0 order is finalized on Shopify's own
+    // checkout — the latest possible point to send the customer there,
+    // right after their survey answer (or skip) is recorded. This only
+    // runs from an actual submit/skip click (never from the "already
+    // answered, restore on reload" replay below), so returning from
+    // checkout to this same finished panel never re-triggers a redirect.
+    function goToOrderIfNeeded(){
+      if(name !== 'confirm') return;
+      if(state.checkoutUrl){
+        state.awaitingCheckoutReturn = true;
+        saveState();
+        // Latest client-controlled moment before the customer leaves for a
+        // real, pre-filled $0 checkout (SNEAKIESFREEBOX + SNEAKIESFREESHIP
+        // already applied, zero manual entry required — see
+        // assets/sn-storefront.js). Shopify's cart-based checkoutUrl has no
+        // return_to (confirmed via live QA, 2026-07-09), so there is no
+        // client-side signal for true order completion without adding
+        // backend order-webhook infrastructure, which is out of scope for
+        // this theme-only implementation — a genuine Shopify platform
+        // limitation, not an implementation gap. This is the closest
+        // available proxy to "Free Box - Claimed": the customer's address
+        // is fully collected and validated, and the cart they're being
+        // sent to requires no further manual action to complete.
+        if(state.address && state.address.email && window.SneakiesKlaviyo){
+          window.SneakiesKlaviyo.updateProperties(state.address.email, { firstName: state.address.first_name, lastName: state.address.last_name }, {
+            free_box: true,
+            address_collected: true,
+            sample_order_created: true
+          });
+        }
+        window.location.href = state.checkoutUrl;
+      }else if(wrap && !wrap.parentNode.querySelector('.sn-claim-checkout-error')){
+        var err = document.createElement('p');
+        err.className = 'sn-claim-checkout-error';
+        err.style.cssText = 'margin:clamp(16px,2vw,20px) 0 0; font-weight:700; text-align:center; color:var(--claim-pink);';
+        err.textContent = 'Something went wrong preparing your order. Please refresh and try again.';
+        wrap.insertAdjacentElement('afterend', err);
+      }
+    }
+
+    if(submitBtn){
+      submitBtn.addEventListener('click', function(){
+        state.surveys[name] = collectAnswer();
+        finishSurvey();
+        goToOrderIfNeeded();
+      });
+    }
+    if(skipBtn){
+      skipBtn.addEventListener('click', function(){
+        finishSurvey();
+        goToOrderIfNeeded();
+      });
+    }
+
+    // Refresh mid-flow: if this survey was already completed before the page
+    // reloaded, land straight back on its panel's final state instead of
+    // showing the question again.
+    if(state.surveysDone[name]) finishSurvey();
+  });
+
+  // Restore whichever step was active before a refresh, without an
+  // unsolicited scroll on first paint.
+  showStep(state.step, { silent: true });
+})();
+</script>
+
+{% schema %}
+{
+  "name": "Sneakies Claim Page",
+  "settings": [
+    { "type": "header", "content": "Claim details" },
+    { "type": "text", "id": "product_name", "label": "Product name", "default": "Sneakies Free Sample Box" },
+    { "type": "text", "id": "sample_size", "label": "Sample size", "default": "4-pack, one of each flavor" },
+    { "type": "text", "id": "retail_value", "label": "Retail value (shown crossed out)", "default": "$19.99" },
+    { "type": "text", "id": "ship_date", "label": "Ship date", "default": "August 2026" },
+    { "type": "text", "id": "discount_code", "label": "Discount code", "default": "SNEAKIESFREEBOX" }
+  ],
+  "presets": [ { "name": "Sneakies Claim Page" } ]
+}
+{% endschema %}
