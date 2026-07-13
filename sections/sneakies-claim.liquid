@@ -187,6 +187,11 @@
   @media(prefers-reduced-motion:reduce){ .sn-claim *{ transition:none !important; } }
 {%- endstyle -%}
 
+{%- comment -%} Full US state list (50 states + DC, no territories) per the Claim
+  Form Validation Specification — value is the standard 2-letter code (what
+  Shopify's Storefront API expects as provinceCode), label is the full state
+  name (the only thing shown to the customer). {%- endcomment -%}
+{%- assign us_states = "AL|Alabama,AK|Alaska,AZ|Arizona,AR|Arkansas,CA|California,CO|Colorado,CT|Connecticut,DE|Delaware,DC|District of Columbia,FL|Florida,GA|Georgia,HI|Hawaii,ID|Idaho,IL|Illinois,IN|Indiana,IA|Iowa,KS|Kansas,KY|Kentucky,LA|Louisiana,ME|Maine,MD|Maryland,MA|Massachusetts,MI|Michigan,MN|Minnesota,MS|Mississippi,MO|Missouri,MT|Montana,NE|Nebraska,NV|Nevada,NH|New Hampshire,NJ|New Jersey,NM|New Mexico,NY|New York,NC|North Carolina,ND|North Dakota,OH|Ohio,OK|Oklahoma,OR|Oregon,PA|Pennsylvania,RI|Rhode Island,SC|South Carolina,SD|South Dakota,TN|Tennessee,TX|Texas,UT|Utah,VT|Vermont,VA|Virginia,WA|Washington,WV|West Virginia,WI|Wisconsin,WY|Wyoming" | split: "," -%}
 {%- assign ship_date = section.settings.ship_date | default: 'August 2026' -%}
 {%- comment -%} Real, live Shopify discount (100% off, scoped to the Sneakies
   Sample Box product, once per customer) — keep this in sync with
@@ -283,63 +288,65 @@
           <div class="sn-claim-field-row">
             <div class="sn-claim-field">
               <label for="sn-claim-fn">First name</label>
-              <input type="text" id="sn-claim-fn" name="first_name" class="sn-claim-input" placeholder="Jamie" autocomplete="given-name" required>
-              <span class="sn-claim-error" data-error-for="first_name"></span>
+              <input type="text" id="sn-claim-fn" name="first_name" class="sn-claim-input" placeholder="Jamie" autocomplete="given-name" maxlength="50" aria-describedby="sn-claim-fn-error" required>
+              <span class="sn-claim-error" id="sn-claim-fn-error" data-error-for="first_name"></span>
             </div>
             <div class="sn-claim-field">
               <label for="sn-claim-ln">Last name</label>
-              <input type="text" id="sn-claim-ln" name="last_name" class="sn-claim-input" placeholder="Rivera" autocomplete="family-name" required>
-              <span class="sn-claim-error" data-error-for="last_name"></span>
+              <input type="text" id="sn-claim-ln" name="last_name" class="sn-claim-input" placeholder="Rivera" autocomplete="family-name" maxlength="50" aria-describedby="sn-claim-ln-error" required>
+              <span class="sn-claim-error" id="sn-claim-ln-error" data-error-for="last_name"></span>
             </div>
           </div>
 
           <div class="sn-claim-field">
             <label for="sn-claim-email">Email</label>
-            <input type="email" id="sn-claim-email" name="email" class="sn-claim-input" placeholder="jamie@email.com" autocomplete="email" required>
-            <span class="sn-claim-error" data-error-for="email"></span>
+            <input type="email" id="sn-claim-email" name="email" class="sn-claim-input" placeholder="jamie@email.com" autocomplete="email" maxlength="254" aria-describedby="sn-claim-email-error" required>
+            <span class="sn-claim-error" id="sn-claim-email-error" data-error-for="email"></span>
           </div>
 
           <div class="sn-claim-field">
             <label for="sn-claim-phone">Phone (optional)</label>
-            <input type="tel" id="sn-claim-phone" name="phone" class="sn-claim-input" placeholder="(555) 123-4567" autocomplete="tel">
-            <span class="sn-claim-error" data-error-for="phone"></span>
+            <input type="tel" id="sn-claim-phone" name="phone" class="sn-claim-input" placeholder="(555) 123-4567" autocomplete="tel" aria-describedby="sn-claim-phone-error">
+            <span class="sn-claim-error" id="sn-claim-phone-error" data-error-for="phone"></span>
           </div>
 
           <div class="sn-claim-field">
             <label for="sn-claim-addr">Street address</label>
-            <input type="text" id="sn-claim-addr" name="address1" class="sn-claim-input" placeholder="123 Orchard Way" autocomplete="address-line1" required>
-            <span class="sn-claim-error" data-error-for="address1"></span>
+            <input type="text" id="sn-claim-addr" name="address1" class="sn-claim-input" placeholder="123 Orchard Way" autocomplete="address-line1" maxlength="100" aria-describedby="sn-claim-addr-error" required>
+            <span class="sn-claim-error" id="sn-claim-addr-error" data-error-for="address1"></span>
           </div>
 
           <div class="sn-claim-field">
             <label for="sn-claim-addr2">Apartment, suite, etc. (optional)</label>
-            <input type="text" id="sn-claim-addr2" name="address2" class="sn-claim-input" placeholder="Apt 4B" autocomplete="address-line2">
+            <input type="text" id="sn-claim-addr2" name="address2" class="sn-claim-input" placeholder="Apt 4B" autocomplete="address-line2" maxlength="50" aria-describedby="sn-claim-addr2-error">
+            <span class="sn-claim-error" id="sn-claim-addr2-error" data-error-for="address2"></span>
           </div>
 
           <div class="sn-claim-field-row sn-claim-field-row--4">
             <div class="sn-claim-field">
               <label for="sn-claim-city">City</label>
-              <input type="text" id="sn-claim-city" name="city" class="sn-claim-input" placeholder="Portland" autocomplete="address-level2" required>
-              <span class="sn-claim-error" data-error-for="city"></span>
+              <input type="text" id="sn-claim-city" name="city" class="sn-claim-input" placeholder="Portland" autocomplete="address-level2" maxlength="60" aria-describedby="sn-claim-city-error" required>
+              <span class="sn-claim-error" id="sn-claim-city-error" data-error-for="city"></span>
             </div>
             <div class="sn-claim-field">
               <label for="sn-claim-state">State</label>
-              <input type="text" id="sn-claim-state" name="state" class="sn-claim-input" placeholder="OR" autocomplete="address-level1" required>
-              <span class="sn-claim-error" data-error-for="state"></span>
+              <select id="sn-claim-state" name="state" class="sn-claim-input" autocomplete="address-level1" aria-describedby="sn-claim-state-error" required>
+                <option value="" selected disabled>Select a state</option>
+                {%- for entry in us_states -%}
+                  {%- assign pair = entry | split: "|" -%}
+                  <option value="{{ pair[0] }}">{{ pair[1] }}</option>
+                {%- endfor -%}
+              </select>
+              <span class="sn-claim-error" id="sn-claim-state-error" data-error-for="state"></span>
             </div>
             <div class="sn-claim-field">
               <label for="sn-claim-zip">Zip code</label>
-              <input type="text" id="sn-claim-zip" name="zip" class="sn-claim-input" placeholder="97201" autocomplete="postal-code" required>
-              <span class="sn-claim-error" data-error-for="zip"></span>
+              <input type="text" id="sn-claim-zip" name="zip" class="sn-claim-input" placeholder="97201" autocomplete="postal-code" inputmode="numeric" maxlength="10" aria-describedby="sn-claim-zip-error" required>
+              <span class="sn-claim-error" id="sn-claim-zip-error" data-error-for="zip"></span>
             </div>
             <div class="sn-claim-field">
               <label for="sn-claim-country">Country</label>
-              <select id="sn-claim-country" name="country" class="sn-claim-input" autocomplete="country">
-                <option value="United States" selected>United States</option>
-                <option value="Canada">Canada</option>
-                <option value="United Kingdom">United Kingdom</option>
-                <option value="Australia">Australia</option>
-              </select>
+              <input type="text" id="sn-claim-country" name="country" class="sn-claim-input" value="United States" readonly aria-readonly="true">
             </div>
           </div>
 
@@ -367,7 +374,7 @@
           name: 'confirm',
           heading: 'What are you most excited about?',
           subtitle: 'Select all that apply — optional, but it helps us make Sneakies better.',
-          options: 'Getting more fruits and veggies into breakfast|Trying the Sneakies flavors|Easier weekday breakfasts|Finding something my kids will actually eat|Being part of the first Sneakies testers'
+          options: 'Getting more fruits and veggies into breakfast|Trying the different Sneakies flavors|Easier weekday breakfast|Finding something my kids will actually eat|Discovering a better/healthier pancake mix'
         -%}
       </div>
     </section>
@@ -386,7 +393,7 @@
           name: 'fallback',
           heading: 'What are you most excited about?',
           subtitle: 'Select all that apply.',
-          options: 'Getting more fruits and veggies into breakfast|Trying the Sneakies flavors|Easier weekday breakfasts|Finding something my kids will actually eat|Being part of the first Sneakies testers'
+          options: 'Getting more fruits and veggies into breakfast|Trying the different Sneakies flavors|Easier weekday breakfast|Finding something my kids will actually eat|Discovering a better/healthier pancake mix'
         -%}
       </div>
     </section>
@@ -434,7 +441,8 @@
       window.SneakiesKlaviyo.updateProperties(state.address.email, { firstName: state.address.first_name }, {
         free_box: true,
         address_collected: true,
-        sample_order_created: true
+        sample_order_created: true,
+        has_shipping_address: true
       });
     }
   }else{
@@ -522,7 +530,9 @@
   // ---- Address form: inline validation + save + advance ----
   var form = root.querySelector('[data-address-form]');
   if(form){
-    var requiredFields = ['first_name', 'last_name', 'email', 'address1', 'city', 'state', 'zip'];
+    var REQUIRED_FIELDS = ['first_name', 'last_name', 'email', 'address1', 'city', 'state', 'zip'];
+    var ALL_FIELD_NAMES = ['first_name', 'last_name', 'email', 'phone', 'address1', 'address2', 'city', 'state', 'zip'];
+    var isSubmitting = false;
 
     Object.keys(state.address).forEach(function(key){
       var el = form.elements[key];
@@ -532,38 +542,139 @@
     function setError(name, message){
       var input = form.elements[name];
       var errorEl = form.querySelector('[data-error-for="' + name + '"]');
-      if(input) input.classList.toggle('has-error', !!message);
+      if(input){
+        input.classList.toggle('has-error', !!message);
+        if(message){ input.setAttribute('aria-invalid', 'true'); } else { input.removeAttribute('aria-invalid'); }
+      }
       if(errorEl){
         errorEl.textContent = message || '';
         errorEl.classList.toggle('is-visible', !!message);
       }
     }
 
+    // ---- Field-level rules (Sneakies Claim Form Validation Specification) ----
+    var NAME_RE = /^[A-Za-z\s'-]+$/;
+    var CITY_RE = /^[A-Za-z0-9\s'.-]+$/;
+    var EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    var ZIP_RE = /^\d{5}(-\d{4})?$/;
+
+    // Reduces a phone entry down to its normalized digits, dropping a leading
+    // US country-code "1" if present, so "323-232-3232", "(323) 232-3232",
+    // and "+1 323 232 3232" all resolve the same way for validation/storage.
+    function normalizedPhoneDigits(raw){
+      var digits = (raw || '').replace(/[^\d]/g, '');
+      if(digits.length === 11 && digits.charAt(0) === '1') digits = digits.slice(1);
+      return digits;
+    }
+
+    // ---- Duplicate-claim protection (spec section 3) ----
+    // No server-side claims database exists in this theme-only architecture,
+    // so this enforces the spec's "prevent more than one free sample claim"
+    // rule as a per-browser safeguard via localStorage (persists across
+    // sessions on the same device), checked BEFORE any Shopify cart/order is
+    // created. This is in addition to — not a replacement for — Shopify's
+    // own real, server-side duplicate-email rejection on the homepage
+    // waitlist signup (the "this email is already on the list" case handled
+    // in sneakies-landing.liquid), which already gates real repeat traffic
+    // before a customer ever reaches this Address step.
+    var CLAIMED_EMAILS_KEY = 'sn_claimed_emails';
+    var CLAIMED_ADDRESSES_KEY = 'sn_claimed_addresses';
+    function readList(key){
+      try{ var raw = localStorage.getItem(key); var list = raw ? JSON.parse(raw) : []; return Array.isArray(list) ? list : []; }catch(e){ return []; }
+    }
+    function writeList(key, list){ try{ localStorage.setItem(key, JSON.stringify(list)); }catch(e){} }
+    function hasClaimed(key, value){ return readList(key).indexOf(value) > -1; }
+    function recordClaim(key, value){
+      var list = readList(key);
+      if(list.indexOf(value) === -1){ list.push(value); writeList(key, list); }
+    }
+    function normalizedAddressKey(address1, zip){ return (address1 || '').trim().toLowerCase() + '|' + (zip || '').trim().toLowerCase(); }
+
     function validate(){
       var isValid = true;
-      requiredFields.forEach(function(name){ setError(name, ''); });
+      ALL_FIELD_NAMES.forEach(function(name){ setError(name, ''); });
 
-      requiredFields.forEach(function(name){
-        var value = (form.elements[name] && form.elements[name].value || '').trim();
-        if(!value){ setError(name, 'This field is required.'); isValid = false; }
+      // First / last name: 1–50 chars, letters/spaces/apostrophes/hyphens only.
+      [['first_name', 'Please enter your first name.'], ['last_name', 'Please enter your last name.']].forEach(function(pair){
+        var name = pair[0], msg = pair[1];
+        var value = (form.elements[name].value || '').trim();
+        if(!value || value.length > 50 || !NAME_RE.test(value)){ setError(name, msg); isValid = false; }
       });
 
-      var email = (form.elements.email.value || '').trim();
-      if(email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){
-        setError('email', 'Enter a valid email address.');
+      // Email: required, standard format, max 254 chars, lowercase-normalized
+      // for both the format check and the duplicate check.
+      var email = (form.elements.email.value || '').trim().toLowerCase();
+      if(!email || email.length > 254 || !EMAIL_RE.test(email)){
+        setError('email', 'Please enter a valid email address.');
+        isValid = false;
+      } else if(hasClaimed(CLAIMED_EMAILS_KEY, email)){
+        setError('email', 'This email address has already been used to claim an offer.');
         isValid = false;
       }
 
-      var zip = (form.elements.zip.value || '').trim();
-      if(zip && !/^[A-Za-z0-9][A-Za-z0-9\s-]{2,9}$/.test(zip)){
-        setError('zip', 'Enter a valid zip/postal code.');
+      // Phone: optional; if entered, must resolve to a full 10-digit US number.
+      var phoneRaw = (form.elements.phone.value || '').trim();
+      if(phoneRaw && normalizedPhoneDigits(phoneRaw).length !== 10){
+        setError('phone', 'Please enter a valid 10-digit phone number.');
         isValid = false;
+      }
+
+      // Street address: 5–100 chars, must contain actual letters/numbers
+      // (rejects punctuation-only or blank-like entries).
+      var address1 = (form.elements.address1.value || '').trim();
+      if(!address1 || address1.length < 5 || address1.length > 100 || !/[A-Za-z0-9]/.test(address1)){
+        setError('address1', 'Please enter your street address.');
+        isValid = false;
+      }
+
+      // Apartment/suite: optional, only a max-length rule per the spec.
+      var address2 = (form.elements.address2.value || '').trim();
+      if(address2.length > 50){
+        setError('address2', 'Please keep this under 50 characters.');
+        isValid = false;
+      }
+
+      // City: 2–60 chars, letters/numbers/spaces/apostrophes/periods/hyphens,
+      // but must contain at least one letter — numbers-only or
+      // punctuation-only entries (allowed characters, disallowed content)
+      // are rejected per the spec.
+      var city = (form.elements.city.value || '').trim();
+      if(!city || city.length < 2 || city.length > 60 || !CITY_RE.test(city) || !/[A-Za-z]/.test(city)){
+        setError('city', 'Please enter your city.');
+        isValid = false;
+      }
+
+      // State: required dropdown — the blank placeholder never counts as valid.
+      var stateVal = form.elements.state.value || '';
+      if(!stateVal){
+        setError('state', 'Please select your state.');
+        isValid = false;
+      }
+
+      // Zip: 5-digit or ZIP+4 only.
+      var zip = (form.elements.zip.value || '').trim();
+      if(!zip || !ZIP_RE.test(zip)){
+        setError('zip', 'Please enter a valid 5-digit or ZIP+4 code.');
+        isValid = false;
+      }
+
+      // Household check: normalized shipping address (spec section 3), only
+      // evaluated once address1/zip individually pass their own checks above
+      // so it never masks a more specific field-level error.
+      if(isValid && address1 && zip){
+        if(hasClaimed(CLAIMED_ADDRESSES_KEY, normalizedAddressKey(address1, zip))){
+          setError('address1', 'It looks like this offer has already been claimed using these details.');
+          isValid = false;
+        }
       }
 
       return isValid;
     }
 
     form.addEventListener('input', function(ev){
+      if(ev.target.name) setError(ev.target.name, '');
+    });
+    form.addEventListener('change', function(ev){
       if(ev.target.name) setError(ev.target.name, '');
     });
 
@@ -580,6 +691,7 @@
       if(!el){
         el = document.createElement('p');
         el.setAttribute('data-address-submit-error', '');
+        el.setAttribute('role', 'alert');
         el.style.cssText = 'color:var(--claim-pink); font-size:12.5px; font-weight:600; margin:10px 0 0; text-align:center;';
         var btn = form.querySelector('[type="submit"]');
         if(btn) btn.insertAdjacentElement('afterend', el);
@@ -589,26 +701,42 @@
 
     form.addEventListener('submit', function(ev){
       ev.preventDefault();
+      // Belt-and-suspenders guard against a double-fire on top of the
+      // disabled-button lock below (e.g. Enter key + click landing in the
+      // same tick) — never allow two submissions to race each other.
+      if(isSubmitting) return;
       if(!validate()){
         var firstInvalid = form.querySelector('.has-error');
         if(firstInvalid) firstInvalid.focus();
         return;
       }
       // Prevent an accidental duplicate submission (double-click, double-tap)
-      // once we're actually past validation and moving the user forward.
+      // once we're actually past validation and moving the user forward. No
+      // Shopify order/cart is created until this point — validation failures
+      // above never reach the Storefront API.
+      isSubmitting = true;
       var submitBtn = form.querySelector('[type="submit"]');
       if(submitBtn) submitBtn.disabled = true;
       setSubmitError('');
 
+      // Whitespace-trim every field before it's stored/sent; email is also
+      // lowercased before storage, per the spec.
       var data = {};
       Array.prototype.forEach.call(form.elements, function(el){
-        if(el.name) data[el.name] = el.value;
+        if(!el.name) return;
+        data[el.name] = (typeof el.value === 'string') ? el.value.trim() : el.value;
       });
+      data.email = (data.email || '').toLowerCase();
+      if(data.phone){
+        var normalizedDigits = normalizedPhoneDigits(data.phone);
+        if(normalizedDigits) data.phone = normalizedDigits;
+      }
       state.address = data;
       saveState();
 
       if(!window.SneakiesStorefront){
         setSubmitError('Something went wrong. Please refresh and try again.');
+        isSubmitting = false;
         if(submitBtn) submitBtn.disabled = false;
         return;
       }
@@ -629,7 +757,8 @@
           // straight to the existing 50% Off experience.
           if(window.SneakiesKlaviyo){
             window.SneakiesKlaviyo.updateProperties(data.email, { firstName: data.first_name, lastName: data.last_name }, {
-              fifty_off: true
+              fifty_off: true,
+              has_shipping_address: true
             });
           }
           showStep('fallback');
@@ -663,17 +792,24 @@
           zip: data.zip,
           country: data.country
         }).then(function(cart){
+          // Record this claim (spec section 3) only once the free-sample
+          // cart genuinely exists — a failed/abandoned attempt never counts
+          // as "claimed".
+          recordClaim(CLAIMED_EMAILS_KEY, data.email);
+          recordClaim(CLAIMED_ADDRESSES_KEY, normalizedAddressKey(data.address1, data.zip));
           state.checkoutUrl = cart.checkoutUrl;
           saveState();
           if(window.SneakiesKlaviyo){
             window.SneakiesKlaviyo.updateProperties(data.email, { firstName: data.first_name, lastName: data.last_name }, {
-              free_box: true
+              free_box: true,
+              has_shipping_address: true
             });
           }
           showStep('confirmation');
         });
       }).catch(function(){
         setSubmitError('Something went wrong securing your box. Please try again.');
+        isSubmitting = false;
         if(submitBtn) submitBtn.disabled = false;
       });
     });
@@ -762,7 +898,8 @@
           window.SneakiesKlaviyo.updateProperties(state.address.email, { firstName: state.address.first_name, lastName: state.address.last_name }, {
             free_box: true,
             address_collected: true,
-            sample_order_created: true
+            sample_order_created: true,
+            has_shipping_address: true
           });
         }
         window.location.href = state.checkoutUrl;

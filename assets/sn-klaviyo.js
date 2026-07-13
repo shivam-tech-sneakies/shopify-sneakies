@@ -66,6 +66,15 @@
   // is required for accurate segment membership.
   function updateProperties(email, extra, properties){
     if(!email || !properties) return;
+    // 2026-07-13 (Task F commerce verification): added has_shipping_address,
+    // defaulted false like every other claim-flow-state property. Callers in
+    // sections/sneakies-claim.liquid override it to true only at the points
+    // where a fully validated shipping address has actually been captured
+    // (address-form submit, sold-out or free-box branch alike, plus the two
+    // later checkpoints that carry state.address forward). Does not touch
+    // existing_customer/existing_contact or any other property. Also removed
+    // a duplicate `var merged` block found here during this pass (dead code,
+    // no behavior change).
     var merged = {
       free_box: false,
       fifty_off: false,
@@ -73,15 +82,7 @@
       sample_order_created: false,
       existing_customer: false,
       existing_contact: false,
-      internal_test: isInternalTestEmail(email)
-    };
-    var merged = {
-      free_box: false,
-      fifty_off: false,
-      address_collected: false,
-      sample_order_created: false,
-      existing_customer: false,
-      existing_contact: false,
+      has_shipping_address: false,
       internal_test: isInternalTestEmail(email)
     };
     for(var key in properties){ if(Object.prototype.hasOwnProperty.call(properties, key)) merged[key] = properties[key]; }
