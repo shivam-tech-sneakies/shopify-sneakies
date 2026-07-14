@@ -13,9 +13,8 @@
   there's no page reload between steps, matching the "one continuous
   experience" requirement. Current step + address form values + survey
   answers are persisted to sessionStorage (see STORE_KEY below) so a refresh
-  doesn't lose progress. No backend/order logic runs here — this is a
-  dev-only preview of the funnel design, reachable step-by-step via the
-  actual CTAs or directly via the preview nav pills at the top.
+  doesn't lose progress. No backend/order logic runs here — steps are
+  advanced client-side via the [data-goto-step] CTAs in each panel.
 
   Reusable pieces: snippets/sneakies-order-summary.liquid (full variant on
   the Claim step, condensed variant on the Address step) and
@@ -49,12 +48,6 @@
   .sn-claim-step{ display:none; }
   .sn-claim-step.is-active{ display:block; }
 
-  /* Dev preview nav — every pill is a real button now (all 4 steps exist), so
-     clicking any of them jumps straight there for design review. */
-  .sn-claim-devnav{ border-bottom:2px dashed rgba(33,5,10,.25); background:var(--beige); }
-  .sn-claim-devnav-inner{ max-width:1180px; margin:0 auto; padding:14px clamp(18px,5vw,40px); display:flex; flex-wrap:wrap; align-items:center; gap:12px 18px; }
-  .sn-claim-devnav-label{ font-family:var(--font-heading); font-weight:700; text-transform:uppercase; letter-spacing:.1em; font-size:11.5px; opacity:.55; white-space:nowrap; }
-  .sn-claim-devnav-pills{ display:flex; flex-wrap:wrap; gap:8px; }
   .sn-claim-pill{ font-family:var(--font-heading); font-weight:700; text-transform:uppercase; letter-spacing:.04em; font-size:12.5px; padding:8px 16px; border-radius:999px; border:2px solid var(--ink); background:var(--cream); white-space:nowrap; cursor:pointer; }
   .sn-claim-pill--active{ background:var(--ink); color:var(--cream); }
 
@@ -202,19 +195,6 @@
 {%- assign retail_value = section.settings.retail_value | default: '$19.99' -%}
 
 <div id="sn-root" class="sn-claim">
-
-  <!-- PREVIEW NAV (dev only) — jumps directly to any step for design review -->
-  <nav class="sn-claim-devnav" aria-label="Development preview steps">
-    <div class="sn-claim-devnav-inner">
-      <span class="sn-claim-devnav-label">Preview · Dev Only</span>
-      <div class="sn-claim-devnav-pills" role="group" aria-label="Claim flow steps">
-        <button type="button" class="sn-claim-pill" data-goto-step="claim">Claim page</button>
-        <button type="button" class="sn-claim-pill" data-goto-step="address">Address form</button>
-        <button type="button" class="sn-claim-pill" data-goto-step="confirmation">Confirmation</button>
-        <button type="button" class="sn-claim-pill" data-goto-step="fallback">50% off fallback</button>
-      </div>
-    </div>
-  </nav>
 
   <!-- HEADER (shared across all 4 steps) -->
   <header class="sn-claim-header">
@@ -520,8 +500,8 @@
     }
   }
 
-  // Every step-jump control (dev nav pills, the Claim CTA, anything else
-  // tagged [data-goto-step]) shares one delegated listener.
+  // Every step-jump control (the Claim CTA, anything else tagged
+  // [data-goto-step]) shares one delegated listener.
   root.addEventListener('click', function(ev){
     var trigger = ev.target.closest('[data-goto-step]');
     if(trigger){ showStep(trigger.getAttribute('data-goto-step')); }
