@@ -131,7 +131,6 @@
   #sn-root .sn-footer-center{ justify-self:center; text-align:center; white-space:nowrap; }
   #sn-root .sn-footer-right{ justify-self:end; display:flex; align-items:center; gap:6px; white-space:nowrap; }
   #sn-root .sn-footer-right .sn-footer-sep{ opacity:.45; }
-  #sn-root .sn-footer-right .sn-footer-linkedin{ margin-left:14px; }
   @media(max-width:700px){
     #sn-root .sn-footer-grid{ grid-template-columns:1fr; justify-items:center; gap:12px; }
     #sn-root .sn-footer-left, #sn-root .sn-footer-center, #sn-root .sn-footer-right{ justify-self:center; }
@@ -200,13 +199,13 @@
 {%- assign sn_marquee_items = sn_marquee_text | split: '|' -%}
 
 <!-- Instagram URL — live Sneakies Instagram link. -->
-{%- assign instagram_url = 'https://www.instagram.com/eat.sneakies?igsh=MTU1emU5OHc3bjRncg==' -%}
+{%- assign instagram_url = 'https://www.instagram.com/eat.sneakies?igsh=MTU1emU5OHc3bjRncg%3D%3D' -%}
 
 <!-- TikTok URL — live Sneakies TikTok link. -->
 {%- assign tiktok_url = 'https://www.tiktok.com/@eat.sneakies' -%}
 
-<!-- LinkedIn URL — placeholder until the real Sneakies LinkedIn link is provided; update this single string to go live. -->
-{%- assign linkedin_url = '#' -%}
+<!-- LinkedIn URL — live Sneakies LinkedIn company page. -->
+{%- assign linkedin_url = 'https://www.linkedin.com/company/sneakies/' -%}
 
 <div id="sn-root">
 
