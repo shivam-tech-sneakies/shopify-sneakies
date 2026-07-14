@@ -391,6 +391,45 @@
   var STEPS = ['claim', 'address', 'confirmation', 'fallback'];
   var STORE_KEY = 'sn_claim_state';
 
+  // Root cause of the Shopify cart/order page briefly flashing before
+  // checkout (2026-07-14 fix): assets/sn-storefront.js talks to the
+  // Storefront API on sneakies2.myshopify.com, so cart.checkoutUrl always
+  // comes back hosted on that *.myshopify.com domain. This storefront's
+  // primary domain is eatsneakies.com, so navigating straight to a
+  // myshopify.com checkout URL forces Shopify to 301-redirect the browser
+  // from myshopify.com to the equivalent eatsneakies.com URL — and the
+  // myshopify.com-hosted page renders, visibly, for that first hop before
+  // the redirect completes. Checkout works identically on every domain
+  // connected to the shop, so rewriting the host to match the domain the
+  // customer is already on (same cart token, same backend) removes that
+  // hop entirely: the one and only navigation lands directly on the real,
+  // branded checkout. No-op when already on that domain (e.g. testing
+  // directly on the *.myshopify.com preview URL).
+  function toCurrentDomainCheckoutUrl(url){
+    try{
+      var parsed = new URL(url, window.location.href);
+      if(parsed.hostname !== window.location.hostname){
+        parsed.hostname = window.location.hostname;
+      }
+      return parsed.toString();
+    }catch(e){ return url; }
+  }
+
+  // Silently "touches" the checkout URL in the background the moment it
+  // exists (right after cart creation, while the customer is still on the
+  // Confirmation/Survey step) so any first-visit connection/cookie setup
+  // Shopify's checkout needs has already happened by the time the real,
+  // user-visible navigation in goToOrderIfNeeded() below fires — that
+  // navigation then lands directly on checkout instead of paying any of
+  // that setup cost visibly. no-cors + credentials:'include' lets the
+  // browser still exchange Shopify's session cookies even though the
+  // (opaque) response itself is never read.
+  function warmCheckoutUrl(url){
+    try{
+      fetch(url, { mode: 'no-cors', credentials: 'include', keepalive: true });
+    }catch(e){}
+  }
+
   function loadState(){
     try{
       var raw = sessionStorage.getItem(STORE_KEY);
@@ -777,8 +816,9 @@
           // as "claimed".
           recordClaim(CLAIMED_EMAILS_KEY, data.email);
           recordClaim(CLAIMED_ADDRESSES_KEY, normalizedAddressKey(data.address1, data.zip));
-          state.checkoutUrl = cart.checkoutUrl;
+          state.checkoutUrl = toCurrentDomainCheckoutUrl(cart.checkoutUrl);
           saveState();
+          warmCheckoutUrl(state.checkoutUrl);
           if(window.SneakiesKlaviyo){
             window.SneakiesKlaviyo.updateProperties(data.email, { firstName: data.first_name, lastName: data.last_name }, {
               free_box: true,
