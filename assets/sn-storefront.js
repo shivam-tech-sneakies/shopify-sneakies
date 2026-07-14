@@ -34,7 +34,7 @@
   var SHOP_DOMAIN = 'sneakies2.myshopify.com';
   var API_VERSION = '2026-07';
   var STOREFRONT_ACCESS_TOKEN = 'f2647ee55f19d9addfa615cad803afd8'; // <-- set once the custom app above exists
-  var VARIANT_ID = 'gid://shopify/ProductVariant/47536862068885'; // Sneakies Sample Box
+  var VARIANT_ID = 'gid://shopify/ProductVariant/47563934072981'; // Sneakies Sample Box
   var DISCOUNT_CODE = 'SNEAKIESFREEBOX';
   // The product discount above only covers the $19.99 item price — Shopify still
   // charges a real shipping rate (e.g. $4.90 Economy) unless a shipping discount
