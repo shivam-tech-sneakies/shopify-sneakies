@@ -1,0 +1,15 @@
+{
+  "name": "sneakies-backend",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Standalone Netlify Functions backend for the Sneakies Free Sample Box claim flow. Authoritative pre-submission validation/dedupe check + webhook-driven Klaviyo sync. Does not create Shopify orders, carts, or checkouts — see README.md.",
+  "type": "commonjs",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "test": "node --test"
+  },
+  "dependencies": {},
+  "devDependencies": {}
+}

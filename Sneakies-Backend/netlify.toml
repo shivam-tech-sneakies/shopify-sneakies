@@ -1,0 +1,17 @@
+[build]
+  functions = "netlify/functions"
+  # No build command / publish dir — this project ships functions only,
+  # there is no static site or bundler step required.
+
+[functions]
+  node_bundler = "esbuild"
+
+# Friendlier, stable paths for the frontend to call and for the Shopify
+# webhook subscription to target, instead of the raw /.netlify/functions/*
+# path. Frontend integration (a later, separate step) should call
+# /api/precheck-claim; the Shopify webhook subscription should target
+# /api/shopify-order-webhook.
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/:splat"
+  status = 200
