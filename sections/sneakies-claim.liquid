@@ -1,5 +1,5 @@
 {%- comment -%}
-  Sneakies — Claim flow (4 steps, client-side).
+  Sneakies — Claim flow (3 steps, client-side).
   Reached from any "Join the Waitlist" CTA on the homepage (sneakies-landing.liquid).
   Reuses the same design tokens, typography, and button interaction states
   established there (#sn-root ink/cream/beige/yellow palette, the shared
@@ -7,20 +7,25 @@
   hover/active states) so this reads as a natural continuation of the site
   rather than a separate landing page.
 
-  Architecture: all 4 steps (Claim / Address form / Confirmation / 50% off
-  fallback) live in this one section as sibling panels ([data-step-panel]),
-  toggled by a small vanilla-JS state machine at the bottom of the file —
-  there's no page reload between steps, matching the "one continuous
-  experience" requirement. Current step + address form values + survey
-  answers are persisted to sessionStorage (see STORE_KEY below) so a refresh
-  doesn't lose progress. No backend/order logic runs here — steps are
-  advanced client-side via the [data-goto-step] CTAs in each panel.
+  Architecture: all 3 steps (Claim / Address form / 50% off fallback) live
+  in this one section as sibling panels ([data-step-panel]), toggled by a
+  small vanilla-JS state machine at the bottom of the file — there's no page
+  reload between steps, matching the "one continuous experience"
+  requirement. Current step + address form values + survey answers are
+  persisted to sessionStorage (see STORE_KEY below) so a refresh doesn't
+  lose progress. No backend/order logic runs here — steps are advanced
+  client-side via the [data-goto-step] CTAs in each panel. The Free Box
+  (in-stock) path never shows an intermediate panel between Address and
+  Shopify checkout — see advanceToCheckout() in the script below.
+  (2026-07-15: this flow used to include a fourth "Confirmation" step/panel
+  with its own survey between Address and checkout; it was removed as
+  orphaned once the Free Box path stopped routing through it — see
+  docs/CONFIRMATION_PAGE_REMOVAL.txt.)
 
   Reusable pieces: snippets/sneakies-order-summary.liquid (full variant on
-  the Claim step, condensed variant on the Address step) and
-  snippets/sneakies-survey.liquid (radio mode on Confirmation, checkbox mode
-  on the Fallback step) — both are rendered twice each rather than having
-  their markup duplicated inline.
+  the Claim step, condensed variant on the Address step, rendered twice)
+  and snippets/sneakies-survey.liquid (checkbox mode, rendered once for the
+  Fallback step).
 {%- endcomment -%}
 
 {%- style -%}
@@ -57,7 +62,7 @@
   .sn-claim-back{ display:inline-flex; align-items:center; gap:6px; text-decoration:none; font-family:var(--font-heading); font-weight:700; text-transform:uppercase; letter-spacing:.06em; font-size:12px; color:var(--ink); opacity:.72; transition:opacity .15s ease; }
   .sn-claim-back:hover{ opacity:1; }
 
-  /* Header (shared across all 4 steps) */
+  /* Header (shared across all 3 steps) */
   .sn-claim-header{ display:flex; flex-direction:column; align-items:center; gap:6px; text-align:center; padding:clamp(18px,3vw,30px) clamp(18px,5vw,40px) clamp(8px,1.6vw,16px); }
   .sn-claim-logo{ height:clamp(44px,6vw,60px); width:auto; }
   .sn-claim-tagline{ margin:0; font-family:var(--font-heading); font-weight:700; text-transform:uppercase; letter-spacing:.14em; font-size:11px; opacity:.55; }
@@ -145,9 +150,8 @@
   .sn-claim-address-summary .sn-claim-card{ max-width:360px; padding:clamp(20px,2.4vw,26px); }
   .sn-claim-address-summary .sn-claim-card-row{ padding:13px 0; }
 
-  /* Confirmation + 50% off fallback (share the same centered layout) */
+  /* 50% off fallback (centered layout) */
   .sn-claim-confirm{ max-width:640px; margin:0 auto; padding:clamp(30px,5vw,56px) clamp(18px,5vw,40px) clamp(48px,6vw,72px); text-align:center; }
-  .sn-claim-confirm-icon{ width:64px; height:64px; margin:0 auto; border-radius:50%; background:var(--claim-green-bg); border:2.5px solid var(--ink); display:flex; align-items:center; justify-content:center; font-size:1.7rem; font-weight:900; color:var(--ink); }
   .sn-claim-offer-badge{ display:inline-block; font-family:var(--font-heading); font-weight:700; text-transform:uppercase; letter-spacing:.05em; font-size:11.5px; color:var(--ink); background:var(--beige); border:2px solid var(--ink); border-radius:999px; padding:7px 18px; }
   .sn-claim-survey-wrap{ margin-top:clamp(28px,4vw,40px); text-align:left; }
   /* Once a survey is submitted/skipped, its panel reveals that step's own
@@ -156,8 +160,8 @@
   .sn-claim-survey-wrap.is-done{ display:none; }
   .sn-claim-final-thanks{ margin:clamp(16px,2vw,20px) 0 0; font-weight:700; text-align:center; color:var(--claim-green); }
 
-  /* Survey card (rendered via snippets/sneakies-survey.liquid; both the
-     Confirmation and 50% Off Fallback steps use checkbox/multi-select mode). */
+  /* Survey card (rendered via snippets/sneakies-survey.liquid for the
+     50% Off Fallback step, checkbox/multi-select mode). */
   .sn-claim-survey{ border:3px solid var(--ink); border-radius:20px; box-shadow:6px 6px 0 var(--ink); background:var(--cream); padding:clamp(22px,3vw,30px); }
   .sn-claim-survey-heading{ margin:0; font-family:var(--font-heading) !important; font-weight:900; font-size:clamp(1.15rem,2vw,1.4rem); letter-spacing:-0.03em !important; text-transform:none !important; }
   .sn-claim-survey-subtitle{ margin:4px 0 0; font-size:13.5px; opacity:.6; font-weight:600; }
@@ -341,26 +345,7 @@
     </section>
   </div>
 
-  <!-- STEP 3: CONFIRMATION -->
-  <div class="sn-claim-step" data-step-panel="confirmation">
-    <section class="sn-claim-confirm">
-      <div class="sn-claim-confirm-icon" aria-hidden="true">✓</div>
-      <h1 class="sn-claim-h1 sn-claim-h1--sm sn-claim-h1--center">Your free box is claimed.</h1>
-      <p class="sn-claim-desc sn-claim-desc--center">We&#8217;ve got your shipping details. Your Sneakies sample box will ship in {{ ship_date }}.</p>
-
-      <div class="sn-claim-survey-wrap">
-        {%- render 'sneakies-survey',
-          mode: 'checkbox',
-          name: 'confirm',
-          heading: 'What are you most excited about?',
-          subtitle: 'Select all that apply — optional, but it helps us make Sneakies better.',
-          options: 'Getting more fruits and veggies into breakfast|Trying the different Sneakies flavors|Easier weekday breakfast|Finding something my kids will actually eat|Discovering a better/healthier pancake mix'
-        -%}
-      </div>
-    </section>
-  </div>
-
-  <!-- STEP 4: 50% OFF FALLBACK -->
+  <!-- STEP 3: 50% OFF FALLBACK -->
   <div class="sn-claim-step" data-step-panel="fallback">
     <section class="sn-claim-confirm">
       <span class="sn-claim-offer-badge">Launch Offer Unlocked</span>
@@ -388,7 +373,7 @@
   var root = document.getElementById('sn-root');
   if(!root || !root.classList.contains('sn-claim')) return;
 
-  var STEPS = ['claim', 'address', 'confirmation', 'fallback'];
+  var STEPS = ['claim', 'address', 'fallback'];
   var STORE_KEY = 'sn_claim_state';
 
   // Root cause of the Shopify cart/order page briefly flashing before
@@ -416,17 +401,16 @@
   }
 
   // Silently "touches" the checkout URL in the background the moment it
-  // exists (right after cart creation, while the customer is still on the
-  // Confirmation/Survey step) so any first-visit connection/cookie setup
-  // Shopify's checkout needs has already happened by the time the real,
-  // user-visible navigation in goToOrderIfNeeded() below fires — that
+  // exists (right after cart creation) so any first-visit connection/cookie
+  // setup Shopify's checkout needs has already happened by the time the
+  // real, user-visible navigation in advanceToCheckout() below fires — that
   // navigation then lands directly on checkout instead of paying any of
   // that setup cost visibly. no-cors + credentials:'include' lets the
   // browser still exchange Shopify's session cookies even though the
   // (opaque) response itself is never read.
   //
   // 2026-07-15 (Claim Confirmation email timing fix): now returns the
-  // fetch's promise instead of discarding it. goToOrderIfNeeded() below
+  // fetch's promise instead of discarding it. advanceToCheckout() below
   // awaits this before writing "claimed" state to Klaviyo, so a checkout
   // endpoint that's genuinely unreachable (offline, DNS failure, ad
   // blocker, Shopify outage) no longer gets silently reported as claimed —
@@ -454,15 +438,11 @@
   // 2026-07-15 (New Free Box Flow): finalizes the Free Box order — waits for
   // checkout-reachability confirmation, writes the "claimed" Klaviyo
   // properties (address_collected/sample_order_created/has_shipping_address/
-  // free_box), then redirects to the real Shopify checkout. This is the
-  // exact same logic that used to live inside the Confirmation survey's
-  // goToOrderIfNeeded() (only reachable after a Submit/Skip click there).
-  // The new flow has no survey step in the Free Box path, so this now runs
-  // directly from the Address form's submit handler, right after the cart
-  // exists. Pulled into its own function (rather than duplicated) so the
-  // Confirmation survey below — kept in the DOM, not deleted, just no
-  // longer routed to — still calls this same code if anything ever routes
-  // to it again, and the two paths can never diverge in behavior.
+  // free_box), then redirects to the real Shopify checkout. Runs directly
+  // from the Address form's submit handler, right after the cart exists —
+  // there is no survey step in the Free Box path. (The checkout-Back-button
+  // restore branch above redirects on its own, without calling this again —
+  // see that branch's own comment for why.)
   function advanceToCheckout(){
     if(!state.checkoutUrl) return false;
     var checkoutUrl = state.checkoutUrl;
@@ -484,43 +464,44 @@
   }
 
   // Set once warmCheckoutUrl() fires (address-form submit success below);
-  // goToOrderIfNeeded() awaits it before writing "claimed" state to
+  // advanceToCheckout() awaits it before writing "claimed" state to
   // Klaviyo. Intentionally NOT persisted to sessionStorage (a Promise
   // isn't serializable) — a fresh page load re-derives it defensively
-  // inside goToOrderIfNeeded() itself if it's ever still null there.
+  // inside advanceToCheckout() itself if it's ever still null there.
   var checkoutReachabilityPromise = null;
 
   if(state.awaitingCheckoutReturn){
-    // Dormant safety net for a future checkout configuration that redirects
-    // back here (2026-07-09 finding: Shopify's real cart checkoutUrl has no
-    // return_to, so Shopify itself never lands the customer back on this
-    // page — the realistic way to reach this branch today is the browser's
-    // own Back button from checkout, in the same tab).
+    // Reachable today via the browser's own Back button from checkout, in
+    // the same tab (2026-07-09 finding: Shopify's real cart checkoutUrl has
+    // no return_to, so Shopify itself never lands the customer back on this
+    // page — Back is the only realistic way back here).
     //
-    // 2026-07-15 (Claim Confirmation email timing fix): this branch used to
-    // re-send the Klaviyo "claimed" write a second time here. Root-cause
-    // analysis traced a production bug — customers receiving the "Free Box
-    // Claimed" (T06) email without ever completing checkout — to
-    // goToOrderIfNeeded() below writing that same state BEFORE the checkout
-    // redirect, with no way to confirm the customer actually reached
-    // checkout, let alone completed an order. Repeating an unconditional
-    // copy of that same premature write here only made the exposure worse
-    // (e.g. hitting Back from checkout would re-affirm "claimed" even for
-    // an abandoned order) and added no information the first write didn't
-    // already have. This branch now only restores the UI step; seeing a
-    // "claimed" write happen at all is entirely goToOrderIfNeeded()'s
-    // responsibility (see the reachability check added there).
-    state.step = 'confirmation';
+    // 2026-07-15 (Confirmation Page Removal): this used to restore the
+    // now-deleted Confirmation panel (state.step = 'confirmation'). That
+    // panel no longer exists, so instead: the customer's cart/checkoutUrl is
+    // still valid (a Shopify cart isn't consumed by an abandoned visit), so
+    // send them straight back into that same checkout rather than showing
+    // any intermediate panel. The Klaviyo "claimed" write already happened
+    // (or didn't, if checkout was unreachable) on the original
+    // advanceToCheckout() call before this redirect — never repeated here,
+    // to avoid a duplicate write. If no checkoutUrl exists (shouldn't happen
+    // in practice), fall back to the Address panel, a real, coherent step
+    // rather than a blank one; the existing duplicate-claim guard in the
+    // address form safely blocks a second claim if they resubmit from there.
     state.awaitingCheckoutReturn = false;
+    state.step = 'address';
     saveState();
+    if(state.checkoutUrl){
+      window.location.href = state.checkoutUrl;
+    }
   }else{
     // Every other fresh page load (refresh, reopening the tab/preview) always
-    // starts over from the Claim page and with the MCQ survey(s) unanswered —
+    // starts over from the Claim page and with the MCQ survey unanswered —
     // this is a demo-era behavior kept intentionally (previously restoring
     // whatever step/survey state was last reached meant a refresh could
-    // reopen straight onto the Confirmation/50% Off result instead of the
-    // top of the flow). Only the address form draft is still restored from a
-    // prior session, since that's unrelated to the step-position behavior.
+    // reopen straight onto the 50% Off result instead of the top of the
+    // flow). Only the address form draft is still restored from a prior
+    // session, since that's unrelated to the step-position behavior.
     state.step = 'claim';
     state.address = state.address || {};
     state.surveys = {};
@@ -836,14 +817,14 @@
         // Free Box branch: build the real Cart now (product line, buyer
         // identity, shipping address, the Free Box discount) — nothing here
         // shows a Shopify page; only state.checkoutUrl gets visited, once,
-        // after the Survey step (see the 'confirm' survey handling below).
+        // via advanceToCheckout() right below.
         //
         // 2026-07-09 (Task C production audit): a cart being created is
         // NOT the same thing as a real order existing — address_collected
         // and sample_order_created must stay false here ("Free Box - Need
         // Address" segment state) and only flip true right before the
         // guaranteed-to-succeed $0 redirect to checkout, in
-        // goToOrderIfNeeded() below (the latest point this flow controls
+        // advanceToCheckout() below (the latest point this flow controls
         // execution — see that function's comment for why it can't be tied
         // to true order completion). Only genuinely abandoned cart
         // *creation* (network/API failure, caught below) leaves the
@@ -874,13 +855,11 @@
               has_shipping_address: true
             });
           }
-          // 2026-07-15 (New Free Box Flow): the Free Box (in-stock) path no
-          // longer routes through the Confirmation survey — go straight to
-          // checkout. See advanceToCheckout() above for what this does
-          // (waits for checkout reachability, writes the "claimed" Klaviyo
-          // properties, then redirects). The Confirmation panel/survey
-          // markup below is left in place, just no longer navigated to from
-          // here.
+          // 2026-07-15 (New Free Box Flow / Confirmation Page Removal): the
+          // Free Box (in-stock) path goes straight to checkout — no survey
+          // step, no intermediate panel. See advanceToCheckout() above for
+          // what this does (waits for checkout reachability, writes the
+          // "claimed" Klaviyo properties, then redirects).
           advanceToCheckout();
         });
       }).catch(function(){
@@ -891,10 +870,9 @@
     });
   }
 
-  // ---- Surveys: shared logic for both multi-select instances (Confirmation
-  // and 50% Off Fallback) rendered by snippets/sneakies-survey.liquid ----
-  // (state.surveys / state.surveysDone are reset above on every fresh load,
-  // so every instance here always starts unanswered.)
+  // ---- Survey: 50% Off Fallback instance, rendered by
+  // snippets/sneakies-survey.liquid ---- (state.surveys / state.surveysDone
+  // are reset above on every fresh load, so it always starts unanswered.)
   root.querySelectorAll('[data-survey]').forEach(function(survey){
     var name = survey.getAttribute('data-survey-name');
     var mode = survey.getAttribute('data-survey-mode');
@@ -926,12 +904,9 @@
       return checked ? checked.value : null;
     }
 
-    // Each survey is scoped to its own panel: submitting (or skipping) it
-    // never navigates to the other panel — it simply reveals that panel's
-    // own dedicated final state (Confirmation stays "your free box is
-    // claimed"; Fallback stays "you're on the list for 50% off" and adds a
-    // short thank-you line). This keeps the Confirmation and 50% Off Fallback
-    // flows fully separate, each with its own routing/result, as required.
+    // Submitting (or skipping) the survey never navigates anywhere — it
+    // simply reveals this panel's own final state ("you're on the list for
+    // 50% off" plus a short thank-you line).
     function finishSurvey(){
       inputs.forEach(function(input){ input.disabled = true; });
       if(submitBtn) submitBtn.disabled = true;
@@ -947,46 +922,24 @@
       saveState();
     }
 
-    // The Free Box branch's real $0 order is finalized on Shopify's own
-    // checkout — the latest possible point to send the customer there,
-    // right after their survey answer (or skip) is recorded. This only
-    // runs from an actual submit/skip click (never from the "already
-    // answered, restore on reload" replay below), so returning from
-    // checkout to this same finished panel never re-triggers a redirect.
-    // 2026-07-15 (New Free Box Flow): the Free Box path no longer routes
-    // through this survey (see the Address form's submit handler above,
-    // which now calls advanceToCheckout() directly after cart creation) —
-    // this panel/survey is kept in place, not deleted, and this handler
-    // still works correctly (delegating to the same shared
-    // advanceToCheckout() logic) if it's ever reachable again. Previously
-    // this function contained its own copy of the reachability-wait +
-    // Klaviyo "claimed" write + redirect logic (added 2026-07-15 in the
-    // Claim Confirmation email timing fix, to avoid telling Klaviyo a box
-    // was claimed before checkout was confirmed reachable) — that logic now
-    // lives once, in advanceToCheckout(), so there is no duplicate copy.
-    function goToOrderIfNeeded(){
-      if(name !== 'confirm') return;
-      var started = advanceToCheckout();
-      if(!started && wrap && !wrap.parentNode.querySelector('.sn-claim-checkout-error')){
-        var err = document.createElement('p');
-        err.className = 'sn-claim-checkout-error';
-        err.style.cssText = 'margin:clamp(16px,2vw,20px) 0 0; font-weight:700; text-align:center; color:var(--claim-pink);';
-        err.textContent = 'Something went wrong preparing your order. Please refresh and try again.';
-        wrap.insertAdjacentElement('afterend', err);
-      }
-    }
+    // 2026-07-15 (Confirmation Page Removal): this survey (Fallback) never
+    // led to checkout — only the Confirmation instance's submit/skip did,
+    // via goToOrderIfNeeded() -> advanceToCheckout(). Now that the
+    // Confirmation instance no longer exists, goToOrderIfNeeded() had no
+    // remaining caller for which it did anything (it only ever proceeded
+    // when name === 'confirm'), so it's removed as truly orphaned code.
+    // advanceToCheckout() itself is untouched and still runs — directly
+    // from the Address form's submit handler, not from any survey.
 
     if(submitBtn){
       submitBtn.addEventListener('click', function(){
         state.surveys[name] = collectAnswer();
         finishSurvey();
-        goToOrderIfNeeded();
       });
     }
     if(skipBtn){
       skipBtn.addEventListener('click', function(){
         finishSurvey();
-        goToOrderIfNeeded();
       });
     }
 
