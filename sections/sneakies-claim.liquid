@@ -424,10 +424,19 @@
   // that setup cost visibly. no-cors + credentials:'include' lets the
   // browser still exchange Shopify's session cookies even though the
   // (opaque) response itself is never read.
+  //
+  // 2026-07-15 (Claim Confirmation email timing fix): now returns the
+  // fetch's promise instead of discarding it. goToOrderIfNeeded() below
+  // awaits this before writing "claimed" state to Klaviyo, so a checkout
+  // endpoint that's genuinely unreachable (offline, DNS failure, ad
+  // blocker, Shopify outage) no longer gets silently reported as claimed —
+  // see that function for what this does and does not guarantee.
   function warmCheckoutUrl(url){
     try{
-      fetch(url, { mode: 'no-cors', credentials: 'include', keepalive: true });
-    }catch(e){}
+      return fetch(url, { mode: 'no-cors', credentials: 'include', keepalive: true })
+        .then(function(){ return true; })
+        .catch(function(){ return false; });
+    }catch(e){ return Promise.resolve(false); }
   }
 
   function loadState(){
@@ -442,28 +451,36 @@
 
   var state = loadState();
 
+  // Set once warmCheckoutUrl() fires (address-form submit success below);
+  // goToOrderIfNeeded() awaits it before writing "claimed" state to
+  // Klaviyo. Intentionally NOT persisted to sessionStorage (a Promise
+  // isn't serializable) — a fresh page load re-derives it defensively
+  // inside goToOrderIfNeeded() itself if it's ever still null there.
+  var checkoutReachabilityPromise = null;
+
   if(state.awaitingCheckoutReturn){
-    // Dormant safety net, kept in case a future checkout configuration ever
-    // does redirect back here (2026-07-09 live QA finding: Shopify's real
-    // cart checkoutUrl has no return_to — completing a $0 order lands the
-    // customer on Shopify's own /thank-you page and never returns to this
-    // tab/session, so in production this branch is not reachable today).
-    // The actual, reliable free_box/address_collected/sample_order_created
-    // write now happens right before the checkout redirect in
-    // goToOrderIfNeeded() below (the last point this flow can guarantee it
-    // still controls execution). This block is left in place, unchanged in
-    // behavior, purely as a no-cost fallback if that ever stops being true.
+    // Dormant safety net for a future checkout configuration that redirects
+    // back here (2026-07-09 finding: Shopify's real cart checkoutUrl has no
+    // return_to, so Shopify itself never lands the customer back on this
+    // page — the realistic way to reach this branch today is the browser's
+    // own Back button from checkout, in the same tab).
+    //
+    // 2026-07-15 (Claim Confirmation email timing fix): this branch used to
+    // re-send the Klaviyo "claimed" write a second time here. Root-cause
+    // analysis traced a production bug — customers receiving the "Free Box
+    // Claimed" (T06) email without ever completing checkout — to
+    // goToOrderIfNeeded() below writing that same state BEFORE the checkout
+    // redirect, with no way to confirm the customer actually reached
+    // checkout, let alone completed an order. Repeating an unconditional
+    // copy of that same premature write here only made the exposure worse
+    // (e.g. hitting Back from checkout would re-affirm "claimed" even for
+    // an abandoned order) and added no information the first write didn't
+    // already have. This branch now only restores the UI step; seeing a
+    // "claimed" write happen at all is entirely goToOrderIfNeeded()'s
+    // responsibility (see the reachability check added there).
     state.step = 'confirmation';
     state.awaitingCheckoutReturn = false;
     saveState();
-    if(window.SneakiesKlaviyo && state.address){
-      window.SneakiesKlaviyo.updateProperties(state.address.email, { firstName: state.address.first_name }, {
-        free_box: true,
-        address_collected: true,
-        sample_order_created: true,
-        has_shipping_address: true
-      });
-    }
   }else{
     // Every other fresh page load (refresh, reopening the tab/preview) always
     // starts over from the Claim page and with the MCQ survey(s) unanswered —
@@ -818,7 +835,7 @@
           recordClaim(CLAIMED_ADDRESSES_KEY, normalizedAddressKey(data.address1, data.zip));
           state.checkoutUrl = toCurrentDomainCheckoutUrl(cart.checkoutUrl);
           saveState();
-          warmCheckoutUrl(state.checkoutUrl);
+          checkoutReachabilityPromise = warmCheckoutUrl(state.checkoutUrl);
           if(window.SneakiesKlaviyo){
             window.SneakiesKlaviyo.updateProperties(data.email, { firstName: data.first_name, lastName: data.last_name }, {
               free_box: true,
@@ -900,29 +917,48 @@
     function goToOrderIfNeeded(){
       if(name !== 'confirm') return;
       if(state.checkoutUrl){
+        var checkoutUrl = state.checkoutUrl;
         state.awaitingCheckoutReturn = true;
         saveState();
-        // Latest client-controlled moment before the customer leaves for a
-        // real, pre-filled $0 checkout (SNEAKIESFREEBOX + SNEAKIESFREESHIP
-        // already applied, zero manual entry required — see
-        // assets/sn-storefront.js). Shopify's cart-based checkoutUrl has no
-        // return_to (confirmed via live QA, 2026-07-09), so there is no
-        // client-side signal for true order completion without adding
-        // backend order-webhook infrastructure, which is out of scope for
-        // this theme-only implementation — a genuine Shopify platform
-        // limitation, not an implementation gap. This is the closest
-        // available proxy to "Free Box - Claimed": the customer's address
-        // is fully collected and validated, and the cart they're being
-        // sent to requires no further manual action to complete.
-        if(state.address && state.address.email && window.SneakiesKlaviyo){
-          window.SneakiesKlaviyo.updateProperties(state.address.email, { firstName: state.address.first_name, lastName: state.address.last_name }, {
-            free_box: true,
-            address_collected: true,
-            sample_order_created: true,
-            has_shipping_address: true
-          });
-        }
-        window.location.href = state.checkoutUrl;
+
+        // 2026-07-15 (Claim Confirmation email timing fix — root cause of a
+        // production bug where customers received the "Free Box Claimed"
+        // (T06) email without ever completing checkout): this used to write
+        // address_collected/sample_order_created/has_shipping_address=true
+        // to Klaviyo unconditionally, synchronously, before any navigation
+        // had even started — confirmed live (2026-07-15 RCA) that if the
+        // customer's connection to checkout then failed or they abandoned
+        // in the moment right after clicking Submit/Skip, Klaviyo had
+        // already been told the box was claimed. Now this waits on
+        // checkoutReachabilityPromise (set by warmCheckoutUrl() right after
+        // cart creation, or re-derived here defensively if that's somehow
+        // still null) — a real network-level confirmation that Shopify's
+        // checkout endpoint actually responded — before writing "claimed"
+        // state. Still a genuine platform limitation, not fully closed by
+        // this: Shopify's cart-based checkoutUrl has no return_to (confirmed
+        // via live QA, 2026-07-09), so there remains no client-side signal
+        // for true order completion without backend order-webhook
+        // infrastructure (out of scope for this theme-only implementation —
+        // see docs/ for the architecture already designed for that). What
+        // this fix does close is the unconditional/no-verification case:
+        // Klaviyo is no longer told "claimed" when checkout was never even
+        // reachable.
+        var reachability = checkoutReachabilityPromise || warmCheckoutUrl(checkoutUrl);
+        reachability.then(function(reachable){
+          if(reachable && state.address && state.address.email && window.SneakiesKlaviyo){
+            window.SneakiesKlaviyo.updateProperties(state.address.email, { firstName: state.address.first_name, lastName: state.address.last_name }, {
+              free_box: true,
+              address_collected: true,
+              sample_order_created: true,
+              has_shipping_address: true
+            });
+          }
+          // Navigate regardless of the reachability result, matching prior
+          // behavior — if checkout is genuinely unreachable the browser's
+          // own navigation will surface that to the customer; this check's
+          // only job is to stop Klaviyo being told "claimed" when it isn't.
+          window.location.href = checkoutUrl;
+        });
       }else if(wrap && !wrap.parentNode.querySelector('.sn-claim-checkout-error')){
         var err = document.createElement('p');
         err.className = 'sn-claim-checkout-error';
