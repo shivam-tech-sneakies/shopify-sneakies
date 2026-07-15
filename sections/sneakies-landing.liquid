@@ -64,9 +64,9 @@
   #sn-root .sn-flip-trigger-text{ text-decoration:underline; text-decoration-style:wavy; text-decoration-thickness:1.4px; text-underline-offset:4px; }
   #sn-root .sn-flip-trigger:hover{ opacity:.72; }
   #sn-root .sn-back-content{ width:100%; height:100%; box-sizing:border-box; display:flex; flex-direction:column; align-items:center; position:relative; }
-  #sn-root .sn-ingredient-pill{ display:inline-flex; align-items:center; border-radius:9999px; border:2.5px solid var(--ink); color:var(--ink); font-family:var(--font-heading); font-weight:700; font-style:italic; text-transform:uppercase; letter-spacing:.02em; font-size:clamp(10.5px,1.5vw,12px); line-height:1.3; padding:6px 13px; white-space:nowrap; }
+  #sn-root .sn-ingredient-pill{ display:inline-flex; align-items:center; border-radius:9999px; border:2.5px solid var(--ink); color:var(--ink); font-family:var(--font-heading); font-weight:700; font-style:italic; text-transform:uppercase; letter-spacing:.02em; font-size:clamp(12.5px,1.7vw,14.5px); line-height:1.3; padding:6px 13px; white-space:nowrap; }
   #sn-root .sn-flip-close{ position:absolute; top:10px; right:10px; width:32px; height:32px; border-radius:50%; border:2.5px solid var(--ink); background:var(--cream); color:var(--ink); cursor:pointer; font-family:var(--font-heading); font-size:14px; line-height:1; display:flex; align-items:center; justify-content:center; }
-  #sn-root .sn-back-btn{ margin-top:auto; cursor:pointer; font-family:var(--font-heading); text-transform:uppercase; letter-spacing:.02em; font-size:.82rem; color:var(--ink); background:var(--cream); border:2.5px solid var(--ink); border-radius:999px; padding:10px 18px; }
+  #sn-root .sn-back-btn{ margin-top:auto; cursor:pointer; font-family:var(--font-heading); text-transform:uppercase; letter-spacing:.02em; font-size:.95rem; color:var(--ink); background:var(--cream); border:2.5px solid var(--ink); border-radius:999px; padding:10px 18px; }
   @media(prefers-reduced-motion:reduce){ #sn-root .sn-flavor-flip-inner{ transition:none; } }
   #sn-root #usp-grid{ display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); }
   @media(max-width:980px){ #sn-root #usp-grid{ grid-template-columns:repeat(2,minmax(0,1fr)); } }
@@ -421,17 +421,17 @@
               <!-- FRONT — unchanged from the existing implementation -->
               <div class="sn-flip-face sn-flavor-flip-face">
                 <div class="sn-active-card" style="width:100%; border:3px solid var(--ink); border-radius:24px; box-shadow:7px 7px 0 var(--ink); padding:clamp(18px,2.6vw,24px); text-align:center;">
-                  <h3 class="sn-name" style="font-family:var(--font-heading) !important; text-transform:uppercase !important; letter-spacing:-0.03em !important; line-height:1; font-size:clamp(1.3rem,3.7vw,1.8rem); margin:0;"></h3>
-                  <div class="sn-veg" style="display:inline-flex; align-items:center; gap:6px; margin-top:14px; border:2.5px solid var(--ink); border-radius:999px; padding:5px 14px; font-family:var(--font-heading); font-weight:700; text-transform:uppercase; letter-spacing:.06em; font-size:14px;"></div>
+                  <h3 class="sn-name" style="font-family:var(--font-heading) !important; text-transform:uppercase !important; letter-spacing:-0.03em !important; line-height:1; font-size:clamp(1.45rem,3.9vw,1.95rem); margin:0;"></h3>
+                  <div class="sn-veg" style="display:inline-flex; align-items:center; gap:6px; margin-top:14px; border:2.5px solid var(--ink); border-radius:999px; padding:5px 14px; font-family:var(--font-heading); font-weight:700; text-transform:uppercase; letter-spacing:.06em; font-size:16px;"></div>
                   <div class="sn-callouts" style="display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin-top:18px;"></div>
-                  <p class="sn-taste" style="font-size:clamp(13px,2vw,15px); line-height:1.45; font-weight:600; font-style:italic; margin:16px auto 0; max-width:32ch;"></p>
+                  <p class="sn-taste" style="font-size:clamp(15px,2.2vw,17px); line-height:1.45; font-weight:600; font-style:italic; margin:16px auto 0; max-width:32ch;"></p>
                 </div>
               </div>
               <!-- BACK — ingredients panel, same dimensions/radius/shadow/flavour tint as the front -->
               <div class="sn-flip-face sn-flavor-flip-face sn-flavor-flip-back">
                 <div class="sn-back-content" style="border:3px solid var(--ink); border-radius:24px; box-shadow:7px 7px 0 var(--ink); padding:clamp(18px,2.6vw,24px);">
                   <button type="button" class="sn-flip-close" data-sn-flip-close aria-label="Close ingredients, back to flavor">×</button>
-                  <h3 style="font-family:var(--font-heading) !important; text-transform:uppercase !important; letter-spacing:-0.03em !important; line-height:1; font-size:clamp(1.3rem,3.8vw,1.85rem); margin:6px 0 0;">Ingredients</h3>
+                  <h3 style="font-family:var(--font-heading) !important; text-transform:uppercase !important; letter-spacing:-0.03em !important; line-height:1; font-size:clamp(1.45rem,4vw,2rem); margin:6px 0 0;">Ingredients</h3>
                   <div class="sn-ingredients-pills" style="display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin:clamp(14px,2.2vw,20px) 0 clamp(14px,2.2vw,20px);"></div>
                   <button type="button" class="sn-back-btn" data-sn-flip-close><span aria-hidden="true">←</span> Back to flavor</button>
                 </div>
@@ -718,7 +718,7 @@
     if(flavorFlipScene) flavorFlipScene.classList.remove('is-flipped');
     coEl.innerHTML='';
     CALLOUTS[idx].forEach(function(c){ var s=document.createElement('span');
-      s.textContent=c; s.style.cssText='display:inline-block;font-family:var(--font-heading);font-weight:700;font-style:italic;text-transform:uppercase;letter-spacing:.02em;font-size:13px;padding:7px 14px;border-radius:999px;border:2.5px solid #21050A;box-shadow:2px 2px 0 #21050A;white-space:nowrap;background:'+CCOL[idx]+';color:'+CTXT[idx]+';';
+      s.textContent=c; s.style.cssText='display:inline-block;font-family:var(--font-heading);font-weight:700;font-style:italic;text-transform:uppercase;letter-spacing:.02em;font-size:15px;padding:7px 14px;border-radius:999px;border:2.5px solid #21050A;box-shadow:2px 2px 0 #21050A;white-space:nowrap;background:'+CCOL[idx]+';color:'+CTXT[idx]+';';
       coEl.appendChild(s); });
     var p=(idx-1+N)%N, n=(idx+1)%N;
     ghostPrev.src=IMGS[p]; ghostPrev.alt=''; ghostNext.src=IMGS[n]; ghostNext.alt='';
