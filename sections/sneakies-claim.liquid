@@ -643,11 +643,15 @@
       var isValid = true;
       ALL_FIELD_NAMES.forEach(function(name){ setError(name, ''); });
 
-      // First / last name: 1–50 chars, letters/spaces/apostrophes/hyphens only.
-      [['first_name', 'Please enter your first name.'], ['last_name', 'Please enter your last name.']].forEach(function(pair){
+      // First / last name: 1–50 chars, letters/spaces/apostrophes/hyphens only,
+      // single word only (rejects "John Smith", "Van Dyke", etc. — mirrors the
+      // homepage waitlist's first-name rule, applied here to both fields).
+      [['first_name', 'Please enter only your first name.'], ['last_name', 'Please enter only your last name.']].forEach(function(pair){
         var name = pair[0], msg = pair[1];
-        var value = (form.elements[name].value || '').trim();
+        var value = (form.elements[name].value || '').trim().replace(/\s+/g, ' ');
+        form.elements[name].value = value;
         if(!value || value.length > 50 || !NAME_RE.test(value)){ setError(name, msg); isValid = false; }
+        else if(value.indexOf(' ') > -1){ setError(name, msg); isValid = false; }
       });
 
       // Email: required, standard format, max 254 chars, lowercase-normalized
