@@ -324,9 +324,10 @@
           this page — always the first Claim Flow screen, never a later step. {%- endcomment -%}
         <input type="hidden" name="return_to" value="{{ claim_url }}">
         <div style="display:flex; flex-wrap:wrap; gap:8px;">
-          <input id="sn-fn" type="text" name="contact[first_name]" required autocomplete="given-name" aria-label="First name" placeholder="First name *" style="flex:1 1 110px; min-width:100px; font-family:var(--font-body); font-size:15px; padding:12px 14px; border:2.5px solid var(--ink); border-radius:11px; background:var(--cream); color:var(--ink); outline:none;">
+          <input id="sn-fn" type="text" name="contact[first_name]" required autocomplete="given-name" aria-label="First name" placeholder="Enter your first name" aria-describedby="sn-fn-error" style="flex:1 1 110px; min-width:100px; font-family:var(--font-body); font-size:15px; padding:12px 14px; border:2.5px solid var(--ink); border-radius:11px; background:var(--cream); color:var(--ink); outline:none;">
           <input id="sn-em" type="email" name="contact[email]" required autocomplete="email" aria-label="Email" placeholder="you@email.com" style="flex:2 1 160px; min-width:140px; font-family:var(--font-body); font-size:15px; padding:12px 14px; border:2.5px solid var(--ink); border-radius:11px; background:var(--cream); color:var(--ink); outline:none;">
         </div>
+        <p id="sn-fn-error" role="alert" style="display:none; color:#CA3779; font-size:12px; font-weight:600; margin-top:6px; text-align:left;">Please enter only your first name.</p>
         {%- if form.errors -%}
           {%- assign sn_email_err = form.errors.messages['email'] -%}
           <div role="alert" style="color:#CA3779; font-size:12px; font-weight:600; margin-top:6px; text-align:left;">
@@ -341,7 +342,7 @@
           Claim your offer
         </button>
         <div style="margin-top:12px; text-align:left;">
-          <p style="font-family:var(--font-heading); font-weight:700; text-transform:uppercase; letter-spacing:.05em; font-size:14px; color:var(--ink); opacity:.68; margin:0 0 5px;">
+          <p style="font-family:var(--font-heading); font-weight:700; text-transform:uppercase; letter-spacing:.05em; font-size:17px; color:var(--ink); opacity:.68; margin:0 0 5px;">
             {%- if sold_out -%}Fully claimed · join the list for 50% off your first subscription order.{%- else -%}{{ spots_claimed }} of {{ free_boxes }} free sample boxes claimed{%- endif -%}
           </p>
           <div style="height:9px; border:2.5px solid var(--ink); border-radius:999px; background:rgba(33,5,10,.06); overflow:hidden;">
@@ -421,7 +422,7 @@
               <!-- FRONT — unchanged from the existing implementation -->
               <div class="sn-flip-face sn-flavor-flip-face">
                 <div class="sn-active-card" style="width:100%; border:3px solid var(--ink); border-radius:24px; box-shadow:7px 7px 0 var(--ink); padding:clamp(18px,2.6vw,24px); text-align:center;">
-                  <h3 class="sn-name" style="font-family:var(--font-heading) !important; text-transform:uppercase !important; letter-spacing:-0.03em !important; line-height:1; font-size:clamp(1.55rem,4.05vw,2.05rem); margin:0;"></h3>
+                  <h3 class="sn-name" style="font-family:var(--font-heading) !important; text-transform:uppercase !important; letter-spacing:-0.03em !important; line-height:1; font-size:clamp(1.75rem,4.3vw,2.25rem); margin:0;"></h3>
                   <div class="sn-veg" style="display:inline-flex; align-items:center; gap:6px; margin-top:14px; border:2.5px solid var(--ink); border-radius:999px; padding:5px 14px; font-family:var(--font-heading); font-weight:700; text-transform:uppercase; letter-spacing:.06em; font-size:17px;"></div>
                   <div class="sn-callouts" style="display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin-top:18px;"></div>
                   <p class="sn-taste" style="font-size:clamp(15px,2.2vw,17px); line-height:1.45; font-weight:600; font-style:italic; margin:16px auto 0; max-width:32ch;"></p>
@@ -841,7 +842,28 @@
   // native POST is in flight.
   var waitlistForm = document.getElementById('sn-waitlist-form');
   if(waitlistForm){
-    waitlistForm.addEventListener('submit', function(){
+    waitlistForm.addEventListener('submit', function(ev){
+      // Sneakies — Quick First Name Validation Fix (2026-07-15): this field
+      // previously accepted any text (e.g. "John Smith"), which then went to
+      // Shopify/Klaviyo as a literal first_name and caused duplicate
+      // first/last-name data. Trim + collapse whitespace, then block
+      // submission (both the native POST and the sessionStorage prefill
+      // below) if more than one word remains.
+      var fnField = waitlistForm.elements['contact[first_name]'];
+      var fnError = document.getElementById('sn-fn-error');
+      if(fnField){
+        var normalizedFn = fnField.value.trim().replace(/\s+/g, ' ');
+        fnField.value = normalizedFn;
+        if(normalizedFn.indexOf(' ') > -1){
+          ev.preventDefault();
+          if(fnError) fnError.style.display = 'block';
+          fnField.setAttribute('aria-invalid', 'true');
+          return;
+        }
+        if(fnError) fnError.style.display = 'none';
+        fnField.removeAttribute('aria-invalid');
+      }
+
       var submitBtn = waitlistForm.querySelector('[type="submit"]');
       if(submitBtn){ submitBtn.disabled = true; submitBtn.style.opacity = '.7'; }
       try{
@@ -853,8 +875,8 @@
           sold_out: {{ sold_out | json }}
         }));
       }catch(e){}
-      // Not preventDefault()'d — the native Shopify form submission must
-      // still proceed normally.
+      // Not preventDefault()'d (for a valid name) — the native Shopify form
+      // submission must still proceed normally.
     });
   }
 
