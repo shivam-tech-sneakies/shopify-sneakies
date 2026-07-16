@@ -842,13 +842,29 @@
   // native POST is in flight.
   var waitlistForm = document.getElementById('sn-waitlist-form');
   if(waitlistForm){
-    waitlistForm.addEventListener('submit', function(ev){
-      // Sneakies — Quick First Name Validation Fix (2026-07-15): this field
-      // previously accepted any text (e.g. "John Smith"), which then went to
-      // Shopify/Klaviyo as a literal first_name and caused duplicate
-      // first/last-name data. Trim + collapse whitespace, then block
-      // submission (both the native POST and the sessionStorage prefill
-      // below) if more than one word remains.
+    // Sneakies — Homepage First Name Validation: Blocking-Layer Fix
+    // (2026-07-15): this field previously accepted any text (e.g. "John
+    // Smith"), which then went to Shopify/Klaviyo as a literal first_name
+    // and caused duplicate first/last-name data. A first pass fixed the
+    // validation logic itself, but live testing found the block was
+    // inconsistently honored — the invalid submission sometimes still went
+    // through to a real Shopify signup + Claim-page redirect despite
+    // ev.preventDefault() being called. Root cause: the listener was
+    // attached directly to the form (bubble phase / target phase), which
+    // leaves same-target listener ordering (and therefore whether
+    // preventDefault() takes effect before the browser's submit algorithm
+    // runs) more timing-sensitive than it should be for a hard blocking
+    // gate. Fix: register this as a CAPTURE-phase listener on `document`
+    // instead. Capture-phase listeners on an ancestor are guaranteed by
+    // spec to run before any listener on the target itself (bubble or
+    // target phase), so this now always runs — and can always call
+    // preventDefault() — before the form's own native submission logic
+    // gets a chance to proceed, regardless of listener registration order.
+    // Same validation logic as before, just moved to a strictly earlier,
+    // unbypassable point in the event flow.
+    document.addEventListener('submit', function(ev){
+      if(ev.target !== waitlistForm) return;
+
       var fnField = waitlistForm.elements['contact[first_name]'];
       var fnError = document.getElementById('sn-fn-error');
       if(fnField){
@@ -856,8 +872,10 @@
         fnField.value = normalizedFn;
         if(normalizedFn.indexOf(' ') > -1){
           ev.preventDefault();
+          ev.stopImmediatePropagation();
           if(fnError) fnError.style.display = 'block';
           fnField.setAttribute('aria-invalid', 'true');
+          fnField.focus();
           return;
         }
         if(fnError) fnError.style.display = 'none';
@@ -877,7 +895,7 @@
       }catch(e){}
       // Not preventDefault()'d (for a valid name) — the native Shopify form
       // submission must still proceed normally.
-    });
+    }, true);
   }
 
   // Sticky CTA: shown only while the offer section has scrolled past but the
