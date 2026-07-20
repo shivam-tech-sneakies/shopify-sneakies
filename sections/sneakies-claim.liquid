@@ -361,6 +361,14 @@
           options: 'Getting more fruits and veggies into breakfast|Trying the different Sneakies flavors|Easier weekday breakfast|Finding something my kids will actually eat|Discovering a better/healthier pancake mix'
         -%}
       </div>
+
+      <!-- Sold Out fast path (2026-07-19) and the survey's own real-completion
+           state both land here — authored once, statically, and toggled via
+           [hidden]/.is-done rather than injected at runtime, so there's a
+           single source of truth for this copy either way. See the
+           [data-survey] wiring loop and the init-time soldOut check in the
+           script below. -->
+      <p class="sn-claim-final-thanks" data-fallback-thanks hidden>Thanks, that helps us make Sneakies better.</p>
     </section>
   </div>
 
@@ -470,6 +478,11 @@
   // inside advanceToCheckout() itself if it's ever still null there.
   var checkoutReachabilityPromise = null;
 
+  // Captured before the branch below consumes/resets the flag, so the Sold
+  // Out fast-path check further down can tell "genuine fresh load" apart
+  // from "returning from checkout" without touching that branch at all.
+  var wasAwaitingCheckoutReturn = !!state.awaitingCheckoutReturn;
+
   if(state.awaitingCheckoutReturn){
     // Reachable today via the browser's own Back button from checkout, in
     // the same tab (2026-07-09 finding: Shopify's real cart checkoutUrl has
@@ -534,6 +547,20 @@
   // way, rather than guessing someone out of a free box they may still be
   // eligible for.
   if(typeof state.soldOut !== 'boolean') state.soldOut = false;
+
+  // Sold Out fast path (2026-07-19): the homepage is the single source of
+  // truth for sold_out (live Shopify inventory, unchanged — see
+  // sections/sneakies-landing.liquid) and hands it off here via sn_prefill,
+  // resolved just above. When it's already known true on a genuine fresh
+  // load (not a checkout Back-button return, which has its own routing
+  // above and is left untouched), skip Claim and Address entirely by
+  // starting directly on the Fallback step. The Fallback panel itself is
+  // rendered into its already-completed state by the [data-survey] wiring
+  // loop below, keyed off this same state.soldOut flag — no navigation
+  // happens here, just which step is initially active.
+  if(!wasAwaitingCheckoutReturn && state.soldOut === true){
+    state.step = 'fallback';
+  }
   saveState();
 
   // Sync the profile into Klaviyo once per session, right when we know the
@@ -879,11 +906,27 @@
   // are reset above on every fresh load, so it always starts unanswered.)
   root.querySelectorAll('[data-survey]').forEach(function(survey){
     var name = survey.getAttribute('data-survey-name');
+    var wrap = survey.closest('.sn-claim-survey-wrap');
+
+    // Sold Out fast path (2026-07-19): this instance (Fallback) was never
+    // shown interactively for this visitor (state.step was set straight to
+    // 'fallback' above, before this loop ran) — render its completed state
+    // directly and skip wiring listeners entirely, rather than mounting a
+    // survey that's never meant to be seen and then simulating its
+    // completion. Mid-flow sold-out (discovered live during Address-form
+    // submit, after this loop already ran with soldOut still false) is
+    // intentionally unaffected and keeps today's interactive survey.
+    if(name === 'fallback' && state.soldOut === true){
+      if(wrap) wrap.classList.add('is-done');
+      var fastPathThanks = wrap && wrap.parentNode.querySelector('[data-fallback-thanks]');
+      if(fastPathThanks) fastPathThanks.hidden = false;
+      return;
+    }
+
     var mode = survey.getAttribute('data-survey-mode');
     var submitBtn = survey.querySelector('[data-survey-submit]');
     var skipBtn = survey.querySelector('[data-survey-skip]');
     var inputs = survey.querySelectorAll('.sn-claim-survey-input');
-    var wrap = survey.closest('.sn-claim-survey-wrap');
 
     var saved = state.surveys[name];
     if(saved){
@@ -916,11 +959,12 @@
       if(submitBtn) submitBtn.disabled = true;
       if(skipBtn) skipBtn.disabled = true;
       if(wrap) wrap.classList.add('is-done');
-      if(name === 'fallback' && wrap && !wrap.parentNode.querySelector('.sn-claim-final-thanks')){
-        var thanks = document.createElement('p');
-        thanks.className = 'sn-claim-final-thanks';
-        thanks.textContent = 'Thanks, that helps us make Sneakies better.';
-        wrap.insertAdjacentElement('afterend', thanks);
+      if(name === 'fallback' && wrap){
+        // Reveals the same statically-authored paragraph the Sold Out fast
+        // path uses (see the wiring loop above) rather than injecting a new
+        // node — one source of truth for this copy either way.
+        var thanks = wrap.parentNode.querySelector('[data-fallback-thanks]');
+        if(thanks) thanks.hidden = false;
       }
       state.surveysDone[name] = true;
       saveState();
