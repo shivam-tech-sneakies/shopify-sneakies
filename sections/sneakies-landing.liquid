@@ -329,7 +329,16 @@
 
       <!-- Waitlist form -->
       {%- form 'customer', id: 'sn-waitlist-form', style: 'margin:16px auto 0; max-width:420px;' -%}
-        <input type="hidden" name="contact[tags]" value="waitlist">
+        {%- comment -%} 50offcoupon (2026-07-21): tags this new customer with
+          50offcoupon in addition to the existing waitlist tag, but only when
+          this signup is actually entering the 50% Off flow — reuses the
+          same sold_out flag already computed above for this page's own
+          copy/branching, rather than a new/duplicate condition. When
+          sold_out is false (Free Box still available), behavior is
+          unchanged from before. Shopify's native contact[tags] field merges
+          into a customer's existing tags rather than replacing them, so
+          repeat signups keep any tags they already have. {%- endcomment -%}
+        <input type="hidden" name="contact[tags]" value="{%- if sold_out -%}waitlist, 50offcoupon{%- else -%}waitlist{%- endif -%}">
         {%- comment -%} On success, Shopify redirects here instead of re-rendering
           this page — always the first Claim Flow screen, never a later step. {%- endcomment -%}
         <input type="hidden" name="return_to" value="{{ claim_url }}">
