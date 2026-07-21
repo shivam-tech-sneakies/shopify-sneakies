@@ -145,12 +145,22 @@
   Sample Box" product's live Shopify inventory (all_products, read directly
   in Liquid — no Storefront API/JS needed just for this display). No manual
   counter or theme setting exists for this anymore; spots_claimed/progress
-  below are pure display values derived from that one live number. {%- endcomment -%}
+  below are pure display values derived from that one live number.
+
+  Global 50% Off Mode (2026-07-21): sn_global_fifty_off_mode is the single
+  kill-switch for the approved Global 50% Implementation Plan
+  (docs/GLOBAL_50_PERCENT_IMPLEMENTATION_PLAN.md). When true, the live
+  inventory branch just below is skipped entirely and the pre-existing
+  sold_out=true / spots_claimed=free_boxes defaults (already the fallback
+  used when sn_sample_variant doesn't exist) stand in as the permanent
+  500/500 sold-out state. Rollback is a one-line flip back to false — the
+  inventory read/branch itself is untouched. {%- endcomment -%}
+{%- assign sn_global_fifty_off_mode = true -%}
 {%- assign sn_sample_variant = all_products['sneakies-free-sample-box'].selected_or_first_available_variant -%}
 {%- assign free_boxes = 500 -%}
 {%- assign spots_claimed = free_boxes -%}
 {%- assign sold_out = true -%}
-{%- if sn_sample_variant -%}
+{%- if sn_sample_variant and sn_global_fifty_off_mode == false -%}
   {%- assign sold_out = true -%}
   {%- if sn_sample_variant.available -%}{%- assign sold_out = false -%}{%- endif -%}
   {%- assign sn_remaining = sn_sample_variant.inventory_quantity | default: 0 -%}

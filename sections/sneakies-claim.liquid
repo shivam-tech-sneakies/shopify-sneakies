@@ -384,6 +384,17 @@
   var STEPS = ['claim', 'address', 'fallback'];
   var STORE_KEY = 'sn_claim_state';
 
+  // Global 50% Off Mode (2026-07-21): single kill-switch for the approved
+  // Global 50% Implementation Plan (docs/GLOBAL_50_PERCENT_IMPLEMENTATION_PLAN.md).
+  // Mirrors sn_global_fifty_off_mode in sections/sneakies-landing.liquid —
+  // that Liquid flag and this JS flag are two separate rendering contexts
+  // and must be toggled together. When true, forces every entry point to
+  // this page into state.soldOut = true (see the two usages below) so the
+  // existing Sold Out fast path is the only path ever reached, without
+  // touching any of that fast path's own logic. Rollback is a one-line
+  // flip to false in each file.
+  var SN_GLOBAL_FIFTY_OFF_MODE = true;
+
   // Root cause of the Shopify cart/order page briefly flashing before
   // checkout (2026-07-14 fix): assets/sn-storefront.js talks to the
   // Storefront API on sneakies2.myshopify.com, so cart.checkoutUrl always
@@ -547,6 +558,15 @@
   // way, rather than guessing someone out of a free box they may still be
   // eligible for.
   if(typeof state.soldOut !== 'boolean') state.soldOut = false;
+
+  // Global 50% Off Mode (2026-07-21): overrides whatever was just resolved
+  // above (homepage handoff, stale/missing prefill, or the direct-visit
+  // default) so every entry point — homepage referral, direct URL, bookmark,
+  // refresh, session restore — resolves to true. Placed after all of that
+  // resolution rather than inside it, specifically so a stale cached
+  // sn_prefill or an in-progress session from before this flag was enabled
+  // can't leave state.soldOut on false.
+  if(SN_GLOBAL_FIFTY_OFF_MODE){ state.soldOut = true; }
 
   // Sold Out fast path (2026-07-19): the homepage is the single source of
   // truth for sold_out (live Shopify inventory, unchanged — see
@@ -829,7 +849,12 @@
       window.SneakiesStorefront.checkAvailability().catch(function(){
         return { available: true, quantity: null };
       }).then(function(avail){
-        state.soldOut = !avail.available;
+        // Global 50% Off Mode (2026-07-21): this live re-check reflects
+        // real Shopify inventory and would otherwise flip state.soldOut
+        // back to false whenever real stock exists — forced true here so
+        // it can't, per the approved plan. avail is still fetched/evaluated
+        // (nothing removed), so rollback needs no changes beyond the flag.
+        state.soldOut = SN_GLOBAL_FIFTY_OFF_MODE ? true : !avail.available;
         saveState();
 
         if(state.soldOut){
