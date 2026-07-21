@@ -37,6 +37,16 @@
     font-family:var(--font-body); -webkit-font-smoothing:antialiased;
     overflow-x:hidden; min-height:100vh;
   }
+  /* Full-page 50% Off success background (2026-07-21): #sn-root is the
+     single page-level wrapper for all 3 steps — it already contains the
+     shared header/logo above and every step panel below, all sharing one
+     background. This modifier overrides that background at the same,
+     page-level element (not a step's inner card/container) so the colour
+     extends behind the header/logo and blends with the rest of the page.
+     Toggled only while the Fallback ("50% off") step is active — see
+     showStep() below — so the Claim and Address steps keep today's
+     background untouched. */
+  #sn-root.sn-claim--offer{ background:#F8F1D8; }
   .sn-claim *{ box-sizing:border-box; }
   .sn-claim img{ max-width:100%; display:block; filter:saturate(1.08) contrast(1.05) brightness(1.02); }
   .sn-claim a{ color:inherit; }
@@ -151,7 +161,7 @@
   .sn-claim-address-summary .sn-claim-card-row{ padding:13px 0; }
 
   /* 50% off fallback (centered layout) */
-  .sn-claim-confirm{ max-width:640px; margin:0 auto; padding:clamp(30px,5vw,56px) clamp(18px,5vw,40px) clamp(48px,6vw,72px); text-align:center; background:#F8F1D8; }
+  .sn-claim-confirm{ max-width:640px; margin:0 auto; padding:clamp(30px,5vw,56px) clamp(18px,5vw,40px) clamp(48px,6vw,72px); text-align:center; }
   .sn-claim-offer-badge{ display:inline-block; font-family:var(--font-heading); font-weight:700; text-transform:uppercase; letter-spacing:.05em; font-size:16px; color:var(--ink); background:var(--beige); border:2px solid var(--ink); border-radius:999px; padding:7px 18px; }
   .sn-claim-survey-wrap{ margin-top:clamp(28px,4vw,40px); text-align:left; }
   /* Once a survey is submitted/skipped, its panel reveals that step's own
@@ -604,6 +614,13 @@
     STEPS.forEach(function(s){
       if(panels[s]) panels[s].classList.toggle('is-active', s === step);
     });
+    // Full-page 50% Off background (2026-07-21): toggled on #sn-root itself
+    // (the same element the shared page background lives on — header/logo
+    // included) rather than on the fallback panel/card, so the colour
+    // change is page-wide only while the Fallback step is active, and the
+    // Claim/Address steps keep today's background untouched. See the
+    // #sn-root.sn-claim--offer rule above.
+    root.classList.toggle('sn-claim--offer', step === 'fallback');
     pills.forEach(function(p){
       var active = p.getAttribute('data-goto-step') === step;
       p.classList.toggle('sn-claim-pill--active', active);
