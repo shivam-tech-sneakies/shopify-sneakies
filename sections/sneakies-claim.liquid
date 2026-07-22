@@ -576,7 +576,19 @@
   // resolution rather than inside it, specifically so a stale cached
   // sn_prefill or an in-progress session from before this flag was enabled
   // can't leave state.soldOut on false.
-  if(SN_GLOBAL_FIFTY_OFF_MODE){ state.soldOut = true; }
+  //
+  // Address Email Flow Fix (2026-07-21, see
+  // docs/ADDRESS_EMAIL_FLOW_REGRESSION_ANALYSIS.txt): the existing Klaviyo
+  // "Free Box Address Request" / "Free Box Address Reminder" emails link
+  // straight here with no other distinguishing signal, so this force used
+  // to catch them too — incorrectly skipping the Address form for exactly
+  // the customers those emails are for. Those two links now end in
+  // ?flow=address; this one read exempts only that entry point from the
+  // force, leaving the line-570 default (Free Box) to stand for them. Every
+  // other entry point is unaffected and still forced true exactly as
+  // before.
+  var isAddressEmailEntry = /(?:^|[?&])flow=address(?:&|$)/.test(location.search);
+  if(SN_GLOBAL_FIFTY_OFF_MODE && !isAddressEmailEntry){ state.soldOut = true; }
 
   // Sold Out fast path (2026-07-19): the homepage is the single source of
   // truth for sold_out (live Shopify inventory, unchanged — see
@@ -871,7 +883,13 @@
         // back to false whenever real stock exists — forced true here so
         // it can't, per the approved plan. avail is still fetched/evaluated
         // (nothing removed), so rollback needs no changes beyond the flag.
-        state.soldOut = SN_GLOBAL_FIFTY_OFF_MODE ? true : !avail.available;
+        //
+        // Address Email Flow Fix (2026-07-21): mirrors the same
+        // isAddressEmailEntry carve-out used at initial state resolution
+        // above — without this, a customer who correctly landed on the
+        // Address form via the ?flow=address link would still get flipped
+        // back to soldOut=true right here at submit time, undoing the fix.
+        state.soldOut = (SN_GLOBAL_FIFTY_OFF_MODE && !isAddressEmailEntry) ? true : !avail.available;
         saveState();
 
         if(state.soldOut){
