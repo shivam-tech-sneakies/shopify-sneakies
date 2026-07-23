@@ -567,10 +567,17 @@
     hero form above (#sn-waitlist-form) already uses — this does NOT replace,
     move, or convert that form; both exist and work independently. Auto-shows
     ~1.5s after a fresh homepage load (see script below), reuses the same
-    Shopify form 'customer' mechanism/fields/tag logic, the same
-    shared snCheckSingleWordName() validation, and the same Klaviyo
-    updateProperties() call shape already established elsewhere on this page
-    and on the Claim page. Deliberately placed inside #sn-root (unlike the
+    Shopify form 'customer' mechanism/fields/tag logic and the same
+    shared snCheckSingleWordName() validation already established elsewhere
+    on this page. QA fix (2026-07-23): a valid submission now natively
+    submits and redirects to the Claim page, same as the hero form —
+    Shopify's /contact endpoint requires a CAPTCHA token that's only ever
+    attached during a real native submission, so the original in-place,
+    no-redirect fetch() success state was never actually reachable in
+    production (see the submit handler below for the full explanation).
+    The Claim page's existing Klaviyo sync-on-arrival logic already covers
+    this popup's signups the same way it covers the hero form's. Deliberately
+    placed inside #sn-root (unlike the
     pre-existing post-submit popup below, which sits outside #sn-root and
     therefore can't resolve #sn-root's --ink/--cream/--yellow/--beige custom
     properties — an existing, out-of-scope-to-fix quirk noted for the
@@ -1061,14 +1068,26 @@
     // is the browser's own hook for exactly this: it resolves once
     // 'dialog-component' is registered, whether that happens before or
     // after this line runs, so the setTimeout is always reached correctly.
+    //
+    // Timing bugfix (2026-07-23): the 1500ms delay used to start only AFTER
+    // customElements.whenDefined() resolved, chaining the two delays
+    // sequentially. Live testing measured dialog.js registering ~900ms
+    // after navigation start (it's a deferred module script), so the popup
+    // was actually appearing ~2.4s in, noticeably later than the intended
+    // ~1.5s. Fix: start the 1500ms timer immediately (matching the
+    // intended delay), and only fall back to waiting on whenDefined() at
+    // fire-time in the rare case the element somehow isn't registered yet —
+    // preserving the original bugfix's guarantee (never call showDialog()
+    // before the custom element is upgraded) without stacking the delays.
     if(!snPopupAlreadyHandled()){
-      customElements.whenDefined('dialog-component').then(function(){
-        setTimeout(function(){
+      setTimeout(function(){
+        if(snPopupAlreadyHandled()) return;
+        customElements.whenDefined('dialog-component').then(function(){
           if(snPopupAlreadyHandled()) return;
           try{ sessionStorage.setItem(SN_POPUP_SHOWN_KEY, '1'); }catch(e){}
           prelaunchPopup.showDialog();
-        }, 1500);
-      });
+        });
+      }, 1500);
     }
 
     var popupFormState = prelaunchPopup.querySelector('[data-sn-popup-form-state]');
@@ -1088,8 +1107,34 @@
       popupSubmitBtn.textContent = isLoading ? 'Submitting…' : popupSubmitBtnText;
     }
 
-    prelaunchForm.addEventListener('submit', function(ev){
-      ev.preventDefault();
+    // Bugfix (2026-07-23): this handler used to call ev.preventDefault()
+    // unconditionally and submit via fetch() so the popup could show an
+    // in-place success state without navigating away. Live browser testing
+    // found Shopify's /contact endpoint (this form's real action) requires
+    // a CAPTCHA token that Shopify only ever attaches during a genuine
+    // native browser submission — a fetch() POST is always rejected with a
+    // 400 "Missing CAPTCHA token" response, regardless of the data sent, so
+    // popupSubmitError was shown on every single submission. Meanwhile,
+    // real clicks still ended up landing on the Claim page a moment later
+    // anyway, because Shopify's own capture-phase CAPTCHA handling
+    // resubmits the form natively in parallel (via the raw form.submit()
+    // method, which isn't a cancelable 'submit' event and so isn't stopped
+    // by this handler's preventDefault) — racing this handler's
+    // guaranteed-400 fetch error. That race is exactly why "Something went
+    // wrong" flashed immediately before the real Claim page success state
+    // took over.
+    // Fix: stop fighting the native submission. This now matches the hero
+    // form's (#sn-waitlist-form) already-proven pattern above — only
+    // preventDefault() to block genuinely invalid input, do it from a
+    // capture-phase document listener (same "must always win the race"
+    // reason documented on that form), stash the handoff data, and
+    // otherwise let the real Shopify POST — and its native CAPTCHA +
+    // redirect — proceed normally. The Claim page's own existing
+    // klaviyoSynced logic (sections/sneakies-claim.liquid) already syncs
+    // Klaviyo for any fresh sn_prefill arrival, exactly as it does for the
+    // hero form, so no separate Klaviyo call is needed here.
+    document.addEventListener('submit', function(ev){
+      if(ev.target !== prelaunchForm) return;
       if(popupSubmitError) popupSubmitError.style.display = 'none';
 
       var isValid = true;
@@ -1118,66 +1163,23 @@
         if(popupEmField) popupEmField.removeAttribute('aria-invalid');
       }
 
-      if(!isValid) return;
+      if(!isValid){
+        ev.preventDefault();
+        ev.stopImmediatePropagation();
+        return;
+      }
 
+      try{
+        sessionStorage.setItem('sn_prefill', JSON.stringify({
+          first_name: popupFnField ? popupFnField.value : '',
+          email: popupEmField ? popupEmField.value : '',
+          sold_out: SN_POPUP_SOLD_OUT
+        }));
+      }catch(e){}
       setPopupLoading(true);
-
-      var formData = new FormData(prelaunchForm);
-      fetch(prelaunchForm.action, { method:'POST', body:formData, redirect:'follow', credentials:'same-origin' })
-        .then(function(res){
-          setPopupLoading(false);
-          var finalUrl = (res && res.url) || '';
-          var succeeded = !!(res && res.ok && finalUrl.indexOf('form_posted_successfully=true') > -1);
-          if(!succeeded){
-            if(popupSubmitError) popupSubmitError.style.display = 'block';
-            return;
-          }
-
-          // Same handoff shape the hero form already writes (sessionStorage
-          // 'sn_prefill'), so the Claim Flow can still prefill correctly if
-          // this visitor later reaches it independently (e.g. via the
-          // existing Klaviyo address-request email).
-          try{
-            sessionStorage.setItem('sn_prefill', JSON.stringify({
-              first_name: popupFnField ? popupFnField.value : '',
-              email: popupEmField ? popupEmField.value : '',
-              sold_out: SN_POPUP_SOLD_OUT
-            }));
-          }catch(e){}
-
-          // Same Klaviyo call/shape the Claim page already makes for a
-          // fresh signup (see sections/sneakies-claim.liquid) — fired here
-          // instead, since this popup deliberately never navigates to the
-          // Claim page for that call to happen there.
-          if(window.SneakiesKlaviyo){
-            var syncProps = SN_POPUP_SOLD_OUT ? { fifty_off:true } : { free_box:true };
-            window.SneakiesKlaviyo.updateProperties(
-              popupEmField ? popupEmField.value : '',
-              { firstName: popupFnField ? popupFnField.value : '' },
-              syncProps
-            );
-          }
-
-          // Pre-mark the Claim page's own klaviyoSynced flag (same
-          // sessionStorage key/shape it already reads on its own) so that if
-          // this same visitor does later reach the Claim page in this
-          // session, its existing "sync once" check skips re-firing the
-          // same Klaviyo update a second time.
-          try{
-            var existingClaimState = {};
-            try{ existingClaimState = JSON.parse(sessionStorage.getItem('sn_claim_state') || '{}'); }catch(e2){}
-            existingClaimState.klaviyoSynced = true;
-            sessionStorage.setItem('sn_claim_state', JSON.stringify(existingClaimState));
-          }catch(e){}
-
-          if(popupFormState) popupFormState.hidden = true;
-          if(popupSuccessState) popupSuccessState.hidden = false;
-        })
-        .catch(function(){
-          setPopupLoading(false);
-          if(popupSubmitError) popupSubmitError.style.display = 'block';
-        });
-    });
+      // Not preventDefault()'d — the native Shopify form submission (and
+      // its CAPTCHA challenge) must proceed normally, same as the hero form.
+    }, true);
   }
 })();
 </script>
