@@ -5342,8 +5342,7 @@
       "type": "sneakies-landing",
       "name": "Sneakies Landing",
       "settings": {
-        "spots_claimed": 0,
-        "free_boxes": 500,
+        "announcement_text": "SIGN UP TODAY FOR 50% OFF YOUR FIRST BOX",
         "ship_date": "August 2026",
         "contact_email": "hello@eatsneakies.com",
         "whatsapp_invite_url": "",
