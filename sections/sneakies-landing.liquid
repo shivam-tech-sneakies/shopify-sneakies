@@ -796,7 +796,7 @@
     renderPills(idx);
     if(flipTrigger) flipTrigger.style.display = FLIP_ENABLED[idx] ? 'inline-flex' : 'none';
     // Card content just changed underneath the flip — always land back on the front
-    // face so a stale ingredients panel from the previous flavor is never shown.
+    // face so a stale ingredients panel from the previous flavor is never shown..
     if(flavorFlipScene) flavorFlipScene.classList.remove('is-flipped');
     coEl.innerHTML='';
     CALLOUTS[idx].forEach(function(c){ var s=document.createElement('span');
