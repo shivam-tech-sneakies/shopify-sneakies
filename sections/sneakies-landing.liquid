@@ -1045,19 +1045,7 @@
   var prelaunchPopup = document.getElementById('sn-prelaunch-popup');
   var prelaunchForm = document.getElementById('sn-popup-waitlist-form');
   if(prelaunchPopup && prelaunchForm){
-    var SN_POPUP_SHOWN_KEY = 'sn_popup_shown';
     var SN_POPUP_SOLD_OUT = {{ sold_out | json }};
-
-    function snPopupAlreadyHandled(){
-      try{
-        if(sessionStorage.getItem(SN_POPUP_SHOWN_KEY)) return true;
-        // sn_prefill only ever exists after a successful signup (hero form
-        // or this popup) earlier in the same session — either way, don't
-        // ask again.
-        if(sessionStorage.getItem('sn_prefill')) return true;
-      }catch(e){}
-      return false;
-    }
 
     // Bugfix (2026-07-21): dialog.js loads as type="module", which executes
     // at "defer" timing (after the whole document parses) — strictly later
@@ -1079,16 +1067,17 @@
     // fire-time in the rare case the element somehow isn't registered yet —
     // preserving the original bugfix's guarantee (never call showDialog()
     // before the custom element is upgraded) without stacking the delays.
-    if(!snPopupAlreadyHandled()){
-      setTimeout(function(){
-        if(snPopupAlreadyHandled()) return;
-        customElements.whenDefined('dialog-component').then(function(){
-          if(snPopupAlreadyHandled()) return;
-          try{ sessionStorage.setItem(SN_POPUP_SHOWN_KEY, '1'); }catch(e){}
-          prelaunchPopup.showDialog();
-        });
-      }, 1500);
-    }
+    //
+    // Product decision (2026-07-23): show on every homepage load/refresh,
+    // not just once per session — Shopify's own validation already handles
+    // duplicate customers/emails, so there's no suppression gate here
+    // anymore (see sn_prefill in the submit handler below, which is
+    // unrelated Claim-flow prefill handoff data and is left untouched).
+    setTimeout(function(){
+      customElements.whenDefined('dialog-component').then(function(){
+        prelaunchPopup.showDialog();
+      });
+    }, 1500);
 
     var popupFormState = prelaunchPopup.querySelector('[data-sn-popup-form-state]');
     var popupSuccessState = prelaunchPopup.querySelector('[data-sn-popup-success-state]');
