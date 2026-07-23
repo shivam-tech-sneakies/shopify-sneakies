@@ -567,7 +567,7 @@
     hero form above (#sn-waitlist-form) already uses — this does NOT replace,
     move, or convert that form; both exist and work independently. Auto-shows
     ~1.5s after a fresh homepage load (see script below), reuses the same
-    Shopify `{% form 'customer' %}` mechanism/fields/tag logic, the same
+    Shopify form 'customer' mechanism/fields/tag logic, the same
     shared snCheckSingleWordName() validation, and the same Klaviyo
     updateProperties() call shape already established elsewhere on this page
     and on the Claim page. Deliberately placed inside #sn-root (unlike the
@@ -1026,7 +1026,7 @@
 
   // ---- Pre-Launch Offer Popup (2026-07-21) ----
   // Additive new entry point into the same waitlist infrastructure as the
-  // hero form above (#sn-waitlist-form) — same Shopify `{% form 'customer' %}`
+  // hero form above (#sn-waitlist-form) — same Shopify form 'customer'
   // fields/tags, same snCheckSingleWordName() validation, same Klaviyo
   // updateProperties() call shape used on the Claim page. The one thing done
   // differently: the hero form is a real native POST + redirect (untouched,
