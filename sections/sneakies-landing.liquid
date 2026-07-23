@@ -1052,12 +1052,23 @@
       return false;
     }
 
-    if(!snPopupAlreadyHandled() && typeof prelaunchPopup.showDialog === 'function'){
-      setTimeout(function(){
-        if(snPopupAlreadyHandled()) return;
-        try{ sessionStorage.setItem(SN_POPUP_SHOWN_KEY, '1'); }catch(e){}
-        prelaunchPopup.showDialog();
-      }, 1500);
+    // Bugfix (2026-07-21): dialog.js loads as type="module", which executes
+    // at "defer" timing (after the whole document parses) — strictly later
+    // than this classic, non-deferred script, which runs synchronously right
+    // here. That meant `<dialog-component>` was never yet upgraded at this
+    // point, so `prelaunchPopup.showDialog` was always undefined and the
+    // setTimeout below was never scheduled. customElements.whenDefined()
+    // is the browser's own hook for exactly this: it resolves once
+    // 'dialog-component' is registered, whether that happens before or
+    // after this line runs, so the setTimeout is always reached correctly.
+    if(!snPopupAlreadyHandled()){
+      customElements.whenDefined('dialog-component').then(function(){
+        setTimeout(function(){
+          if(snPopupAlreadyHandled()) return;
+          try{ sessionStorage.setItem(SN_POPUP_SHOWN_KEY, '1'); }catch(e){}
+          prelaunchPopup.showDialog();
+        }, 1500);
+      });
     }
 
     var popupFormState = prelaunchPopup.querySelector('[data-sn-popup-form-state]');
