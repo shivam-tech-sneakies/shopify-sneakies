@@ -561,6 +561,68 @@
     </button>
   </div>
 
+  <!-- PRE-LAUNCH OFFER POPUP (2026-07-21) -->
+  {%- comment -%}
+    Additive, new entry point into the exact same waitlist infrastructure the
+    hero form above (#sn-waitlist-form) already uses — this does NOT replace,
+    move, or convert that form; both exist and work independently. Auto-shows
+    ~1.5s after a fresh homepage load (see script below), reuses the same
+    Shopify `{% form 'customer' %}` mechanism/fields/tag logic, the same
+    shared snCheckSingleWordName() validation, and the same Klaviyo
+    updateProperties() call shape already established elsewhere on this page
+    and on the Claim page. Deliberately placed inside #sn-root (unlike the
+    pre-existing post-submit popup below, which sits outside #sn-root and
+    therefore can't resolve #sn-root's --ink/--cream/--yellow/--beige custom
+    properties — an existing, out-of-scope-to-fix quirk noted for the
+    record) so this popup's own var(--ink) etc. references resolve
+    correctly. Uses <dialog-component> (assets/dialog.js, already loaded
+    site-wide via the theme's import map) instead of a hand-rolled overlay,
+    specifically because it provides native focus-trapping and scroll-lock
+    for free — neither of which the existing post-submit popup's hand-rolled
+    ESC/click-outside-only implementation (see the script below) provides.
+  {%- endcomment -%}
+  {%- unless form.posted_successfully? -%}
+  <script src="{{ 'dialog.js' | asset_url }}" type="module"></script>
+  <dialog-component id="sn-prelaunch-popup">
+    <dialog ref="dialog" aria-labelledby="sn-prelaunch-heading" style="background:var(--cream); border:3px solid var(--ink); border-radius:24px; max-width:480px; width:100%; padding:0; box-shadow:0 18px 0 rgba(33,5,10,.3); margin:auto; overflow:hidden; animation:sn-pop .3s ease both; color:var(--ink);">
+      <button ref="closeButton" type="button" on:click="/closeDialog" aria-label="Close" style="position:absolute; top:16px; right:16px; z-index:1; cursor:pointer; width:32px; height:32px; border-radius:50%; border:2px solid var(--ink); background:var(--cream); color:var(--ink); font-family:var(--font-heading); font-size:13px; line-height:1;">✕</button>
+
+      <div data-sn-popup-form-state style="padding:34px 28px 28px; text-align:center;">
+        <span style="display:inline-block; font-family:var(--font-heading); font-weight:700; text-transform:uppercase; letter-spacing:.05em; font-size:11.5px; color:var(--ink); background:#B6CDEA; border:2px solid var(--ink); border-radius:999px; padding:7px 16px;">Pre-Launch Offer</span>
+        <h2 id="sn-prelaunch-heading" style="font-family:var(--font-display) !important; text-transform:uppercase !important; letter-spacing:-0.03em !important; line-height:.98; font-size:clamp(1.7rem,5vw,2.15rem); margin:14px 0 0;">Get <span style="background:var(--yellow);">50% Off</span> Your First Order</h2>
+        <p style="font-size:14px; line-height:1.5; margin:12px auto 0; max-width:34ch; opacity:.85;">Join the waitlist, and we&#8217;ll take 50% off your first subscription order when Sneakies launches.</p>
+
+        {%- form 'customer', id: 'sn-popup-waitlist-form', style: 'margin:20px auto 0; max-width:400px; text-align:left;' -%}
+          <input type="hidden" name="contact[tags]" value="{%- if sold_out -%}waitlist, 50offcoupon{%- else -%}waitlist{%- endif -%}">
+          <input type="hidden" name="return_to" value="{{ claim_url }}">
+          <div style="display:flex; flex-wrap:wrap; gap:8px;">
+            <div style="flex:1 1 150px; min-width:130px;">
+              <label for="sn-popup-fn" style="display:block; font-family:var(--font-heading); font-weight:700; text-transform:uppercase; letter-spacing:.05em; font-size:10.5px; margin-bottom:5px;">Name</label>
+              <input id="sn-popup-fn" type="text" name="contact[first_name]" required autocomplete="given-name" aria-describedby="sn-popup-fn-error" placeholder="Enter your name" style="width:100%; font-family:var(--font-body); font-size:15px; padding:12px 14px; border:2.5px solid var(--ink); border-radius:11px; background:var(--cream); color:var(--ink); outline:none;">
+            </div>
+            <div style="flex:1 1 170px; min-width:150px;">
+              <label for="sn-popup-em" style="display:block; font-family:var(--font-heading); font-weight:700; text-transform:uppercase; letter-spacing:.05em; font-size:10.5px; margin-bottom:5px;">Email Address</label>
+              <input id="sn-popup-em" type="email" name="contact[email]" required autocomplete="email" aria-describedby="sn-popup-em-error" placeholder="you@email.com" style="width:100%; font-family:var(--font-body); font-size:15px; padding:12px 14px; border:2.5px solid var(--ink); border-radius:11px; background:var(--cream); color:var(--ink); outline:none;">
+            </div>
+          </div>
+          <p id="sn-popup-fn-error" role="alert" style="display:none; color:#CA3779; font-size:12px; font-weight:600; margin-top:6px;">Name is required.</p>
+          <p id="sn-popup-em-error" role="alert" style="display:none; color:#CA3779; font-size:12px; font-weight:600; margin-top:6px;">Enter a valid email address.</p>
+          <p id="sn-popup-submit-error" role="alert" style="display:none; color:#CA3779; font-size:12px; font-weight:600; margin-top:6px; background:rgba(202,55,121,.1); border:1.5px solid #CA3779; border-radius:8px; padding:8px 10px;">Something went wrong. Please try again.</p>
+          <button type="submit" class="sn-submit" style="margin-top:14px; width:100%; cursor:pointer; font-family:var(--font-heading); text-transform:uppercase; letter-spacing:.02em; font-size:1rem; color:var(--cream); background:var(--ink); border:2.5px solid var(--ink); border-radius:12px; padding:15px 20px; box-shadow:0 5px 0 var(--yellow);">Claim Your Offer</button>
+        {%- endform -%}
+      </div>
+
+      <div data-sn-popup-success-state hidden style="padding:40px 28px 34px; text-align:center;">
+        <div style="width:64px; height:64px; margin:0 auto; border-radius:50%; background:#BBD06E; border:2.5px solid var(--ink); display:flex; align-items:center; justify-content:center;">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#21050A" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+        </div>
+        <h2 style="font-family:var(--font-display) !important; text-transform:uppercase !important; letter-spacing:-0.03em !important; line-height:.98; font-size:clamp(1.7rem,5vw,2.15rem); margin:16px 0 0;">You&#8217;re On The List</h2>
+        <p style="font-size:14px; line-height:1.5; margin:10px auto 0; max-width:36ch; opacity:.85;">We&#8217;ll email you a 50% off coupon before we launch. Keep an eye on your inbox.</p>
+      </div>
+    </dialog>
+  </dialog-component>
+  {%- endunless -%}
+
 </div>
 
 <!-- POST-SUBMIT POPUP -->
@@ -851,6 +913,17 @@
     });
   });
 
+  // Shared single-word first-name check (2026-07-21): extracted here,
+  // behavior-for-behavior identical to what previously lived inline in the
+  // hero form's own listener below, so the new Pre-Launch Offer popup
+  // (added further down this same script) can reuse the exact same rule
+  // instead of re-implementing it — normalize (trim + collapse whitespace),
+  // then report whether the result is a single word.
+  function snCheckSingleWordName(rawValue){
+    var normalized = (rawValue || '').trim().replace(/\s+/g, ' ');
+    return { value: normalized, isSingleWord: normalized.indexOf(' ') === -1 };
+  }
+
   // Waitlist form: this is a real Shopify customer-creation submission (full
   // page POST + redirect via the return_to field above), so there's no
   // client-side "success" callback to hook into. Instead: (1) stash the
@@ -887,9 +960,9 @@
       var fnField = waitlistForm.elements['contact[first_name]'];
       var fnError = document.getElementById('sn-fn-error');
       if(fnField){
-        var normalizedFn = fnField.value.trim().replace(/\s+/g, ' ');
-        fnField.value = normalizedFn;
-        if(normalizedFn.indexOf(' ') > -1){
+        var nameCheck = snCheckSingleWordName(fnField.value);
+        fnField.value = nameCheck.value;
+        if(!nameCheck.isSingleWord){
           ev.preventDefault();
           ev.stopImmediatePropagation();
           if(fnError) fnError.style.display = 'block';
@@ -949,6 +1022,151 @@
     if(closeBtn) closeBtn.addEventListener('click', closePopup);
     popup.addEventListener('click', function(ev){ if(ev.target === popup) closePopup(); });
     document.addEventListener('keydown', function(ev){ if(ev.key === 'Escape') closePopup(); }, { once:true });
+  }
+
+  // ---- Pre-Launch Offer Popup (2026-07-21) ----
+  // Additive new entry point into the same waitlist infrastructure as the
+  // hero form above (#sn-waitlist-form) — same Shopify `{% form 'customer' %}`
+  // fields/tags, same snCheckSingleWordName() validation, same Klaviyo
+  // updateProperties() call shape used on the Claim page. The one thing done
+  // differently: the hero form is a real native POST + redirect (untouched,
+  // still true above); this popup submits the exact same fields via fetch()
+  // instead, specifically so the visitor is never navigated away, per this
+  // feature's explicit requirement. <dialog-component>'s showDialog()/
+  // closeDialog() (assets/dialog.js) provide ESC-close, click-outside-close,
+  // focus-trap, and scroll-lock — none of this block re-implements those.
+  var prelaunchPopup = document.getElementById('sn-prelaunch-popup');
+  var prelaunchForm = document.getElementById('sn-popup-waitlist-form');
+  if(prelaunchPopup && prelaunchForm){
+    var SN_POPUP_SHOWN_KEY = 'sn_popup_shown';
+    var SN_POPUP_SOLD_OUT = {{ sold_out | json }};
+
+    function snPopupAlreadyHandled(){
+      try{
+        if(sessionStorage.getItem(SN_POPUP_SHOWN_KEY)) return true;
+        // sn_prefill only ever exists after a successful signup (hero form
+        // or this popup) earlier in the same session — either way, don't
+        // ask again.
+        if(sessionStorage.getItem('sn_prefill')) return true;
+      }catch(e){}
+      return false;
+    }
+
+    if(!snPopupAlreadyHandled() && typeof prelaunchPopup.showDialog === 'function'){
+      setTimeout(function(){
+        if(snPopupAlreadyHandled()) return;
+        try{ sessionStorage.setItem(SN_POPUP_SHOWN_KEY, '1'); }catch(e){}
+        prelaunchPopup.showDialog();
+      }, 1500);
+    }
+
+    var popupFormState = prelaunchPopup.querySelector('[data-sn-popup-form-state]');
+    var popupSuccessState = prelaunchPopup.querySelector('[data-sn-popup-success-state]');
+    var popupFnField = prelaunchForm.elements['contact[first_name]'];
+    var popupEmField = prelaunchForm.elements['contact[email]'];
+    var popupFnError = document.getElementById('sn-popup-fn-error');
+    var popupEmError = document.getElementById('sn-popup-em-error');
+    var popupSubmitError = document.getElementById('sn-popup-submit-error');
+    var popupSubmitBtn = prelaunchForm.querySelector('[type="submit"]');
+    var popupSubmitBtnText = popupSubmitBtn ? popupSubmitBtn.textContent : '';
+    var popupEmailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    function setPopupLoading(isLoading){
+      if(!popupSubmitBtn) return;
+      popupSubmitBtn.disabled = isLoading;
+      popupSubmitBtn.textContent = isLoading ? 'Submitting…' : popupSubmitBtnText;
+    }
+
+    prelaunchForm.addEventListener('submit', function(ev){
+      ev.preventDefault();
+      if(popupSubmitError) popupSubmitError.style.display = 'none';
+
+      var isValid = true;
+      var nameCheck = snCheckSingleWordName(popupFnField ? popupFnField.value : '');
+      if(popupFnField) popupFnField.value = nameCheck.value;
+      if(!nameCheck.value){
+        if(popupFnError){ popupFnError.textContent = 'Name is required.'; popupFnError.style.display = 'block'; }
+        if(popupFnField) popupFnField.setAttribute('aria-invalid', 'true');
+        isValid = false;
+      }else if(!nameCheck.isSingleWord){
+        if(popupFnError){ popupFnError.textContent = 'Please enter only your first name.'; popupFnError.style.display = 'block'; }
+        if(popupFnField) popupFnField.setAttribute('aria-invalid', 'true');
+        isValid = false;
+      }else{
+        if(popupFnError) popupFnError.style.display = 'none';
+        if(popupFnField) popupFnField.removeAttribute('aria-invalid');
+      }
+
+      var emailValue = popupEmField ? popupEmField.value.trim() : '';
+      if(!popupEmailRe.test(emailValue)){
+        if(popupEmError) popupEmError.style.display = 'block';
+        if(popupEmField) popupEmField.setAttribute('aria-invalid', 'true');
+        isValid = false;
+      }else{
+        if(popupEmError) popupEmError.style.display = 'none';
+        if(popupEmField) popupEmField.removeAttribute('aria-invalid');
+      }
+
+      if(!isValid) return;
+
+      setPopupLoading(true);
+
+      var formData = new FormData(prelaunchForm);
+      fetch(prelaunchForm.action, { method:'POST', body:formData, redirect:'follow', credentials:'same-origin' })
+        .then(function(res){
+          setPopupLoading(false);
+          var finalUrl = (res && res.url) || '';
+          var succeeded = !!(res && res.ok && finalUrl.indexOf('form_posted_successfully=true') > -1);
+          if(!succeeded){
+            if(popupSubmitError) popupSubmitError.style.display = 'block';
+            return;
+          }
+
+          // Same handoff shape the hero form already writes (sessionStorage
+          // 'sn_prefill'), so the Claim Flow can still prefill correctly if
+          // this visitor later reaches it independently (e.g. via the
+          // existing Klaviyo address-request email).
+          try{
+            sessionStorage.setItem('sn_prefill', JSON.stringify({
+              first_name: popupFnField ? popupFnField.value : '',
+              email: popupEmField ? popupEmField.value : '',
+              sold_out: SN_POPUP_SOLD_OUT
+            }));
+          }catch(e){}
+
+          // Same Klaviyo call/shape the Claim page already makes for a
+          // fresh signup (see sections/sneakies-claim.liquid) — fired here
+          // instead, since this popup deliberately never navigates to the
+          // Claim page for that call to happen there.
+          if(window.SneakiesKlaviyo){
+            var syncProps = SN_POPUP_SOLD_OUT ? { fifty_off:true } : { free_box:true };
+            window.SneakiesKlaviyo.updateProperties(
+              popupEmField ? popupEmField.value : '',
+              { firstName: popupFnField ? popupFnField.value : '' },
+              syncProps
+            );
+          }
+
+          // Pre-mark the Claim page's own klaviyoSynced flag (same
+          // sessionStorage key/shape it already reads on its own) so that if
+          // this same visitor does later reach the Claim page in this
+          // session, its existing "sync once" check skips re-firing the
+          // same Klaviyo update a second time.
+          try{
+            var existingClaimState = {};
+            try{ existingClaimState = JSON.parse(sessionStorage.getItem('sn_claim_state') || '{}'); }catch(e2){}
+            existingClaimState.klaviyoSynced = true;
+            sessionStorage.setItem('sn_claim_state', JSON.stringify(existingClaimState));
+          }catch(e){}
+
+          if(popupFormState) popupFormState.hidden = true;
+          if(popupSuccessState) popupSuccessState.hidden = false;
+        })
+        .catch(function(){
+          setPopupLoading(false);
+          if(popupSubmitError) popupSubmitError.style.display = 'block';
+        });
+    });
   }
 })();
 </script>
