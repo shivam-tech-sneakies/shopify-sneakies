@@ -371,14 +371,6 @@
           options: 'Getting more fruits and veggies into breakfast|Trying the different Sneakies flavors|Easier weekday breakfast|Finding something my kids will actually eat|Discovering a better/healthier pancake mix'
         -%}
       </div>
-
-      <!-- Sold Out fast path (2026-07-19) and the survey's own real-completion
-           state both land here — authored once, statically, and toggled via
-           [hidden]/.is-done rather than injected at runtime, so there's a
-           single source of truth for this copy either way. See the
-           [data-survey] wiring loop and the init-time soldOut check in the
-           script below. -->
-      <p class="sn-claim-final-thanks" data-fallback-thanks hidden>Thanks, that helps us make Sneakies better.</p>
     </section>
   </div>
 
@@ -621,11 +613,23 @@
   STEPS.forEach(function(s){ panels[s] = root.querySelector('[data-step-panel="' + s + '"]'); });
   var pills = root.querySelectorAll('[data-goto-step]');
 
+  // Auto Redirect (2026-07-24): once the 50% Off success/fallback step is
+  // shown, send the visitor back to the landing page after 2s — the
+  // success message itself is left fully visible/unchanged until then.
+  // Guarded so re-entering this same step (e.g. a stray extra showStep()
+  // call) never schedules a second, overlapping redirect.
+  var SN_ROOT_URL = {{ routes.root_url | json }};
+  var snFallbackRedirectScheduled = false;
+
   function showStep(step, opts){
     if(STEPS.indexOf(step) === -1) return;
     STEPS.forEach(function(s){
       if(panels[s]) panels[s].classList.toggle('is-active', s === step);
     });
+    if(step === 'fallback' && !snFallbackRedirectScheduled){
+      snFallbackRedirectScheduled = true;
+      setTimeout(function(){ window.location.href = SN_ROOT_URL; }, 2000);
+    }
     // Full-page 50% Off background (2026-07-21): toggled on #sn-root itself
     // (the same element the shared page background lives on — header/logo
     // included) rather than on the fallback panel/card, so the colour

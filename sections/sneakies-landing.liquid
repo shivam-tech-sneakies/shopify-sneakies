@@ -343,10 +343,10 @@
           this page — always the first Claim Flow screen, never a later step. {%- endcomment -%}
         <input type="hidden" name="return_to" value="{{ claim_url }}">
         <div style="display:flex; flex-wrap:wrap; gap:8px;">
-          <input id="sn-fn" type="text" name="contact[first_name]" required autocomplete="given-name" aria-label="First name" placeholder="Enter your first name" aria-describedby="sn-fn-error" style="flex:1 1 110px; min-width:100px; font-family:var(--font-body); font-size:15px; padding:12px 14px; border:2.5px solid var(--ink); border-radius:11px; background:var(--cream); color:var(--ink); outline:none;">
+          <input id="sn-fn" type="text" name="contact[first_name]" required autocomplete="name" aria-label="Full name" placeholder="Enter your full name" aria-describedby="sn-fn-error" style="flex:1 1 110px; min-width:100px; font-family:var(--font-body); font-size:15px; padding:12px 14px; border:2.5px solid var(--ink); border-radius:11px; background:var(--cream); color:var(--ink); outline:none;">
           <input id="sn-em" type="email" name="contact[email]" required autocomplete="email" aria-label="Email" placeholder="you@email.com" style="flex:2 1 160px; min-width:140px; font-family:var(--font-body); font-size:15px; padding:12px 14px; border:2.5px solid var(--ink); border-radius:11px; background:var(--cream); color:var(--ink); outline:none;">
         </div>
-        <p id="sn-fn-error" role="alert" style="display:none; color:#CA3779; font-size:12px; font-weight:600; margin-top:6px; text-align:left;">Please enter only your first name.</p>
+        <p id="sn-fn-error" role="alert" style="display:none; color:#CA3779; font-size:12px; font-weight:600; margin-top:6px; text-align:left;">Please enter your full name.</p>
         {%- if form.errors -%}
           {%- assign sn_email_err = form.errors.messages['email'] -%}
           <div role="alert" style="color:#CA3779; font-size:12px; font-weight:600; margin-top:6px; text-align:left;">
@@ -605,7 +605,7 @@
           <div style="display:flex; flex-wrap:wrap; gap:8px;">
             <div style="flex:1 1 150px; min-width:130px;">
               <label for="sn-popup-fn" style="display:block; font-family:var(--font-heading); font-weight:700; text-transform:uppercase; letter-spacing:.05em; font-size:10.5px; margin-bottom:5px;">Name</label>
-              <input id="sn-popup-fn" type="text" name="contact[first_name]" required autocomplete="given-name" aria-describedby="sn-popup-fn-error" placeholder="Enter your name" style="width:100%; font-family:var(--font-body); font-size:15px; padding:12px 14px; border:2.5px solid var(--ink); border-radius:11px; background:var(--cream); color:var(--ink); outline:none;">
+              <input id="sn-popup-fn" type="text" name="contact[first_name]" required autocomplete="name" aria-describedby="sn-popup-fn-error" placeholder="Enter your full name" style="width:100%; font-family:var(--font-body); font-size:15px; padding:12px 14px; border:2.5px solid var(--ink); border-radius:11px; background:var(--cream); color:var(--ink); outline:none;">
             </div>
             <div style="flex:1 1 170px; min-width:150px;">
               <label for="sn-popup-em" style="display:block; font-family:var(--font-heading); font-weight:700; text-transform:uppercase; letter-spacing:.05em; font-size:10.5px; margin-bottom:5px;">Email Address</label>
@@ -928,7 +928,11 @@
   // then report whether the result is a single word.
   function snCheckSingleWordName(rawValue){
     var normalized = (rawValue || '').trim().replace(/\s+/g, ' ');
-    return { value: normalized, isSingleWord: normalized.indexOf(' ') === -1 };
+    // Full Name Validation (2026-07-24): now requires at least two words
+    // (a first + last name) rather than exactly one. isSingleWord is kept
+    // as-is for anything still relying on the old rule; isFullName is the
+    // new check both name fields below use.
+    return { value: normalized, isSingleWord: normalized.indexOf(' ') === -1, isFullName: normalized.length > 0 && normalized.indexOf(' ') > -1 };
   }
 
   // Waitlist form: this is a real Shopify customer-creation submission (full
@@ -969,7 +973,7 @@
       if(fnField){
         var nameCheck = snCheckSingleWordName(fnField.value);
         fnField.value = nameCheck.value;
-        if(!nameCheck.isSingleWord){
+        if(!nameCheck.isFullName){
           ev.preventDefault();
           ev.stopImmediatePropagation();
           if(fnError) fnError.style.display = 'block';
@@ -1133,8 +1137,8 @@
         if(popupFnError){ popupFnError.textContent = 'Name is required.'; popupFnError.style.display = 'block'; }
         if(popupFnField) popupFnField.setAttribute('aria-invalid', 'true');
         isValid = false;
-      }else if(!nameCheck.isSingleWord){
-        if(popupFnError){ popupFnError.textContent = 'Please enter only your first name.'; popupFnError.style.display = 'block'; }
+      }else if(!nameCheck.isFullName){
+        if(popupFnError){ popupFnError.textContent = 'Please enter your full name.'; popupFnError.style.display = 'block'; }
         if(popupFnField) popupFnField.setAttribute('aria-invalid', 'true');
         isValid = false;
       }else{
